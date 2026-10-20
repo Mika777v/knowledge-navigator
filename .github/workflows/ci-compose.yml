@@ -8,6 +8,7 @@ on:
       - .env.example
       - Makefile
       - backend/**
+      - frontend/**
       - infra/docker/postgres/**
       - .github/workflows/ci-compose.yml
   push:
@@ -17,6 +18,7 @@ on:
       - .env.example
       - Makefile
       - backend/**
+      - frontend/**
       - infra/docker/postgres/**
       - .github/workflows/ci-compose.yml
   workflow_dispatch:
@@ -37,6 +39,10 @@ jobs:
             < infra/docker/postgres/test/compose-check.sql
       - name: Check backend health
         run: curl -fsS http://localhost:8080/actuator/health | tee /dev/stderr | grep -q '"status":"UP"'
+      - name: Check frontend and BFF
+        run: |
+          curl -fsS http://localhost:3000/api/health | tee /dev/stderr | grep -q '"backend":"UP"'
+          curl -fsS http://localhost:3000/ | grep -q '社内規程ナビ'
       - name: Show logs on failure
         if: failure()
         run: docker compose logs

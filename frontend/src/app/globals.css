@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* 色はトークンで定義し、shadcn/ui の命名（background / foreground / muted / border）に合わせる */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --muted-foreground: #5f6368;
+  --border: #d4d4d8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --muted-foreground: #a1a1aa;
+    --border: #3f3f46;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  /* 日本語の可読性を優先し、OS 標準フォントを使う（Web フォントのダウンロードなし） */
+  --font-sans:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI",
+    "Meiryo", system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

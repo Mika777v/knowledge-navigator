@@ -46,9 +46,10 @@ seed: ## ダミーデータを投入する（#33 で実装）
 	@echo "未実装です（#33 で追加予定）" >&2; exit 1
 
 .PHONY: test
-test: .env ## テストを実行する（backend。frontend は #26 で追加）
+test: .env ## テストを実行する（backend・frontend）
 	$(COMPOSE) build postgres
 	cd backend && ./gradlew test
+	cd frontend && pnpm install --frozen-lockfile && pnpm test
 
 .PHONY: eval
 eval: ## 検索品質の評価を実行する（#39 で実装）

@@ -1,5 +1,4 @@
 # ローカル開発・デモ用の構成。
-# frontend は #26 でサービスを追加する。
 # 使い方は README.md の「ローカルで動かす」または `make help` を参照。
 
 name: knowledge-navigator
@@ -47,6 +46,26 @@ services:
       timeout: 3s
       retries: 30
       start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: knowledge-navigator/frontend:local
+    environment:
+      # BFF（/api/*）の転送先。compose 内のサービス名で backend を指す
+      BACKEND_URL: http://backend:8080
+      TZ: Asia/Tokyo
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

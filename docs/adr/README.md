@@ -11,12 +11,12 @@
 | [0002](./0002-japanese-search-pg-bigm.md) | 日本語全文検索に PostgreSQL + pg_bigm を採用する | Accepted |
 | [0003](./0003-program-as-first-class-entity.md) | 制度（Program）を文書から独立したエンティティにする | Accepted |
 | [0004](./0004-permission-prefilter.md) | 権限フィルタは検索前（プレフィルタ）に適用する | Accepted |
+| [0005](./0005-nextjs-as-bff.md) | Next.js を画面兼 BFF として使う | Accepted |
 
 ### 予定（[TECH_STACK_DECISION.md §4](../TECH_STACK_DECISION.md)）
 
 | No | タイトル | 作成時期 |
 |---|---|---|
-| 0005 | Next.js を BFF として使う | #26（Next.js 雛形）着手時 |
 | 0006 | AI 処理を FastAPI 別サービスに分離する | Phase4 |
 | 0007 | ベクトルストアに pgvector を採用する | Phase4 |
 | 0008 | LLM プロバイダを抽象化し既定を Ollama とする | Phase4 |

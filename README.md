@@ -13,23 +13,22 @@
 
 ## ローカルで動かす
 
-必要なもの: Docker（Compose v2）、make
+必要なもの: Docker（Compose v2）、make。`make test` には Java 21 と Node.js 22 + pnpm も必要
 
 ```bash
 make up      # .env が無ければ .env.example から作成し、ビルドして起動
 make psql    # DB に接続
 make down    # 停止（データは残る）
 make clean   # 停止してデータも削除
-make test    # テスト（backend）
+make test    # テスト（backend・frontend）
 make help    # コマンド一覧
 ```
 
 | サービス | URL |
 |---|---|
+| frontend | http://localhost:3000 |
 | backend | http://localhost:8080/actuator/health 、API 仕様 http://localhost:8080/swagger-ui.html |
 | PostgreSQL | localhost:5432（pg_bigm / pgvector 入り） |
-
-frontend は順次追加します。
 
 ## ドキュメント
 
