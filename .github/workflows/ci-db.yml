@@ -1,0 +1,37 @@
+name: ci-db
+
+on:
+  pull_request:
+    paths:
+      - infra/docker/postgres/**
+      - .github/workflows/ci-db.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/docker/postgres/**
+      - .github/workflows/ci-db.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Dockerfile の PG_BIGM_SHA256 が tarball と一致するかを先に確認し、
+      # 不一致なら実際の値を PR 画面の注釈に出す（バージョン更新時に使う）
+      - name: Verify pg_bigm checksum
+        run: |
+          df=infra/docker/postgres/Dockerfile
+          version=$(sed -n 's/^ARG PG_BIGM_VERSION=//p' "$df")
+          expected=$(sed -n 's/^ARG PG_BIGM_SHA256=//p' "$df")
+          actual=$(curl -fsSL "https://github.com/pgbigm/pg_bigm/archive/refs/tags/v${version}.tar.gz" | sha256sum | cut -d' ' -f1)
+          if [ "$actual" != "$expected" ]; then
+            echo "::error file=${df}::PG_BIGM_SHA256 mismatch for v${version}: expected ${expected}, actual ${actual}"
+            exit 1
+          fi
+          echo "pg_bigm v${version} checksum OK"
+      - name: Build image and run smoke test
+        run: infra/docker/postgres/test/run-smoke.sh
