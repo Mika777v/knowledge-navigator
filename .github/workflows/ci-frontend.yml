@@ -1,0 +1,42 @@
+name: ci-frontend
+
+on:
+  pull_request:
+    paths:
+      - frontend/**
+      - .github/workflows/ci-frontend.yml
+  push:
+    branches: [main]
+    paths:
+      - frontend/**
+      - .github/workflows/ci-frontend.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Build container image
+        run: docker build -t knowledge-navigator/frontend:ci .

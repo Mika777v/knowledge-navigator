@@ -42,3 +42,30 @@ updates:
       # Java は LTS（21）に固定する。次の LTS へ上げるときは手動で行う
       - dependency-name: eclipse-temurin
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:frontend", "dependencies"]
+    groups:
+      next-react:
+        patterns: ["next", "eslint-config-next", "react", "react-dom", "@types/react*"]
+      test:
+        patterns: ["vitest", "@vitest/*", "@testing-library/*", "jsdom", "@vitejs/*"]
+
+  - package-ecosystem: docker
+    directory: /frontend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:frontend", "dependencies"]
+    ignore:
+      # Node.js は LTS（22）に固定する。次の LTS へ上げるときは手動で行う
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
