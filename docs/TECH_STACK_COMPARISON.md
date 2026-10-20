@@ -151,7 +151,7 @@ Embeddingも同様に `bge-m3`（Ollama） / `text-embedding-3-small`（OpenAI/A
 
 | 役割 | 技術 |
 |---|---|
-| Backend | Spring Boot 3 / Java 21（モジュラーモノリス） |
+| Backend | Spring Boot 4 / Java 21（モジュラーモノリス） |
 | Frontend | Next.js（SPA的利用）+ Tailwind + shadcn/ui |
 | DB / 検索 | PostgreSQL 17 + pg_bigm |
 | AI | なし |

@@ -1,0 +1,17 @@
+# 依存バージョンの一元管理。Spring Boot の BOM が管理するもの（Flyway, Testcontainers, PostgreSQL JDBC 等）はここに書かない。
+[versions]
+spring-boot = "4.1.1"
+spring-dependency-management = "1.1.7"
+spring-modulith = "2.1.1"
+springdoc = "3.1.1"
+spotless = "8.10.4"
+palantir-java-format = "2.102.0"
+
+[libraries]
+spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
+springdoc-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
