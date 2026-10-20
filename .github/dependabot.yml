@@ -8,3 +8,12 @@ updates:
     commit-message:
       prefix: ci
     labels: ["area:infra", "dependencies"]
+
+  - package-ecosystem: docker
+    directory: /infra/docker/postgres
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:db", "dependencies"]

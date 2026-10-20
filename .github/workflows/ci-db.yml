@@ -1,0 +1,24 @@
+name: ci-db
+
+on:
+  pull_request:
+    paths:
+      - infra/docker/postgres/**
+      - .github/workflows/ci-db.yml
+  push:
+    branches: [main]
+    paths:
+      - infra/docker/postgres/**
+      - .github/workflows/ci-db.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build image and run smoke test
+        run: infra/docker/postgres/test/run-smoke.sh
