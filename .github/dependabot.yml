@@ -38,3 +38,7 @@ updates:
       prefix: build
       include: scope
     labels: ["area:backend", "dependencies"]
+    ignore:
+      # Java は LTS（21）に固定する。次の LTS へ上げるときは手動で行う
+      - dependency-name: eclipse-temurin
+        update-types: ["version-update:semver-major"]

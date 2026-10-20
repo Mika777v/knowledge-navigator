@@ -14,7 +14,7 @@ help: ## コマンド一覧を表示する
 	@echo ".env を .env.example から作成しました"
 
 .PHONY: up
-up: .env ## 全サービスをビルドして起動する（起動完了まで待つ）
+up: .env ## 全サービスをビルドして起動する（起動完了まで待つ。初回は数分かかる）
 	$(COMPOSE) up -d --build --wait
 
 .PHONY: down
@@ -46,8 +46,9 @@ seed: ## ダミーデータを投入する（#33 で実装）
 	@echo "未実装です（#33 で追加予定）" >&2; exit 1
 
 .PHONY: test
-test: ## 全テストを実行する（#25 / #26 で実装）
-	@echo "未実装です（#25 / #26 で追加予定）" >&2; exit 1
+test: .env ## テストを実行する（backend。frontend は #26 で追加）
+	$(COMPOSE) build postgres
+	cd backend && ./gradlew test
 
 .PHONY: eval
 eval: ## 検索品質の評価を実行する（#39 で実装）

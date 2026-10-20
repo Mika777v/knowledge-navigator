@@ -20,10 +20,16 @@ make up      # .env が無ければ .env.example から作成し、ビルドし�
 make psql    # DB に接続
 make down    # 停止（データは残る）
 make clean   # 停止してデータも削除
+make test    # テスト（backend）
 make help    # コマンド一覧
 ```
 
-現時点で起動するのは PostgreSQL（pg_bigm / pgvector 入り）のみです。backend・frontend は順次追加します。
+| サービス | URL |
+|---|---|
+| backend | http://localhost:8080/actuator/health 、API 仕様 http://localhost:8080/swagger-ui.html |
+| PostgreSQL | localhost:5432（pg_bigm / pgvector 入り） |
+
+frontend は順次追加します。
 
 ## ドキュメント
 

@@ -1,0 +1,45 @@
+name: ci-compose
+
+# `make up` で全サービスが起動し、連携できることを確認する
+on:
+  pull_request:
+    paths:
+      - compose.yaml
+      - .env.example
+      - Makefile
+      - backend/**
+      - infra/docker/postgres/**
+      - .github/workflows/ci-compose.yml
+  push:
+    branches: [main]
+    paths:
+      - compose.yaml
+      - .env.example
+      - Makefile
+      - backend/**
+      - infra/docker/postgres/**
+      - .github/workflows/ci-compose.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose-up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Start all services
+        run: make up
+      - name: Check database settings
+        run: |
+          docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+            < infra/docker/postgres/test/compose-check.sql
+      - name: Check backend health
+        run: curl -fsS http://localhost:8080/actuator/health | tee /dev/stderr | grep -q '"status":"UP"'
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop services
+        if: always()
+        run: make clean

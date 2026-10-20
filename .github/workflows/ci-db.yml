@@ -3,17 +3,11 @@ name: ci-db
 on:
   pull_request:
     paths:
-      - compose.yaml
-      - .env.example
-      - Makefile
       - infra/docker/postgres/**
       - .github/workflows/ci-db.yml
   push:
     branches: [main]
     paths:
-      - compose.yaml
-      - .env.example
-      - Makefile
       - infra/docker/postgres/**
       - .github/workflows/ci-db.yml
   workflow_dispatch:
@@ -41,11 +35,3 @@ jobs:
           echo "pg_bigm v${version} checksum OK"
       - name: Build image and run smoke test
         run: infra/docker/postgres/test/run-smoke.sh
-      - name: Start with compose and check settings
-        run: |
-          make up
-          docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
-            < infra/docker/postgres/test/compose-check.sql
-      - name: Stop compose
-        if: always()
-        run: make clean
