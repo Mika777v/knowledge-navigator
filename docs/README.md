@@ -18,6 +18,7 @@
 | [ROADMAP.md](./ROADMAP.md) | 6か月ロードマップ、スプリント計画 |
 | [TASKS.md](./TASKS.md) | Epic / Story / Task 分解、初期Issue 20件 |
 | [DESIGN_REVIEW.md](./DESIGN_REVIEW.md) | 設計レビュー、アーキテクトとしての提言 |
+| [adr/](./adr/README.md) | 設計判断の記録（ADR） |
 
 ---
 
