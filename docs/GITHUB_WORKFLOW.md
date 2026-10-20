@@ -68,7 +68,7 @@ Refs #12
 | `chore` | 雑務 |
 | `search` | **検索品質に影響する変更**（重み・辞書・正規化）。評価結果をbodyに記載 |
 
-scope: `backend`, `frontend`, `ai`, `ingest`, `db`, `search`, `auth`, `infra`, `docs`, `seed`
+scope: `backend`, `frontend`, `content`（文書・制度・FAQ）, `insight`（検索ログ・分析）, `eval`（検索品質評価）, `ai`, `ingest`, `db`, `search`, `auth`, `infra`, `docs`, `seed`, `deps`
 
 例:
 ```
