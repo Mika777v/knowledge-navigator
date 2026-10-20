@@ -78,7 +78,8 @@ backend/src/main/java/com/example/knavi/
 
 | Method | Path | 説明 | Phase |
 |---|---|---|---|
-| POST | `/auth/login` / `/auth/logout` | ログイン/ログアウト | 1 |
+| GET | `/auth/csrf` | CSRF トークンの発行（XSRF-TOKEN Cookie）。ログイン前に呼ぶ | 1 |
+| POST | `/auth/login` / `/auth/logout` | ログイン/ログアウト（CSRF トークン必須） | 1 |
 | GET | `/me` | ログインユーザー情報・ロール | 1 |
 | **GET** | **`/navigate?q=`** | **ナビゲーション検索（制度/文書/セクション/FAQ/窓口の4ブロック）** | 1 |
 | GET | `/search/suggest?q=` | サジェスト | 3 |
