@@ -2,6 +2,7 @@
 
 > ステータス: Draft v0.1 / 2026-10-20
 > リポジトリ: `knowledge-navigator`（Public。ダミーデータのみ）
+> 本書は運用ルール（何を）。GitHub への設定方法（どうやって）は [REPOSITORY_SETUP.md](./REPOSITORY_SETUP.md)。
 
 ---
 

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 設計ドキュメント
+    url: https://github.com/Mika777v/knowledge-navigator/tree/main/docs
+    about: Issue を作る前に docs/ の設計を確認してください

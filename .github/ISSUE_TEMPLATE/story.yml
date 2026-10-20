@@ -1,0 +1,45 @@
+name: Story
+description: 利用者価値のある機能単位（Epic の子 Issue）
+title: "[Story] "
+labels: ["type:story"]
+body:
+  - type: input
+    id: epic
+    attributes:
+      label: Epic
+      description: 親 Epic の Issue 番号（Sub-issue として登録する場合は省略可）
+      placeholder: "#3 E07 ナビゲーション検索"
+  - type: textarea
+    id: story
+    attributes:
+      label: ユーザーストーリー
+      value: |
+        **<ロール>** として、**<やりたいこと>** をしたい。
+        なぜなら **<目的>** だから。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 受け入れ条件
+      value: |
+        - [ ] Given ... When ... Then ...
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options: ["0", "1", "2", "3", "4", "5", "6"]
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: 見積り
+      options: ["XS (≤2h)", "S (≤0.5d)", "M (≤1d)", "L (≤3d)", "XL (要分割)"]
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足・参考ドキュメント
+      placeholder: docs/PRD_KNOWLEDGE_NAVIGATOR.md F-110 など

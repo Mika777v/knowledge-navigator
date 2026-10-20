@@ -1,0 +1,43 @@
+name: Search Quality
+description: 期待した検索結果が得られない（評価セットへの追加候補）
+title: "[Search] "
+labels: ["type:bug", "area:search"]
+body:
+  - type: input
+    id: query
+    attributes:
+      label: クエリ
+      placeholder: 結婚したら何か制度ある？
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した結果（制度 / 文書 / 窓口）
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の結果
+    validations:
+      required: true
+  - type: dropdown
+    id: cause
+    attributes:
+      label: 原因仮説
+      multiple: true
+      options:
+        - 辞書（ナビゲーションキーワード）不足
+        - 類義語不足
+        - 正規化（表記ゆれ）
+        - スコア重み
+        - データ不足（制度・FAQ未登録）
+        - 権限（見えるべきものが見えない）
+        - 不明
+  - type: checkboxes
+    id: eval
+    attributes:
+      label: 評価セット
+      options:
+        - label: data/eval/questions.yaml に追加する

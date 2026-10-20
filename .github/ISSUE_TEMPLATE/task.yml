@@ -1,0 +1,32 @@
+name: Task
+description: 技術タスク（Story / Epic の子 Issue）
+title: "[Task] "
+labels: ["type:task"]
+body:
+  - type: input
+    id: parent
+    attributes:
+      label: 親 Story / Epic
+      placeholder: "#12"
+  - type: textarea
+    id: work
+    attributes:
+      label: 作業内容
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: 完了条件（Definition of Done）
+      value: |
+        - [ ] 受け入れ条件を満たす
+        - [ ] テストを追加・更新した
+        - [ ] CI がグリーン
+        - [ ] 必要なドキュメント（docs/ / ADR）を更新した
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: 見積り
+      options: ["XS (≤2h)", "S (≤0.5d)", "M (≤1d)", "L (≤3d)", "XL (要分割)"]
