@@ -223,3 +223,18 @@ Settings → Actions → General → Workflow permissions は既定の **Read re
 
 初期設定のコミット（このドキュメントを含む）は、ブランチ保護を有効にする **前に** main へ直接 push した。
 保護を有効にした後は、例外なく PR 経由で変更する。
+
+### 7.1 適用状況（2026-10-20 時点）
+
+Claude Code のクラウドセッションからは、リポジトリ設定・Rulesets・セキュリティ設定の書き込みと GraphQL（Projects）が
+制限されているため、一部はリポジトリ管理者がローカルで実行する必要がある。
+
+| 項目 | 状態 | 備考 |
+|---|---|---|
+| `.github/` のテンプレート・CODEOWNERS・dependabot・ワークフロー | ✅ 適用済み | main に push 済み |
+| ラベル（30件） | ✅ 適用済み | `labels` ワークフローで同期。デフォルトラベルは削除済み |
+| Milestones（v0.1.0〜v0.6.0） | ✅ 適用済み | REST API で作成 |
+| マージ方式・Topics・説明 | ⏳ 未適用 | ローカルで `scripts/github/setup-repo.sh` を実行 |
+| セキュリティ機能 | ⏳ 未適用 | 同上 |
+| main の Ruleset | ⏳ 未適用 | 同上（**これ以降 main への直接 push は不可になる**） |
+| GitHub Projects | ⏳ 未適用 | ローカルで `gh auth refresh -s project` → `scripts/github/setup-project.sh`、その後 §5 の手動設定 |
