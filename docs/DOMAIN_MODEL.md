@@ -553,7 +553,7 @@ CREATE TABLE answer_citations (
   deadline_note: 入籍後6か月以内
   owner_department: GA        # 総務部
   basis:
-    - document: REG-GA-002    # 慶弔見舞金規程
+    - document: REG-GA-001    # 慶弔見舞金規程
       article: 第5条
   contacts:
     - { contact: GA-GENERAL, role: PAYMENT }
