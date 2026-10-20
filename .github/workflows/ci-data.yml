@@ -1,0 +1,29 @@
+name: ci-data
+
+on:
+  pull_request:
+    paths:
+      - data/**
+      - scripts/data/**
+      - .github/workflows/ci-data.yml
+  push:
+    branches: [main]
+    paths:
+      - data/**
+      - scripts/data/**
+      - .github/workflows/ci-data.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seed-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python scripts/data/validate_seed.py
