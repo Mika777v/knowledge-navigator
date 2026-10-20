@@ -1,0 +1,42 @@
+# 文書・制度・FAQ のカテゴリ（2階層）
+# slug: 一意なキー / parent: 親カテゴリの slug
+
+- slug: hr
+  name: 人事・労務
+  sort_order: 10
+- slug: hr-work
+  name: 勤務・労働時間
+  parent: hr
+  sort_order: 11
+- slug: hr-leave
+  name: 休暇・休業
+  parent: hr
+  sort_order: 12
+- slug: hr-pay
+  name: 給与・手当
+  parent: hr
+  sort_order: 13
+
+- slug: welfare
+  name: 福利厚生
+  sort_order: 20
+- slug: welfare-ceremony
+  name: 慶弔
+  parent: welfare
+  sort_order: 21
+
+- slug: general
+  name: 総務・社内ルール
+  sort_order: 30
+
+- slug: finance
+  name: 経理・経費
+  sort_order: 40
+
+- slug: it
+  name: IT・情報セキュリティ
+  sort_order: 50
+
+- slug: compliance
+  name: コンプライアンス
+  sort_order: 60

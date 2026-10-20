@@ -11,6 +11,14 @@ from pathlib import Path
 import yaml
 
 ROLES = {"EMPLOYEE", "MANAGER", "CONTENT_EDITOR", "SYSTEM_ADMIN"}
+VISIBILITIES = {"INTERNAL", "MANAGERS", "RESTRICTED", "CONFIDENTIAL"}
+DOCUMENT_TYPES = {"REGULATION", "PROCEDURE", "MANUAL", "RULE", "ORG_CHART"}
+DOCUMENT_FIELDS = (
+    "code", "title", "document_type", "category", "owner_department",
+    "visibility", "version_label", "effective_from", "summary",
+)
+DISCLAIMER = "架空企業「架空商事株式会社」のサンプル"
+ARTICLE_HEADING = re.compile(r"^### 第(\d+)条（(.+)）\s*$", re.MULTILINE)
 EMPLOYMENT_TYPES = {"REGULAR", "CONTRACT", "PART_TIME"}
 # 架空データであることを保証するため、連絡先は予約済みドメインのみ許可する
 ALLOWED_EMAIL = re.compile(r"^[a-z0-9.\-]+@([a-z0-9\-]+\.)*example\.com$")
@@ -31,11 +39,67 @@ def check_unique(items: list[dict], key: str, label: str, errors: list[str]) -> 
         seen.add(value)
 
 
+def parse_document(path: Path) -> tuple[dict, str]:
+    """front matter（YAML）と本文に分ける"""
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        raise ValueError("front matter がありません")
+    _, front, body = text.split("---\n", 2)
+    return yaml.safe_load(front) or {}, body
+
+
+def validate_documents(
+    seed_dir: Path, dept_codes: set[str], category_slugs: set[str], errors: list[str]
+) -> None:
+    docs: dict[str, tuple[dict, str, set[int]]] = {}
+    for path in sorted((seed_dir / "documents").glob("*.md")):
+        label = f"documents/{path.name}"
+        try:
+            meta, body = parse_document(path)
+        except ValueError as e:
+            errors.append(f"{label}: {e}")
+            continue
+        for field in DOCUMENT_FIELDS:
+            if not meta.get(field):
+                errors.append(f"{label}: front matter に {field} がありません")
+        code = meta.get("code", "")
+        if not path.name.startswith(f"{code}_"):
+            errors.append(f"{label}: ファイル名は「{code}_タイトル.md」にしてください")
+        if code in docs:
+            errors.append(f"{label}: code {code} が重複しています")
+        if meta.get("category") not in category_slugs:
+            errors.append(f"{label}: カテゴリ {meta.get('category')} が存在しません")
+        if meta.get("owner_department") not in dept_codes:
+            errors.append(f"{label}: 所管部署 {meta.get('owner_department')} が存在しません")
+        if meta.get("visibility") not in VISIBILITIES:
+            errors.append(f"{label}: visibility が不正です: {meta.get('visibility')}")
+        if meta.get("document_type") not in DOCUMENT_TYPES:
+            errors.append(f"{label}: document_type が不正です: {meta.get('document_type')}")
+        if DISCLAIMER not in body.split("##", 1)[0]:
+            errors.append(f"{label}: 冒頭に架空データである旨の注記がありません")
+
+        numbers = [int(n) for n, _ in ARTICLE_HEADING.findall(body)]
+        if not numbers:
+            errors.append(f"{label}: 「### 第N条（見出し）」形式の条文がありません")
+        elif numbers != list(range(1, len(numbers) + 1)):
+            errors.append(f"{label}: 条番号が第1条からの連番になっていません: {numbers}")
+        docs[code] = (meta, body, set(numbers))
+
+    # 規程どうしの条文参照（例: 就業規則第32条）が実在する条を指しているか
+    by_title = {meta.get("title"): numbers for meta, _, numbers in docs.values()}
+    for code, (_, body, _) in docs.items():
+        for title, numbers in by_title.items():
+            for n in re.findall(re.escape(title) + r"第(\d+)条", body):
+                if int(n) not in numbers:
+                    errors.append(f"documents[{code}]: 参照先「{title}第{n}条」が存在しません")
+
+
 def validate(seed_dir: Path) -> list[str]:
     errors: list[str] = []
     departments = load(seed_dir, "departments.yaml")
     contacts = load(seed_dir, "contacts.yaml")
     users = load(seed_dir, "users.yaml")
+    categories = load(seed_dir, "categories.yaml")
 
     # ---------- departments ----------
     check_unique(departments, "code", "departments", errors)
@@ -49,6 +113,15 @@ def validate(seed_dir: Path) -> list[str]:
             errors.append(f"departments[{d['code']}]: 親部署 {parent} が存在しません")
         if parent == d["code"]:
             errors.append(f"departments[{d['code']}]: 自分自身を親にしています")
+
+    # ---------- categories ----------
+    check_unique(categories, "slug", "categories", errors)
+    category_slugs = {c["slug"] for c in categories}
+    for c in categories:
+        if not c.get("name"):
+            errors.append(f"categories[{c.get('slug')}]: name がありません")
+        if c.get("parent") and c["parent"] not in category_slugs:
+            errors.append(f"categories[{c['slug']}]: 親カテゴリ {c['parent']} が存在しません")
 
     # ---------- contacts ----------
     check_unique(contacts, "code", "contacts", errors)
@@ -95,6 +168,9 @@ def validate(seed_dir: Path) -> list[str]:
     roles_present = {u.get("role") for u in users}
     for role in ROLES - roles_present:
         errors.append(f"users: ロール {role} のデモユーザーがいません")
+
+    # ---------- documents ----------
+    validate_documents(seed_dir, dept_codes, category_slugs, errors)
 
     return errors
 
