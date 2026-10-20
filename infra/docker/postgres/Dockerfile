@@ -11,7 +11,7 @@ FROM pgvector/pgvector:0.8.7-pg17-bookworm AS pg-bigm-builder
 
 ARG PG_BIGM_VERSION=1.2-20240606
 # ソース tarball の SHA-256。PG_BIGM_VERSION を変えたら必ず更新する
-ARG PG_BIGM_SHA256=0000000000000000000000000000000000000000000000000000000000000000
+ARG PG_BIGM_SHA256=69eabf7a6af19909fc8a33525768854b08c94929d7f9fa94fe31e737c04748ff
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
