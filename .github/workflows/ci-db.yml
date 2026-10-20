@@ -1,15 +1,8 @@
 name: ci-db
 
+# ci.yml（ゲート）から、関係するファイルが変わったときだけ呼ばれる。手動実行も可
 on:
-  pull_request:
-    paths:
-      - infra/docker/postgres/**
-      - .github/workflows/ci-db.yml
-  push:
-    branches: [main]
-    paths:
-      - infra/docker/postgres/**
-      - .github/workflows/ci-db.yml
+  workflow_call:
   workflow_dispatch:
 
 permissions:
