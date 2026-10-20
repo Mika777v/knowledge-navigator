@@ -187,6 +187,12 @@ classDiagram
 
 ## 5. DB設計（DDL）
 
+> **実装の正本は Flyway のマイグレーション（`backend/src/main/resources/db/migration/`）**。以下は設計時の DDL で、実装では次の点を変更している（#30）。
+> - 区分値（visibility / status / role など）は ENUM 型ではなく `varchar` + `CHECK` 制約（値の追加が容易、JPA で扱いやすい）
+> - `contacts.code`、`departments.description`、`app_settings`（総合窓口などの設定）を追加
+> - `documents.current_version_id` は「同じ文書の版」しか指せない複合外部キー（遅延制約）
+> - `audit_logs` の更新・削除はトリガーで禁止（DB ロールの権限分離は本番構成で行う）
+>
 > 拡張: `pg_bigm`（日本語部分一致）、`vector`（pgvector, Phase4）、`pgcrypto`。
 > Docker では `pgvector/pgvector:pg17` をベースに pg_bigm をビルドした独自イメージを `infra/docker/postgres/` に置く。
 
