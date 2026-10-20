@@ -1,17 +1,8 @@
 name: ci-data
 
+# ci.yml（ゲート）から、関係するファイルが変わったときだけ呼ばれる。手動実行も可
 on:
-  pull_request:
-    paths:
-      - data/**
-      - scripts/data/**
-      - .github/workflows/ci-data.yml
-  push:
-    branches: [main]
-    paths:
-      - data/**
-      - scripts/data/**
-      - .github/workflows/ci-data.yml
+  workflow_call:
   workflow_dispatch:
 
 permissions:

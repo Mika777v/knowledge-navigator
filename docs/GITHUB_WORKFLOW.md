@@ -230,6 +230,7 @@ PR / main への push
        ├─ frontend ──▶ ci-frontend.yml  （frontend/ が変わったとき）
        ├─ db       ──▶ ci-db.yml        （infra/docker/postgres/ が変わったとき）
        ├─ compose  ──▶ ci-compose.yml   （compose・Makefile・各サービスが変わったとき）
+       ├─ data     ──▶ ci-data.yml      （data/・scripts/data/ が変わったとき）
        └─ ci-ok    … 上記の結果を集約（スキップは成功扱い）← 必須チェック
 ```
 
@@ -246,6 +247,7 @@ PR / main への push
 | `ci-frontend.yml` | ゲートから / 手動 | lint / typecheck / test / build → コンテナイメージのビルド |
 | `ci-db.yml` | ゲートから / 手動 | pg_bigm のチェックサム検証 → DB イメージのスモークテスト |
 | `ci-compose.yml` | ゲートから / 手動 | `make up` → DB 設定・backend・frontend（BFF 経由）の疎通確認 |
+| `ci-data.yml` | ゲートから / 手動 | ダミーデータ（seed・規程）の整合性検査 |
 | `labels.yml` | push(main) で labels.yml 変更時 | ラベル同期 |
 | `search-eval.yml` | （#39 で追加） | 評価セット実行 → PR に結果コメント |
 | `release-please.yml` | （E16 で追加） | Release PR 生成 |
