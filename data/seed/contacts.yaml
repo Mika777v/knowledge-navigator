@@ -1,0 +1,156 @@
+# 問い合わせ窓口（すべて架空。メールは example.com、内線は架空の4桁）
+# department: departments.yaml の code
+# is_primary: 部署の代表窓口。窓口を導出できないときのフォールバック先になる（部署ごとに最大1つ）
+# topics: この窓口が受け付ける主な内容。ナビゲーションキーワードの作成に使う
+
+# ---------- 人事部 ----------
+- code: HR-REP
+  department: HR
+  name: 人事部 代表
+  description: 人事に関する総合窓口。担当がわからない場合はこちらへ。
+  email: hr@example.com
+  phone_ext: "1200"
+  chat_url: https://chat.example.com/channels/hr
+  office_hours: 平日 9:00〜17:30
+  is_primary: true
+  topics: [人事全般, 問い合わせ先がわからない]
+
+- code: HR-LABOR
+  department: HR
+  name: 人事部 労務グループ
+  description: 勤怠・休暇・休業・社会保険・扶養・住所変更などの手続き。
+  email: hr-roumu@example.com
+  phone_ext: "1234"
+  chat_url: https://chat.example.com/channels/hr-roumu
+  office_hours: 平日 9:00〜17:30
+  topics: [勤怠, 有給休暇, 特別休暇, 育児休業, 介護休業, 社会保険, 扶養, 住所変更, 氏名変更, 在宅勤務]
+
+- code: HR-PLAN
+  department: HR
+  name: 人事部 人事企画グループ
+  description: 人事評価・異動・等級・人事制度の企画。
+  email: hr-kikaku@example.com
+  phone_ext: "1240"
+  office_hours: 平日 9:00〜17:30
+  topics: [人事評価, 異動, 等級, 昇格]
+
+- code: HR-HIRE
+  department: HR
+  name: 人事部 採用・研修グループ
+  description: 入社手続き・新入社員研修・社内研修・退職手続き。
+  email: hr-saiyo@example.com
+  phone_ext: "1250"
+  office_hours: 平日 9:00〜17:30
+  topics: [入社手続き, 新入社員研修, 研修, 退職手続き]
+
+- code: HR-HEALTH
+  department: HR
+  name: 健康管理室（産業医・保健師）
+  description: 健康診断・ストレスチェック・心身の不調の相談。相談内容は人事評価に使われない。
+  email: health@example.com
+  phone_ext: "1290"
+  office_hours: 平日 10:00〜16:00（産業医面談は予約制）
+  topics: [健康診断, ストレスチェック, 体調不良, メンタルヘルス, 産業医]
+
+# ---------- 総務部 ----------
+- code: GA-REP
+  department: GA
+  name: 総務部 代表
+  description: 総務に関する総合窓口。
+  email: soumu@example.com
+  phone_ext: "1300"
+  chat_url: https://chat.example.com/channels/soumu
+  office_hours: 平日 9:00〜17:30
+  is_primary: true
+  topics: [総務全般]
+
+- code: GA-GENERAL
+  department: GA
+  name: 総務部 庶務グループ
+  description: 慶弔見舞金の支給・社宅・備品・名刺・郵便物。
+  email: shomu@example.com
+  phone_ext: "1310"
+  office_hours: 平日 9:00〜17:30
+  topics: [慶弔見舞金, 結婚祝金, 出産祝金, 弔慰金, 社宅, 備品, 名刺]
+
+- code: GA-FACILITY
+  department: GA
+  name: 総務部 ファシリティグループ
+  description: オフィス・会議室・入館証・駐車場・防災。
+  email: facility@example.com
+  phone_ext: "1320"
+  office_hours: 平日 9:00〜17:30
+  topics: [入館証, 会議室, 駐車場, 防災, 落とし物]
+
+# ---------- 経理部 ----------
+- code: FIN-REP
+  department: FIN
+  name: 経理部 代表
+  description: 経理に関する総合窓口。
+  email: keiri@example.com
+  phone_ext: "1400"
+  office_hours: 平日 9:00〜17:30
+  is_primary: true
+  topics: [経理全般, 請求書]
+
+- code: FIN-EXPENSE
+  department: FIN
+  name: 経理部 経費精算デスク
+  description: 旅費・出張・立替経費・通勤手当の支払い。
+  email: keihi@example.com
+  phone_ext: "1410"
+  chat_url: https://chat.example.com/channels/keihi
+  office_hours: 平日 9:00〜17:00（月末3営業日は混雑）
+  topics: [経費精算, 出張, 旅費, 立替, 通勤手当]
+
+# ---------- 情報システム部 ----------
+- code: IT-HELPDESK
+  department: IT
+  name: ITヘルプデスク
+  description: PC・スマートフォン・アカウント・パスワード・社内システムの問い合わせ。
+  email: helpdesk@example.com
+  phone_ext: "1500"
+  chat_url: https://chat.example.com/channels/helpdesk
+  office_hours: 平日 8:30〜18:00
+  is_primary: true
+  topics: [PC故障, パスワード, アカウント, VPN, スマートフォン, ソフトウェア]
+
+- code: IT-SECURITY
+  department: IT
+  name: 情報セキュリティ窓口
+  description: 情報漏えい・紛失・不審メールの報告（緊急時は24時間受付）。
+  email: security@example.com
+  phone_ext: "1590"
+  office_hours: 24時間（緊急時）
+  topics: [紛失, 盗難, 不審メール, 情報漏えい, ウイルス]
+
+# ---------- 法務・コンプライアンス部 ----------
+- code: LEGAL-REP
+  department: LEGAL
+  name: 法務・コンプライアンス部 代表
+  description: 契約・法務・コンプライアンスの総合窓口。
+  email: legal@example.com
+  phone_ext: "1600"
+  office_hours: 平日 9:00〜17:30
+  is_primary: true
+  topics: [契約, 法務相談, コンプライアンス]
+
+- code: LEGAL-HOTLINE
+  department: LEGAL
+  name: コンプライアンス・ハラスメント相談窓口
+  description: ハラスメント・不正行為の相談と通報。匿名での相談も受け付け、相談者の不利益な取り扱いは禁止されている。
+  email: hotline@example.com
+  phone_ext: "1690"
+  office_hours: 平日 9:00〜17:30（メールは24時間受付）
+  topics: [ハラスメント, パワハラ, セクハラ, 内部通報, 不正]
+
+# ---------- 経営企画部 ----------
+- code: PLAN-REP
+  department: PLAN
+  name: 経営企画部 代表
+  description: 組織・社内規程の体系に関する問い合わせ。
+  email: kikaku@example.com
+  phone_ext: "1700"
+  office_hours: 平日 9:00〜17:30
+  is_primary: true
+  topics: [組織図, 規程体系]

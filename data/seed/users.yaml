@@ -1,0 +1,77 @@
+# デモユーザー（すべて架空の人物）
+# パスワードはここに書かない。投入時に環境変数 DEMO_USER_PASSWORD（既定値は data/README.md 参照）を全員に設定する
+# role: EMPLOYEE / MANAGER / CONTENT_EDITOR / SYSTEM_ADMIN
+# employment_type: REGULAR（正社員）/ CONTRACT（契約社員）/ PART_TIME（パートタイム）
+# persona: docs/PRODUCT_VISION.md のペルソナとの対応
+
+- email: sato@example.com
+  display_name: 佐藤 太郎
+  department: SALES-EAST
+  role: EMPLOYEE
+  employment_type: REGULAR
+  joined_on: 2023-04-01
+  persona: 一般社員（入社3年目・結婚予定）
+
+- email: suzuki@example.com
+  display_name: 鈴木 美咲
+  department: PROD-DEV1
+  role: EMPLOYEE
+  employment_type: REGULAR
+  joined_on: 2026-10-01
+  persona: 新入社員（入社1か月）
+
+- email: yamamoto@example.com
+  display_name: 山本 さくら
+  department: SALES-WEST
+  role: EMPLOYEE
+  employment_type: CONTRACT
+  joined_on: 2025-07-01
+  persona: 契約社員（制度の対象者の違いを確認する）
+
+- email: tanaka@example.com
+  display_name: 田中 健一
+  department: SALES
+  role: MANAGER
+  employment_type: REGULAR
+  joined_on: 2010-04-01
+  persona: 管理職（部下8名）
+
+- email: takahashi@example.com
+  display_name: 高橋 由美
+  department: HR
+  role: CONTENT_EDITOR
+  employment_type: REGULAR
+  joined_on: 2015-04-01
+  persona: 人事担当（規程・制度・FAQ の管理者）
+
+- email: ito@example.com
+  display_name: 伊藤 誠
+  department: GA
+  role: CONTENT_EDITOR
+  employment_type: REGULAR
+  joined_on: 2017-10-01
+  persona: 総務担当（慶弔・社内ルール）
+
+- email: kobayashi@example.com
+  display_name: 小林 修
+  department: LEGAL
+  role: CONTENT_EDITOR
+  employment_type: REGULAR
+  joined_on: 2016-04-01
+  persona: 法務担当（ハラスメント防止規程の所管）
+
+- email: kato@example.com
+  display_name: 加藤 直樹
+  department: IT
+  role: CONTENT_EDITOR
+  employment_type: REGULAR
+  joined_on: 2019-04-01
+  persona: 情報システム部のコンテンツ担当（情報セキュリティ規程・PC貸与規程の所管）
+
+- email: watanabe@example.com
+  display_name: 渡辺 翔
+  department: IT
+  role: SYSTEM_ADMIN
+  employment_type: REGULAR
+  joined_on: 2018-04-01
+  persona: 情報システム担当（ユーザー・権限・監査を管理。職務分離のためコンテンツは編集できない）

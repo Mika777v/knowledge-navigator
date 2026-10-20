@@ -1,0 +1,58 @@
+# 架空商事株式会社の部署（すべて架空）
+# code: 一意な部署コード / parent: 親部署の code（最上位は省略）
+# 文書・制度を所管する部署には、contacts.yaml で代表窓口（is_primary: true）を1つ置く
+
+- code: HR
+  name: 人事部
+  description: 労務管理・人事制度・採用・研修・健康管理を担当する。
+  sort_order: 10
+
+- code: GA
+  name: 総務部
+  description: 慶弔・社宅・備品・オフィス・社内行事を担当する。
+  sort_order: 20
+
+- code: FIN
+  name: 経理部
+  description: 経費精算・給与以外の支払い・決算を担当する。
+  sort_order: 30
+
+- code: IT
+  name: 情報システム部
+  description: 社内システム・PC・アカウント・情報セキュリティを担当する。
+  sort_order: 40
+
+- code: LEGAL
+  name: 法務・コンプライアンス部
+  description: 契約審査・コンプライアンス・ハラスメント相談を担当する。
+  sort_order: 50
+
+- code: PLAN
+  name: 経営企画部
+  description: 経営計画・組織設計・社内規程の体系管理を担当する。
+  sort_order: 60
+
+- code: SALES
+  name: 営業部
+  description: 法人向けの販売・顧客対応を担当する。
+  sort_order: 70
+
+- code: SALES-EAST
+  name: 東日本営業課
+  parent: SALES
+  sort_order: 71
+
+- code: SALES-WEST
+  name: 西日本営業課
+  parent: SALES
+  sort_order: 72
+
+- code: PROD
+  name: 商品開発部
+  description: 自社商品の企画・開発を担当する。
+  sort_order: 80
+
+- code: PROD-DEV1
+  name: 開発第一課
+  parent: PROD
+  sort_order: 81
