@@ -3,6 +3,7 @@
 - ステータス: Accepted
 - 日付: 2026-10-20
 - 関連 Issue / PR: #22
+- 改訂: 2026-10-20 実装開始時点の最新安定版に合わせ、Spring Boot のメジャー版を 3 → 4 に修正（判断内容は変更なし、#25）
 - 関連ドキュメント: [ARCHITECTURE.md §1-2](../ARCHITECTURE.md), [TECH_STACK_DECISION.md D-01, D-02](../TECH_STACK_DECISION.md), [TECH_STACK_COMPARISON.md §1](../TECH_STACK_COMPARISON.md)
 
 ## 背景（Context）
@@ -17,7 +18,7 @@
 
 ## 決定（Decision）
 
-1. バックエンドのコア（認証・認可・ドメイン・検索のオーケストレーション）は **Spring Boot 3 / Java 21 の単一アプリケーション** とする。
+1. バックエンドのコア（認証・認可・ドメイン・検索のオーケストレーション）は **Spring Boot 4 / Java 21 の単一アプリケーション** とする。
 2. 内部はコンテキストごとのパッケージ（`organization`, `content`, `navigation`, `ingestion`, `insight`, `audit`, `assistant`, `shared`）に分け、各パッケージを `api / application / domain / infrastructure` の層で構成する。
 3. モジュール境界は **Spring Modulith** でテストにより検証する（循環依存・内部パッケージへの直接参照を禁止）。
 4. AI 処理（Embedding・RAG・PDF解析）は Phase4 で Python（FastAPI）の別サービスに切り出す（詳細は将来の ADR-0006）。それまではサービスを増やさない。

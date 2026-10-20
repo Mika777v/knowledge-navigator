@@ -25,7 +25,7 @@
 ```mermaid
 flowchart LR
   U[利用者ブラウザ] --> FE[frontend<br/>Next.js App Router<br/>BFF Route Handlers]
-  FE -->|REST /api/v1<br/>session cookie転送| BE[backend<br/>Spring Boot 3 / Java 21<br/>Modular Monolith]
+  FE -->|REST /api/v1<br/>session cookie転送| BE[backend<br/>Spring Boot 4 / Java 21<br/>Modular Monolith]
   BE --> PG[(PostgreSQL 17<br/>pg_bigm)]
   BE -.Phase2.-> S3[(MinIO / S3<br/>PDF保管)]
 ```

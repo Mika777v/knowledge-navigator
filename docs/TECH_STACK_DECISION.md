@@ -11,7 +11,7 @@
 |---|---|---|
 | Frontend | Next.js 15系（App Router, TypeScript）+ Tailwind CSS + shadcn/ui + TanStack Query | 1 |
 | BFF | Next.js Route Handlers（`/api/*` を backend へプロキシ、SSE中継） | 1 |
-| Backend | Spring Boot 3.x / Java 21 / Gradle (Kotlin DSL) / Spring Security / Spring Modulith | 1 |
+| Backend | Spring Boot 4.x / Java 21 / Gradle (Kotlin DSL) / Spring Security / Spring Modulith | 1 |
 | DB | PostgreSQL 17 | 1 |
 | 日本語検索 | pg_bigm（Phase1）→ + Sudachi 正規化 tsvector（Phase3） | 1 / 3 |
 | マイグレーション | Flyway | 1 |

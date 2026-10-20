@@ -49,7 +49,7 @@ MVP: `backend/` `frontend/` `data/{seed,eval}/` `infra/docker/` `docs/{adr,api}/
 
 ### 4. 推奨技術構成
 
-Next.js（BFF）/ Spring Boot 3・Java 21（モジュラーモノリス）/ PostgreSQL 17（pg_bigm → Sudachi → pgvector）/ FastAPI ai-service（Phase4〜）/ Ollama・Azure OpenAI・OpenAI 切替 / Docker Compose / GitHub Actions
+Next.js（BFF）/ Spring Boot 4・Java 21（モジュラーモノリス）/ PostgreSQL 17（pg_bigm → Sudachi → pgvector）/ FastAPI ai-service（Phase4〜）/ Ollama・Azure OpenAI・OpenAI 切替 / Docker Compose / GitHub Actions
 
 ### 5. 技術比較結果
 

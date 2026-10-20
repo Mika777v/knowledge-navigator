@@ -33,7 +33,7 @@ make help    # コマンド一覧
 
 ## 予定技術スタック
 
-Next.js / Spring Boot 3 (Java 21) / PostgreSQL 17 (pg_bigm, pgvector) / FastAPI / Ollama・Azure OpenAI・OpenAI
+Next.js / Spring Boot 4 (Java 21) / PostgreSQL 17 (pg_bigm, pgvector) / FastAPI / Ollama・Azure OpenAI・OpenAI
 
 ## ライセンス
 

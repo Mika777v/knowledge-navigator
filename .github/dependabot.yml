@@ -17,3 +17,24 @@ updates:
       prefix: build
       include: scope
     labels: ["area:db", "dependencies"]
+
+  - package-ecosystem: gradle
+    directory: /backend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:backend", "dependencies"]
+    groups:
+      spring:
+        patterns: ["org.springframework*"]
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:backend", "dependencies"]
