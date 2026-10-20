@@ -11,6 +11,20 @@
 
 設計フェーズ（Phase0）。実装は [ROADMAP](docs/ROADMAP.md) に沿って進めます。
 
+## ローカルで動かす
+
+必要なもの: Docker（Compose v2）、make
+
+```bash
+make up      # .env が無ければ .env.example から作成し、ビルドして起動
+make psql    # DB に接続
+make down    # 停止（データは残る）
+make clean   # 停止してデータも削除
+make help    # コマンド一覧
+```
+
+現時点で起動するのは PostgreSQL（pg_bigm / pgvector 入り）のみです。backend・frontend は順次追加します。
+
 ## ドキュメント
 
 - [設計ドキュメント一覧・最終まとめ](docs/README.md)
