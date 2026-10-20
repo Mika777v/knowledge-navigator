@@ -56,7 +56,7 @@ SELECT bigm_similarity('結婚祝金', '結婚');
 | 対象 | 手順 |
 |---|---|
 | ベースイメージ（pgvector / PostgreSQL のマイナー版） | Dependabot が PR を作る。`ci-db` ワークフローのスモークテストが通ればマージ |
-| pg_bigm | `PG_BIGM_VERSION` と `PG_BIGM_SHA256` を両方更新する。SHA-256 は `curl -fsSL <tarball URL> \| sha256sum` で求める |
+| pg_bigm | `PG_BIGM_VERSION` と `PG_BIGM_SHA256` を両方更新する。SHA-256 は `curl -fsSL <tarball URL> \| sha256sum` で求めるか、`ci-db` の「Verify pg_bigm checksum」が不一致時に PR の注釈へ実際の値を出すのでそれを使う |
 | PostgreSQL のメジャー版 | タグを `pg18` 系に変え、pg_bigm がそのメジャー版に対応しているかリリースノートで確認する。既存データはダンプ/リストアが必要 |
 
 ## 注意
