@@ -235,7 +235,7 @@ Settings → Actions → General → Workflow permissions は既定の **Read re
 | セキュリティ機能 | ✅ 適用済み | 同上 |
 | main の Ruleset `main-protection` | ✅ 適用済み（active） | 同上。**以後 main への直接 push は不可** |
 | GitHub Projects（#1、フィールド5種） | ✅ 適用済み | Codespaces で `setup-project.sh` |
-| Projects の Status・Iteration・ビュー・自動化 | ⏳ 手動設定待ち | §5 |
+| Projects の Status・Iteration・ビュー6種・自動化 | ✅ 適用済み | 画面で手動設定（§5） |
 
 ---
 
