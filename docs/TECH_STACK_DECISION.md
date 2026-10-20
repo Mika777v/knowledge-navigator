@@ -98,6 +98,8 @@
 
 ## 4. ADR 初期リスト
 
+> 作成済みの ADR と予定は [adr/README.md](./adr/README.md) を参照。
+
 | No | タイトル |
 |---|---|
 | 0001 | モジュラーモノリス（Spring Boot）を採用する |
