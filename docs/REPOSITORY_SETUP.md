@@ -226,15 +226,38 @@ Settings → Actions → General → Workflow permissions は既定の **Read re
 
 ### 7.1 適用状況（2026-10-20 時点）
 
-Claude Code のクラウドセッションからは、リポジトリ設定・Rulesets・セキュリティ設定の書き込みと GraphQL（Projects）が
-制限されているため、一部はリポジトリ管理者がローカルで実行する必要がある。
-
-| 項目 | 状態 | 備考 |
+| 項目 | 状態 | 適用方法 |
 |---|---|---|
-| `.github/` のテンプレート・CODEOWNERS・dependabot・ワークフロー | ✅ 適用済み | main に push 済み |
+| `.github/` のテンプレート・CODEOWNERS・dependabot・ワークフロー | ✅ 適用済み | main に push |
 | ラベル（30件） | ✅ 適用済み | `labels` ワークフローで同期。デフォルトラベルは削除済み |
-| Milestones（v0.1.0〜v0.6.0） | ✅ 適用済み | REST API で作成 |
-| マージ方式・Topics・説明 | ⏳ 未適用 | ローカルで `scripts/github/setup-repo.sh` を実行 |
-| セキュリティ機能 | ⏳ 未適用 | 同上 |
-| main の Ruleset | ⏳ 未適用 | 同上（**これ以降 main への直接 push は不可になる**） |
-| GitHub Projects | ⏳ 未適用 | ローカルで `gh auth refresh -s project` → `scripts/github/setup-project.sh`、その後 §5 の手動設定 |
+| Milestones（v0.1.0〜v0.6.0） | ✅ 適用済み | REST API |
+| マージ方式・Topics・説明 | ✅ 適用済み | Codespaces で `setup-repo.sh` |
+| セキュリティ機能 | ✅ 適用済み | 同上 |
+| main の Ruleset `main-protection` | ✅ 適用済み（active） | 同上。**以後 main への直接 push は不可** |
+| GitHub Projects（#1、フィールド5種） | ✅ 適用済み | Codespaces で `setup-project.sh` |
+| Projects の Status・Iteration・ビュー6種・自動化 | ✅ 適用済み | 画面で手動設定（§5） |
+
+---
+
+## 8. Codespaces からスクリプトを実行する方法
+
+Claude Code のクラウドセッションからは、リポジトリ設定・Rulesets・セキュリティ設定の書き込みと
+GraphQL（Projects）が制限されている。また Codespaces が自動で設定する `GITHUB_TOKEN` も権限が足りない。
+そのため、管理者本人のアカウントでログインし直して実行する。
+
+1. リポジトリの **Code → Codespaces → Create codespace on main**
+2. ターミナルで実行:
+
+```bash
+unset GITHUB_TOKEN GH_TOKEN                # Codespaces 既定のトークンを外す（このシェル内のみ）
+gh auth login -h github.com -s project     # GitHub.com / HTTPS / Login with a web browser
+gh auth status                              # 自分のアカウントでログインしていることを確認
+
+scripts/github/setup-repo.sh
+scripts/github/setup-project.sh
+```
+
+3. ターミナルを開き直した場合は `unset` からやり直す。
+4. 使い終わった Codespace は削除する（無料枠の消費を防ぐ）。
+
+ローカル PC に gh CLI がある場合は、手順 2 の `unset` 以外をそのまま実行すればよい。
