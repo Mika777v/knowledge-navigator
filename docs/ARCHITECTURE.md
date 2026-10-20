@@ -102,7 +102,9 @@ backend/src/main/java/com/example/knavi/
 
 | Method | Path | ロール |
 |---|---|---|
-| CRUD | `/admin/documents`、`POST /admin/documents/{id}/versions`、`POST /admin/documents/{id}/publish`、`/archive` | EDITOR（所管） |
+| GET/POST/PUT | `/admin/documents`、`/admin/documents/{id}`（更新は `If-Match` 必須） | EDITOR（所管） |
+| GET/POST/PUT | `/admin/documents/{id}/versions`、`/versions/{versionId}`（本文は条単位に自動分割。公開済みの版は更新不可） | EDITOR（所管） |
+| POST | `/admin/documents/{id}/publish`（`{versionId}`）、`/admin/documents/{id}/archive`（`If-Match` 必須） | EDITOR（所管） |
 | CRUD | `/admin/programs`、`PUT /admin/programs/{id}/basis`、`PUT /admin/programs/{id}/contacts` | EDITOR（所管） |
 | CRUD | `/admin/faqs`、`/admin/life-events`、`/admin/navigation-keywords`、`/admin/synonyms` | EDITOR |
 | CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |

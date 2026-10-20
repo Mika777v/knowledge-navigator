@@ -1,6 +1,7 @@
 package com.example.knavi.organization.infrastructure;
 
 import com.example.knavi.organization.domain.User;
+import com.example.knavi.shared.security.AuthenticatedUser;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -10,12 +11,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /** セッションに保存する認証済みユーザー。最新の属性は /me で DB から読み直す */
-public record KnaviUserDetails(UUID id, String email, String passwordHash, String role, boolean active)
-        implements UserDetails, Serializable {
+public record KnaviUserDetails(
+        UUID id, UUID departmentId, String email, String passwordHash, String role, boolean active)
+        implements UserDetails, AuthenticatedUser, Serializable {
 
     static KnaviUserDetails from(User user) {
         return new KnaviUserDetails(
                 user.getId(),
+                user.getDepartment() == null ? null : user.getDepartment().getId(),
                 user.getEmail(),
                 user.getPasswordHash(),
                 user.getRole().name(),

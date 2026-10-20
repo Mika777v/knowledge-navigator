@@ -46,6 +46,8 @@ class AuthController {
     @Operation(summary = "CSRF トークンを発行する（XSRF-TOKEN Cookie を設定する）。ログイン前に1回呼ぶ")
     @GetMapping("/auth/csrf")
     Map<String, String> csrf(CsrfToken token) {
+        // トークンは遅延生成されるため、値を読んで生成させる（このとき XSRF-TOKEN Cookie が設定される）
+        token.getToken();
         return Map.of("headerName", token.getHeaderName());
     }
 
