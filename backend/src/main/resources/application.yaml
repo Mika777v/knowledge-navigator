@@ -13,9 +13,20 @@ spring:
     locations: classpath:db/migration
   jackson:
     time-zone: Asia/Tokyo
+  mvc:
+    problemdetails:
+      enabled: true
 
 server:
   shutdown: graceful
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: lax
+        # 本番（HTTPS）では true にする
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 management:
   endpoints:
