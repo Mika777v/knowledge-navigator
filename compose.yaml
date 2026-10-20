@@ -1,5 +1,5 @@
 # ローカル開発・デモ用の構成。
-# backend（#25）/ frontend（#26）は各 Issue でサービスを追加する。
+# frontend は #26 でサービスを追加する。
 # 使い方は README.md の「ローカルで動かす」または `make help` を参照。
 
 name: knowledge-navigator
@@ -26,6 +26,27 @@ services:
       timeout: 3s
       retries: 20
       start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: knowledge-navigator/backend:local
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Tokyo
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
     restart: unless-stopped
 
 volumes:
