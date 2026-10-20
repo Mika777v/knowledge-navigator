@@ -1,26 +1,9 @@
 name: ci-compose
 
 # `make up` で全サービスが起動し、連携できることを確認する
+# ci.yml（ゲート）から、関係するファイルが変わったときだけ呼ばれる。手動実行も可
 on:
-  pull_request:
-    paths:
-      - compose.yaml
-      - .env.example
-      - Makefile
-      - backend/**
-      - frontend/**
-      - infra/docker/postgres/**
-      - .github/workflows/ci-compose.yml
-  push:
-    branches: [main]
-    paths:
-      - compose.yaml
-      - .env.example
-      - Makefile
-      - backend/**
-      - frontend/**
-      - infra/docker/postgres/**
-      - .github/workflows/ci-compose.yml
+  workflow_call:
   workflow_dispatch:
 
 permissions:

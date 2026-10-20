@@ -121,14 +121,16 @@ JSON で丸ごと定義でき、画面でも API でも同じ構造で扱える�
 |---|---|---|
 | 対象 | `~DEFAULT_BRANCH`（main） | デフォルトブランチ名が変わっても追従 |
 | `pull_request` | 必須、承認数 0、会話の解決必須、squash のみ | 直接 push 禁止。1人開発のため自分の PR を承認できない問題を承認数 0 で回避 |
-| `required_status_checks` | `conventional-commits` | PRタイトル検証が通らないとマージ不可 |
+| `required_status_checks` | `conventional-commits`、`ci-ok` | PRタイトル検証と CI（ゲートで集約）が通らないとマージ不可 |
 | `non_fast_forward` | 有効 | force push 禁止 |
 | `deletion` | 有効 | main の削除禁止 |
 | `required_linear_history` | 有効 | マージコミット禁止 |
 | `bypass_actors` | なし | **管理者も PR 経由**（設計どおり運用するため） |
 
-**必須チェックの追加方法**: backend / frontend の CI ワークフローを作ったら、スクリプトの `required_status_checks` にジョブ名（例: `backend-build`）を追加して再実行する。
-**まだ存在しないジョブを必須にすると、どの PR もマージできなくなる**ため、ワークフローが main で一度動いてから追加する。
+**必須チェックの考え方**: 個々の CI（backend / frontend など）は変更されたファイルに応じてしか実行されないため、直接必須にはしない。
+常に実行されるゲートジョブ `ci-ok`（`.github/workflows/ci.yml`）に結果を集約し、それを必須にする（GITHUB_WORKFLOW.md §8）。
+新しい CI を追加しても、ゲートに組み込めば Ruleset の変更は不要。
+**まだ存在しないジョブを必須にすると、どの PR もマージできなくなる**ため、`ci-ok` を必須にするのは `ci.yml` が main に入った後に行う。
 
 確認方法: Settings → Rules → Rulesets → `main-protection`、または
 `gh api repos/Mika777v/knowledge-navigator/rulesets`

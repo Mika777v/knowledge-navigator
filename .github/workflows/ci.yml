@@ -1,0 +1,93 @@
+name: ci
+
+# すべての PR と main への push で動くゲート。
+# 変更されたファイルに応じて各 CI（再利用ワークフロー）を呼び、最後の ci-ok ジョブで結果をまとめる。
+# main の必須チェックは ci-ok と pr-title（conventional-commits）の2つだけにする（scripts/github/setup-repo.sh）。
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      db: ${{ steps.filter.outputs.db }}
+      compose: ${{ steps.filter.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # ci.yml 自体の変更では全 CI を実行する
+          filters: |
+            gate: &gate
+              - .github/workflows/ci.yml
+            backend:
+              - *gate
+              - backend/**
+              - infra/docker/postgres/**
+              - .github/workflows/ci-backend.yml
+            frontend:
+              - *gate
+              - frontend/**
+              - .github/workflows/ci-frontend.yml
+            db:
+              - *gate
+              - infra/docker/postgres/**
+              - .github/workflows/ci-db.yml
+            compose:
+              - *gate
+              - compose.yaml
+              - .env.example
+              - Makefile
+              - backend/**
+              - frontend/**
+              - infra/docker/postgres/**
+              - .github/workflows/ci-compose.yml
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    uses: ./.github/workflows/ci-backend.yml
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/ci-frontend.yml
+
+  db:
+    needs: changes
+    if: needs.changes.outputs.db == 'true'
+    uses: ./.github/workflows/ci-db.yml
+
+  compose:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
+    uses: ./.github/workflows/ci-compose.yml
+
+  # 必須チェック。スキップされた CI は成功扱い、失敗・キャンセルがあれば失敗にする
+  ci-ok:
+    if: always()
+    needs: [changes, backend, frontend, db, compose]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "results: $RESULTS"
+          if echo "$RESULTS" | grep -qE '"(failure|cancelled)"'; then
+            echo "::error::いずれかの CI が失敗またはキャンセルされました"
+            exit 1
+          fi

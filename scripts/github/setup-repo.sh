@@ -68,8 +68,8 @@ create_milestone "v0.6.0 Assistant"  2027-04-30 "Phase6: AIアシスタント試
 # ---------------------------------------------------------------
 # 4. main ブランチ保護（Repository Ruleset）
 #    - PR 必須（1人開発のため承認数は 0、会話の解決は必須）
-#    - 必須チェック: pr-title ワークフローの conventional-commits ジョブ
-#      （backend / frontend の CI を作ったら required_status_checks に追加する）
+#    - 必須チェック: pr-title の conventional-commits と、ci のゲートジョブ ci-ok
+#      （各 CI は ci.yml から変更に応じて呼ばれ、結果は ci-ok に集約される）
 #    - force push・削除禁止、linear history
 #    - bypass なし（管理者も PR 経由）
 # ---------------------------------------------------------------
@@ -98,7 +98,8 @@ RULESET_JSON=$(cat <<'JSON'
       "parameters": {
         "strict_required_status_checks_policy": false,
         "required_status_checks": [
-          { "context": "conventional-commits" }
+          { "context": "conventional-commits" },
+          { "context": "ci-ok" }
         ]
       } }
   ]

@@ -220,19 +220,38 @@ body:
 
 ## 8. GitHub Actions
 
+### 8.1 構成: ゲート + 再利用ワークフロー
+
+```
+PR / main への push
+  └─ ci.yml（ゲート）
+       ├─ changes        … 変更されたファイルを判定（dorny/paths-filter）
+       ├─ backend  ──▶ ci-backend.yml   （backend/・DB イメージが変わったとき）
+       ├─ frontend ──▶ ci-frontend.yml  （frontend/ が変わったとき）
+       ├─ db       ──▶ ci-db.yml        （infra/docker/postgres/ が変わったとき）
+       ├─ compose  ──▶ ci-compose.yml   （compose・Makefile・各サービスが変わったとき）
+       └─ ci-ok    … 上記の結果を集約（スキップは成功扱い）← 必須チェック
+```
+
+各 CI にパスフィルターを直接書いて必須チェックにすると、関係ない PR ではチェックが実行されず「待機中」のままマージできなくなる。
+そのため、常に実行されるゲートジョブ `ci-ok` だけを必須にしている。
+
+### 8.2 ワークフロー一覧
+
 | Workflow | トリガー | 内容 |
 |---|---|---|
-| `ci-backend.yml` | PR / push(main), `backend/**` | Gradle build, test（Testcontainers）, Spotless, Modulith検証, JaCoCo |
-| `ci-frontend.yml` | `frontend/**` | pnpm install, lint, type-check, Vitest, build |
-| `ci-ai.yml` | `ai-service/**`（Phase4〜） | uv sync, ruff, mypy, pytest |
-| `e2e.yml` | PR（ラベル `e2e`）/ nightly | compose 起動 → Playwright |
-| `search-eval.yml` | `backend/**/navigation/**`, `data/**` | シード投入 → 評価セット実行 → PRに結果コメント |
-| `openapi.yml` | `backend/**` | OpenAPI 生成と差分チェック（破壊的変更検出） |
-| `pr-title.yml` | PR | Conventional Commits 検証 |
-| `release-please.yml` | push(main) | Release PR 生成 |
-| `codeql.yml` / `trivy.yml` | 週次 + PR | セキュリティスキャン |
+| `ci.yml` | 全 PR / push(main) | 変更判定 → 各 CI を呼ぶ → `ci-ok` で集約（**必須**） |
+| `pr-title.yml` | PR | PR タイトルの Conventional Commits 検証（`conventional-commits` が**必須**） |
+| `ci-backend.yml` | ゲートから / 手動 | DB イメージのビルド → Gradle build・test（Testcontainers）→ コンテナイメージのビルド |
+| `ci-frontend.yml` | ゲートから / 手動 | lint / typecheck / test / build → コンテナイメージのビルド |
+| `ci-db.yml` | ゲートから / 手動 | pg_bigm のチェックサム検証 → DB イメージのスモークテスト |
+| `ci-compose.yml` | ゲートから / 手動 | `make up` → DB 設定・backend・frontend（BFF 経由）の疎通確認 |
+| `labels.yml` | push(main) で labels.yml 変更時 | ラベル同期 |
+| `search-eval.yml` | （#39 で追加） | 評価セット実行 → PR に結果コメント |
+| `release-please.yml` | （E16 で追加） | Release PR 生成 |
+| `codeql.yml` / `trivy.yml` | （E16 で追加） | セキュリティスキャン |
 
----
+新しい CI を追加するときは、`workflow_call` で再利用ワークフローとして作り、`ci.yml` の `changes` と `ci-ok` の `needs` に加える。
 
 ## 9. GitHub Projects 運用
 
