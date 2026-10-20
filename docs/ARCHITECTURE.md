@@ -1,0 +1,403 @@
+# ARCHITECTURE — 社内規程ナビ
+
+> ステータス: Draft v0.1 / 2026-10-20
+> 内容: システム構成 / API設計 / 検索アーキテクチャ / AI導入アーキテクチャ / セキュリティ / ディレクトリ構成
+
+---
+
+## 1. アーキテクチャ方針
+
+| 方針 | 内容 |
+|---|---|
+| **モジュラーモノリスから始める** | MVPは `frontend` + `backend` + `PostgreSQL` の3コンテナ。境界はパッケージで切り、分割は必要になってから |
+| **AIは後付け可能な別サービス** | Phase4で Python の `ai-service` を追加。backend は検索の「オーケストレーター」であり続ける |
+| **PostgreSQLに寄せる** | 全文検索（pg_bigm）もベクトル（pgvector）も同一DB。トランザクション整合と権限フィルタを1クエリで実現 |
+| **検索エンジンは差し替え可能に** | `SearchPort` インターフェースを切り、規模拡大時に OpenSearch 実装を追加できる |
+| **LLMプロバイダは設定で切替** | Ollama（ローカル・外部送信なし）/ OpenAI / Azure OpenAI |
+| **スキーマ駆動** | OpenAPI を正とし、フロントの型（TypeScript）を自動生成 |
+
+---
+
+## 2. システム構成
+
+### 2.1 MVP（Phase1-3）
+
+```mermaid
+flowchart LR
+  U[利用者ブラウザ] --> FE[frontend<br/>Next.js App Router<br/>BFF Route Handlers]
+  FE -->|REST /api/v1<br/>session cookie転送| BE[backend<br/>Spring Boot 3 / Java 21<br/>Modular Monolith]
+  BE --> PG[(PostgreSQL 17<br/>pg_bigm)]
+  BE -.Phase2.-> S3[(MinIO / S3<br/>PDF保管)]
+```
+
+### 2.2 将来（Phase4-6）
+
+```mermaid
+flowchart LR
+  U[ブラウザ] --> FE[frontend Next.js]
+  FE --> BE[backend Spring Boot<br/>認証・認可・検索オーケストレーション]
+  BE --> PG[(PostgreSQL<br/>pg_bigm + pgvector)]
+  BE -->|内部API<br/>許可済みID集合を渡す| AI[ai-service<br/>FastAPI / Python]
+  AI --> PG
+  AI --> LLM{{LLM Gateway<br/>Ollama / OpenAI / Azure OpenAI}}
+  W[ingest-worker<br/>PDF解析・Embedding] --> PG
+  W --> S3[(MinIO / S3)]
+  BE -->|ジョブ投入<br/>PG queue| W
+```
+
+**権限は backend だけが判定する**。ai-service は「この ID 集合の中から検索せよ」という形で backend から許可済みの範囲を受け取り、自分では認可を持たない（ゼロトラスト的な責務分離、かつ認可ロジックの二重実装を防ぐ）。
+
+### 2.3 backend モジュール構成
+
+```
+backend/src/main/java/com/example/knavi/
+├── shared/           # 共通（ID、時刻、例外、AccessPolicy）
+├── organization/     # 部署・窓口・ユーザー
+├── content/          # 文書・版・セクション・制度・FAQ・カテゴリ・タグ
+├── navigation/       # クエリ解析・辞書・検索・結果組立（SearchPort）
+├── ingestion/        # Phase2: ファイル・PDF解析・ジョブ
+├── insight/          # 検索ログ・フィードバック・評価
+├── audit/            # 監査ログ
+└── assistant/        # Phase5: ai-service クライアント、会話
+    各モジュール: api/ (Controller, DTO) / application/ (UseCase) / domain/ / infrastructure/ (JPA, jOOQ)
+```
+
+モジュール間依存は **Spring Modulith** で検証（循環依存をテストで検出）。
+
+---
+
+## 3. API設計
+
+- ベース: `/api/v1`、JSON、OpenAPI 3.1（`backend` から springdoc で生成し `docs/api/openapi.yaml` にコミット）
+- 認証: セッションCookie（HttpOnly, Secure, SameSite=Lax）+ CSRFトークン。将来 OIDC
+- エラー: RFC 9457 Problem Details
+- ページング: `?page=&size=`（管理画面）、検索は `limit` のみ
+- 楽観ロック: 更新系は `If-Match: <row_version>`
+
+### 3.1 利用者向け API
+
+| Method | Path | 説明 | Phase |
+|---|---|---|---|
+| POST | `/auth/login` / `/auth/logout` | ログイン/ログアウト | 1 |
+| GET | `/me` | ログインユーザー情報・ロール | 1 |
+| **GET** | **`/navigate?q=`** | **ナビゲーション検索（制度/文書/セクション/FAQ/窓口の4ブロック）** | 1 |
+| GET | `/search/suggest?q=` | サジェスト | 3 |
+| GET | `/life-events` / `/life-events/{code}` | きっかけ一覧/詳細（紐づく制度） | 1 |
+| GET | `/programs/{id}` | 制度詳細（根拠条文・窓口・関連FAQ） | 1 |
+| GET | `/documents?categoryId=&tag=` | 文書一覧 | 1 |
+| GET | `/documents/{id}` | 文書詳細（最新版、目次） | 1 |
+| GET | `/documents/{id}/versions` / `/{id}/versions/{versionId}` | 版履歴 | 1 |
+| GET | `/sections/{id}` | セクション単体（引用リンク先） | 1 |
+| GET | `/sections/{id}/similar` | 類似条文 | 4 |
+| GET | `/faqs` / `/faqs/{id}` | FAQ | 1 |
+| GET | `/departments` / `/contacts` | 部署・窓口 | 1 |
+| GET | `/categories` | カテゴリツリー | 1 |
+| POST | `/search-logs/{id}/clicks` | クリック記録 | 1 |
+| POST | `/search-logs/{id}/feedback` | フィードバック | 1 |
+| POST | `/assistant/answers` (SSE) | 根拠付き回答生成 | 5 |
+| POST | `/assistant/sessions` / `/{id}/messages` | 対話 | 6 |
+
+### 3.2 管理 API（`/api/v1/admin`）
+
+| Method | Path | ロール |
+|---|---|---|
+| CRUD | `/admin/documents`、`POST /admin/documents/{id}/versions`、`POST /admin/documents/{id}/publish`、`/archive` | EDITOR（所管） |
+| CRUD | `/admin/programs`、`PUT /admin/programs/{id}/basis`、`PUT /admin/programs/{id}/contacts` | EDITOR（所管） |
+| CRUD | `/admin/faqs`、`/admin/life-events`、`/admin/navigation-keywords`、`/admin/synonyms` | EDITOR |
+| CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |
+| POST | `/admin/files`（multipart）→ `POST /admin/ingestion-jobs` | EDITOR（Phase2） |
+| GET | `/admin/ingestion-jobs/{id}` | EDITOR（Phase2） |
+| GET | `/admin/analytics/zero-hits`、`/top-queries`、`/feedback` | EDITOR/ADMIN |
+| GET | `/admin/audit-logs` | ADMIN |
+| POST | `/admin/evaluations/run`、GET `/admin/evaluations` | ADMIN |
+
+### 3.3 `GET /api/v1/navigate?q=結婚したら何か制度ある？` レスポンス例
+
+```json
+{
+  "searchLogId": "0192f1c4-...",
+  "query": { "raw": "結婚したら何か制度ある？", "normalized": "結婚", "matchedLifeEvents": ["MARRIAGE"], "expandedTerms": ["結婚", "婚姻", "入籍"] },
+  "programs": [
+    {
+      "id": "...", "name": "結婚祝金", "summary": "社員が婚姻したときに支給", "benefit": "30,000円",
+      "deadline": "入籍後6か月以内",
+      "basis": [{ "documentId": "...", "documentTitle": "慶弔見舞金規程", "versionLabel": "v2.1", "sectionId": "...", "articleNo": "第5条" }],
+      "score": 0.92, "reasons": ["LIFE_EVENT:結婚", "KEYWORD:結婚"]
+    },
+    { "id": "...", "name": "結婚休暇", "benefit": "連続5日", "basis": [{ "documentTitle": "就業規則", "articleNo": "第32条" }], "score": 0.88 }
+  ],
+  "documents": [
+    {
+      "id": "...", "title": "慶弔見舞金規程", "versionLabel": "v2.1", "effectiveFrom": "2026-04-01",
+      "sections": [{ "id": "...", "articleNo": "第5条", "heading": "結婚祝金", "snippet": "社員が<em>婚姻</em>したときは…", "page": null }]
+    }
+  ],
+  "faqs": [{ "id": "...", "question": "入籍前に申請できますか？" }],
+  "contacts": [
+    { "id": "...", "name": "人事部 労務グループ", "department": "人事部", "phoneExt": "1234", "email": "hr-roumu@example.com", "officeHours": "平日 9:00-17:30", "reason": "結婚休暇の問い合わせ先" },
+    { "id": "...", "name": "総務部 庶務グループ", "department": "総務部", "reason": "結婚祝金の支給窓口" }
+  ],
+  "relatedPrograms": [{ "name": "扶養家族の追加" }, { "name": "通勤手当の変更" }],
+  "fallback": false
+}
+```
+
+---
+
+## 4. 検索アーキテクチャ
+
+### 4.1 日本語検索の前提（重要）
+
+PostgreSQL 標準の Full Text Search（`to_tsvector`）は **日本語の分かち書きを行わない**ため、そのままでは日本語検索に使えない。選択肢:
+
+| 方式 | 内容 | 採用 |
+|---|---|---|
+| **pg_bigm** | 2-gram の GIN インデックスで `LIKE '%結婚%'` を高速化、`bigm_similarity` でスコア | **MVP採用**（導入が簡単、取りこぼしが少ない） |
+| アプリ側形態素解析 + tsvector | Sudachi（Java版 / Python版）で分かち書き・正規化形を `simple` 構成の tsvector に格納 | **Phase3で併用**（表記ゆれ・ランキング改善） |
+| PGroonga | 高機能な日本語全文検索 | 代替案（マネージドDBでの提供状況に依存） |
+| OpenSearch + kuromoji/sudachi | 本格的な検索エンジン | 規模拡大時の移行先 |
+
+> pg_bigm は公式 postgres イメージに含まれないため、独自 Dockerfile でビルドする。マネージドDB（RDS / Cloud SQL / Azure）での利用可否は採用前に要確認。
+
+### 4.2 ナビゲーション検索パイプライン
+
+```mermaid
+flowchart TB
+  Q[質問文] --> N[1. 正規化<br/>NFKC・記号除去・口語ストップワード除去<br/>「したら」「ある？」「教えて」]
+  N --> T[2. 語抽出<br/>MVP: 辞書最長一致 + 2文字以上の名詞句<br/>Phase3: Sudachi形態素解析]
+  T --> X[3. 展開<br/>Phase3: 類義語グループ展開]
+  X --> D[4. 辞書ヒット<br/>navigation_keywords → 制度/きっかけ]
+  X --> F[5. 全文検索<br/>programs / sections / faqs<br/>pg_bigm]
+  X -.Phase4.-> V[5'. ベクトル検索<br/>pgvector]
+  D --> R[6. 権限フィルタ済み候補の統合・スコアリング]
+  F --> R
+  V -.-> R
+  R --> A[7. 結果組立<br/>制度→根拠セクション→文書<br/>窓口導出ルール適用]
+  A --> L[8. 検索ログ記録]
+```
+
+**権限フィルタは 5 の SQL 内で適用する**（`visibility` 条件 + `access_rules` の EXISTS）。
+
+### 4.3 スコアリング（MVP）
+
+```
+score(item) = Σ  w_source × match_strength
+  w_source:  辞書(きっかけ/制度直撃)=3.0, 制度名一致=2.5, FAQ質問一致=2.0,
+             見出し一致=1.5, 本文一致=1.0
+  match_strength: bigm_similarity または 完全一致=1.0
+  + 鮮度ボーナス（直近改定）、Phase3でクリック率を加味
+```
+
+- 重みは設定ファイル化し、**評価用質問セットで A/B 比較**して決める。
+- 制度がヒットしたら、その根拠セクション・文書を自動的に結果に含める（「制度経由の文書」）。
+
+### 4.4 検索品質評価
+
+```yaml
+# data/eval/questions.yaml
+- q: 結婚したら何か制度ある？
+  expect:
+    programs: [PRG-MARRIAGE-GIFT, PRG-MARRIAGE-LEAVE]
+    contacts: [HR-LABOR]
+- q: PC壊れた
+  expect:
+    contacts: [IT-HELPDESK]
+    documents: [REG-IT-002]
+```
+
+- 指標: Hit@1, Hit@5, MRR, 窓口正答率, ゼロヒット率
+- GitHub Actions で PR ごとに実行し、**前回 main 比で悪化したら警告コメント**
+
+### 4.5 検索エンジン差し替え
+
+```java
+public interface SearchPort {
+  SearchCandidates search(NormalizedQuery q, AccessScope scope, int limit);
+}
+// 実装: PgBigmSearchAdapter (MVP) / HybridSearchAdapter (Phase4) / OpenSearchAdapter (将来)
+```
+
+**OpenSearch への移行判断基準**: セクション数 100万超、または複数言語・高度な分析（ファセット集計・ハイライト高度化）が必要になった時点。それまでは PostgreSQL 一本の方が運用・権限整合の面で有利。
+
+---
+
+## 5. AI導入アーキテクチャ
+
+### 5.1 段階的導入
+
+| Phase | AIの役割 | 失敗時の挙動 |
+|---|---|---|
+| 1-3 | なし | — |
+| 4 | Embedding による意味検索（言い換え吸収） | ベクトル検索を無効化しキーワード検索のみで動作 |
+| 5 | 検索結果を文脈にした回答文生成（RAG） | 回答文を出さず、Phase1の4ブロック結果のみ表示 |
+| 6 | 確認質問・制度網羅・チェックリスト化 | 通常検索にフォールバック |
+
+**AIは常に「上乗せ」であり、AI停止時もナビゲーションは機能する**（Graceful Degradation）。
+
+### 5.2 Embedding / インデックス
+
+| 項目 | 方針 |
+|---|---|
+| 単位 | セクション（条単位）。長い条は 600〜800字で分割、前後 100字オーバーラップ。見出しパス（文書名 > 章 > 条）を先頭に付与 |
+| 対象 | `INTERNAL`/`MANAGERS`/`RESTRICTED` の公開済み最新版、FAQ、制度。**CONFIDENTIAL は対象外** |
+| モデル | ローカル: `bge-m3`（Ollama, 1024次元, 多言語） / クラウド: `text-embedding-3-small`（OpenAI / Azure OpenAI） |
+| 更新 | 版公開イベント → ジョブキュー（PostgreSQL の `SELECT ... FOR UPDATE SKIP LOCKED`）→ ingest-worker が差分計算（`content_hash`） |
+| 再計算 | モデル変更時は新モデルで並行生成 → 評価 → 切替（Blue/Green） |
+
+### 5.3 ハイブリッド検索
+
+```
+keyword_hits  = pg_bigm 上位50件（権限フィルタ済）
+vector_hits   = pgvector 上位50件（同じ権限フィルタを WHERE 句で）
+fused         = RRF(k=60)  : score = Σ 1 / (k + rank_i)
+reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系）
+```
+
+### 5.4 RAG フロー
+
+```mermaid
+sequenceDiagram
+  participant FE as frontend
+  participant BE as backend
+  participant AI as ai-service
+  participant DB as PostgreSQL
+  participant LLM as LLM
+  FE->>BE: POST /assistant/answers {question}
+  BE->>BE: 認証・AccessScope算出
+  BE->>BE: ナビゲーション検索（制度・窓口は構造化データで確定）
+  BE->>AI: /rag/answer {question, allowedScope, candidateSectionIds}
+  AI->>DB: ハイブリッド検索（allowedScope内）
+  AI->>AI: 文脈構築（上位k件・引用番号付与・トークン上限）
+  AI->>LLM: プロンプト（システム指示 + 文脈 + 質問）
+  LLM-->>AI: 回答（引用番号付き）
+  AI->>AI: 引用検証（存在しない番号・文脈外の数値を検出）
+  AI-->>BE: answer, citations, answerable
+  BE-->>FE: SSE: 回答文 + citations + contacts(DB由来) + programs
+```
+
+### 5.5 ハルシネーション対策（必須要件の担保）
+
+| 対策 | 内容 |
+|---|---|
+| **窓口・根拠はLLMに生成させない** | 問い合わせ先は `program_contacts` 等のDB値。根拠表示は検索で得たセクションIDから描画 |
+| 引用必須プロンプト | 「文脈に無いことは答えない」「各文に [n] を付ける」「金額・日数・期限は原文から引用」 |
+| 引用検証 | 回答中の [n] が文脈に存在するか、数値が引用元に含まれるかを機械チェック。失敗時は回答文を破棄して通常結果を表示 |
+| 回答不能判定 | 検索スコアが閾値未満 / LLMが「不明」と判断 → 「規程上の記載が見つかりません。人事部 労務グループへお問い合わせください」 |
+| 免責表示 | 「AIによる要約です。最終判断は根拠文書と担当部署へ」 |
+| プロンプトインジェクション | 文書内の命令文は「データ」として区切り文字で囲う。文書登録者は社内EDITORに限定 |
+
+### 5.6 LLM プロバイダ抽象化
+
+```python
+# ai-service/app/llm/base.py
+class ChatModel(Protocol):
+    async def stream(self, messages: list[Message], **opts) -> AsyncIterator[str]: ...
+class EmbeddingModel(Protocol):
+    async def embed(self, texts: list[str]) -> list[list[float]]: ...
+# 実装: OllamaChat / OpenAIChat / AzureOpenAIChat  ← 環境変数 LLM_PROVIDER で切替
+```
+
+- デフォルトは **Ollama（ローカル）**: ダミーデータでも「外部送信ゼロで動く」構成を示せる
+- 実務想定は **Azure OpenAI**: 閉域接続（Private Endpoint）、データ所在地、エンタープライズ契約
+- LangChain 等のフレームワークへの全面依存は避け、薄い自前抽象 + 必要部分のみライブラリ利用（バージョン追随コストの抑制）
+
+### 5.7 RAG 評価
+
+- 評価セット: 質問 / 期待根拠セクション / 期待される要点（数値・期限）
+- 指標: 検索 Recall@k、引用正確性（引用先に主張が含まれるか）、回答忠実性（LLM-as-a-judge + 人手サンプリング）、回答不能の適切性
+- CIでは小さなローカルモデルで「引用検証ロジック」まで回し、フル評価は手動ワークフロー（`workflow_dispatch`）
+
+---
+
+## 6. セキュリティ設計
+
+| 領域 | 設計 |
+|---|---|
+| 認証 | MVP: Spring Security フォームログイン + BCrypt、デモユーザー。将来: OIDC（Keycloak を compose で提供 → 実務では Entra ID） |
+| セッション | HttpOnly/Secure/SameSite=Lax Cookie、CSRFトークン、アイドル30分 |
+| 認可 | `AccessPolicy` に集約。URLベース（ロール）+ データベース（所管部署・公開範囲）の二層 |
+| 検索時認可 | **プレフィルタ**（SQL WHERE）。件数・スニペット・サジェスト・類似検索・RAG文脈すべて同じスコープを使用 |
+| 入力 | Bean Validation、Markdown は sanitize（DOMPurify / OWASP HTML Sanitizer）してから描画 |
+| ファイル | MIME/拡張子/マジックバイト検証、サイズ上限、ウイルススキャン（ClamAV）フック、署名付きURLで配信 |
+| 秘密情報 | `.env` は git 管理外、`.env.example` のみコミット。GitHub は Secret scanning / Push protection 有効化 |
+| 依存関係 | Dependabot、CodeQL、Trivy（コンテナイメージ） |
+| ログ | 検索ログはユーザーIDをHMACで仮名化、保持期間を設定。チャット本文は保持期間後に削除 |
+| 監査 | 公開・改定・権限変更・機密文書閲覧を `audit_logs` に追記専用で記録 |
+| LLM送信 | プロバイダごとに「外部送信可能な公開範囲」を設定（例: OpenAI は INTERNAL のみ、Ollama は全て） |
+| ヘッダ | CSP、X-Content-Type-Options、Referrer-Policy、HSTS |
+
+---
+
+## 7. デプロイ構成
+
+| 環境 | 構成 |
+|---|---|
+| ローカル | `docker compose up`（frontend / backend / postgres / minio / ollama[profile: ai]） |
+| CI | GitHub Actions（Testcontainers で PostgreSQL 実起動、評価セット実行） |
+| デモ公開 | 単一VM or コンテナPaaS（例: Fly.io / Render / Azure Container Apps）+ マネージドPostgreSQL。デモはダミーデータのみ、ログイン画面にデモアカウント表示 |
+| 実務想定 | Azure: Container Apps + Azure Database for PostgreSQL + Blob Storage + Azure OpenAI + Entra ID、Private Endpoint |
+
+IaC は Phase4 以降に `infra/terraform/` で用意（MVPでは compose のみ）。
+
+---
+
+## 8. ディレクトリ構成
+
+### 8.1 MVP時点
+
+```
+knowledge-navigator/
+├── README.md                    # 概要・スクショ・起動方法・アーキテクチャ図
+├── LICENSE                      # MIT（ダミーデータは CC BY 4.0 と明記）
+├── compose.yaml
+├── .env.example
+├── Makefile                     # make up / make seed / make test / make eval
+├── docs/
+│   ├── PRODUCT_VISION.md  PRD_KNOWLEDGE_NAVIGATOR.md  DOMAIN_MODEL.md
+│   ├── ARCHITECTURE.md  TECH_STACK_COMPARISON.md  TECH_STACK_DECISION.md
+│   ├── GITHUB_WORKFLOW.md  ROADMAP.md  TASKS.md  DESIGN_REVIEW.md
+│   ├── adr/                     # 0001-use-postgresql-pg_bigm.md ...
+│   ├── api/openapi.yaml
+│   └── images/
+├── backend/                     # Spring Boot（Gradle Kotlin DSL）
+│   ├── build.gradle.kts
+│   └── src/{main,test}/...
+│       └── resources/db/migration/   # Flyway V1__init.sql ...
+├── frontend/                    # Next.js + TypeScript
+│   ├── src/app/  src/components/  src/lib/api/ (OpenAPI生成型)
+│   └── package.json
+├── data/
+│   ├── seed/                    # departments.yaml, documents/*.md, programs.yaml, faqs.yaml ...
+│   └── eval/questions.yaml
+├── infra/
+│   └── docker/postgres/Dockerfile   # pgvector + pg_bigm
+└── .github/
+    ├── workflows/ (ci-backend.yml, ci-frontend.yml, eval.yml)
+    ├── ISSUE_TEMPLATE/  pull_request_template.md
+    ├── CODEOWNERS  dependabot.yml
+```
+
+### 8.2 将来拡張時点（Phase4-6）
+
+```
+knowledge-navigator/
+├── backend/
+├── frontend/
+├── ai-service/                  # FastAPI（uv管理）
+│   ├── app/{api,llm,retrieval,rag,eval}/
+│   ├── tests/
+│   └── pyproject.toml
+├── ingest-worker/               # PDF解析・セクション化・Embedding（Python、ai-service とパッケージ共有）
+├── packages/
+│   └── api-client/              # OpenAPI生成クライアント（TS）
+├── data/
+│   ├── seed/  sample-pdfs/      # ダミー規程PDF（Markdownから生成）
+│   └── eval/{search,rag}/
+├── infra/
+│   ├── docker/
+│   ├── terraform/{azure,aws}/
+│   └── k8s/ (任意)
+├── scripts/                     # seed生成、PDF生成、評価レポート
+├── docs/ (adr, runbooks/, eval-reports/)
+└── .github/
+```
