@@ -42,6 +42,19 @@
 
 タグ別にも集計し、どの種類の質問に弱いかを見る（例: `variant` が低ければ類義語辞書を強化する）。
 
+## 評価の実行（#39）
+
+```bash
+make up && make seed   # 全サービスを起動してダミーデータを投入
+make eval              # 評価して結果を表示（build/eval/report.md・result.json にも出力）
+```
+
+- 評価バッチは `scripts/eval/run_eval.py`。質問ごとに `as` のユーザーでログインし、`GET /api/v1/navigate` を呼ぶ
+- CI（ci-compose の `search-eval` ステップ）でも PR ごとに実行し、結果をジョブのサマリーに出す
+  - **失敗**: Hit@5 が目標（MVP の 70%）を下回った、窓口が1件もない結果があった、検索に失敗した
+  - **警告**: 基準値 `baseline.json` より悪化した指標がある（失敗にはしない）
+- 検索を改善して指標が上がったら、`python3 scripts/eval/run_eval.py --update-baseline` で基準値を更新し、同じ PR に含める
+
 ## 質問を追加するとき
 
 - 検索で期待どおりの結果が出なかった質問は、Issue（Search Quality テンプレート）を作り、ここに追加する

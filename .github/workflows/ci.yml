@@ -55,11 +55,15 @@ jobs:
               - backend/**
               - frontend/**
               - infra/docker/postgres/**
+              # ダミーデータと評価セットが変わると検索品質の評価結果も変わる
+              - data/**
+              - scripts/eval/**
               - .github/workflows/ci-compose.yml
             data:
               - *gate
               - data/**
               - scripts/data/**
+              - scripts/eval/**
               - .github/workflows/ci-data.yml
 
   backend:
