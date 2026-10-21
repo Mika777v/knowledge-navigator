@@ -1,0 +1,94 @@
+name: trivy
+
+# Trivy による依存ライブラリ・コンテナイメージの脆弱性スキャン（E16-T1）。
+# 結果は CodeQL と同じく Security タブ（Code scanning）と PR の注釈に出る。必須チェック（ci-ok）には含めない。
+# - 依存ライブラリ: frontend の pnpm-lock.yaml と、リポジトリに入ってしまった秘密情報（secret）
+# - イメージ: backend・frontend・postgres（backend の Java ライブラリは、イメージ内の jar から検出する）
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - backend/**
+      - frontend/**
+      - infra/docker/**
+      - compose.yaml
+      - .github/workflows/trivy.yml
+  schedule:
+    # 毎週月曜 12:41（日本時間）。新しく公開された脆弱性も定期的に確かめる
+    - cron: "41 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v7
+      # タグの付け替えに影響されないよう、コミットのハッシュで固定する（v0.36.0）
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret
+          # 修正版が出ている重大度 HIGH 以上だけを出す（直せないものは出さない）
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-repository.sarif
+          limit-severities-for-sarif: true
+      - uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-repository.sarif
+          category: trivy-repository
+
+  image:
+    name: image (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [backend, frontend, postgres]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the image
+        run: |
+          cp .env.example .env
+          docker compose build ${{ matrix.service }}
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: image
+          image-ref: knowledge-navigator/${{ matrix.service }}:local
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          limit-severities-for-sarif: true
+      - uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-image-${{ matrix.service }}
+      - name: Show the findings in the job log
+        # Security タブを開かなくても、件数と内容をジョブのログで確かめられるようにする
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          scan-type: image
+          image-ref: knowledge-navigator/${{ matrix.service }}:local
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          format: table
+          skip-setup-trivy: true
