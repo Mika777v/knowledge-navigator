@@ -16,6 +16,20 @@ export default function AdminHomePage() {
             利用者の言葉（例: 「入籍」）を、制度・きっかけ・窓口などに直接案内する辞書を確認・編集します。
           </p>
         </li>
+        <li>
+          <Link href="/admin/analytics" className="font-medium underline">
+            検索の分析
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            何も見つからなかった質問・よく検索される質問・フィードバックを見て、FAQ や辞書の改善につなげます。
+          </p>
+        </li>
+        <li>
+          <Link href="/admin/audit-logs" className="font-medium underline">
+            監査ログ
+          </Link>
+          <p className="text-sm text-muted-foreground">誰が・いつ・何を変更したかを確認します（システム管理者だけ）。</p>
+        </li>
       </ul>
     </div>
   );

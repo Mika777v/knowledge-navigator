@@ -608,6 +608,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 監査ログの一覧（期間・操作・対象・操作者で絞り込み） */
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/zero-hits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 何も見つからなかった質問（FAQ・辞書の改善候補） */
+        get: operations["zeroHits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/top-queries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** よく検索された質問（ゼロヒット・クリックの件数つき） */
+        get: operations["topQueries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/analytics/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 検索結果へのフィードバック（件数とコメント） */
+        get: operations["feedback_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/navigation-keywords/{id}": {
         parameters: {
             query?: never;
@@ -1144,6 +1212,71 @@ export interface components {
             current: boolean;
             /** Format: int32 */
             sectionCount: number;
+        };
+        Actor: {
+            /** Format: uuid */
+            id: string;
+            displayName: string;
+            email: string;
+        };
+        Entry: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            occurredAt: string;
+            actor: components["schemas"]["Actor"];
+            action: string;
+            resourceType: string;
+            /** Format: uuid */
+            resourceId: string;
+            details: {
+                [key: string]: unknown;
+            };
+        };
+        Page: {
+            items: components["schemas"]["Entry"][];
+            /** Format: int64 */
+            nextCursor: number;
+        };
+        Period: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+        };
+        QueryReport: {
+            period: components["schemas"]["Period"];
+            /** Format: int32 */
+            minDistinctUsers: number;
+            queries: components["schemas"]["QueryStat"][];
+        };
+        QueryStat: {
+            query: string;
+            /** Format: int32 */
+            searches: number;
+            /** Format: int32 */
+            users: number;
+            /** Format: int32 */
+            zeroHitSearches: number;
+            /** Format: int32 */
+            clickedSearches: number;
+            /** Format: date-time */
+            lastSearchedAt: string;
+        };
+        FeedbackComment: {
+            query: string;
+            helpful: boolean;
+            comment: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FeedbackSummary: {
+            period: components["schemas"]["Period"];
+            /** Format: int32 */
+            helpful: number;
+            /** Format: int32 */
+            notHelpful: number;
+            comments: components["schemas"]["FeedbackComment"][];
         };
     };
     responses: never;
@@ -2181,6 +2314,107 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Target"][];
+                };
+            };
+        };
+    };
+    search: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                action?: string;
+                resourceType?: string;
+                resourceId?: string;
+                actorId?: string;
+                cursor?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Page"];
+                };
+            };
+        };
+    };
+    zeroHits: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QueryReport"];
+                };
+            };
+        };
+    };
+    topQueries: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["QueryReport"];
+                };
+            };
+        };
+    };
+    feedback_1: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FeedbackSummary"];
                 };
             };
         };
