@@ -17,6 +17,7 @@ const MENU: MenuItem[] = [
   { href: "/admin/faqs", label: "FAQ", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/programs", label: "制度", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/analytics", label: "検索の分析", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
+  { href: "/admin/documents", label: "規程", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/audit-logs", label: "監査ログ", roles: ["SYSTEM_ADMIN"] },
 ];
 

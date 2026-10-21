@@ -134,4 +134,18 @@ class SeedLoaderTests {
     private int count(String sql) {
         return jdbc.sql(sql).query(Integer.class).single();
     }
+
+    @Test
+    void documentBodiesDoNotContainFrontMatter() {
+        loader.load(SEED, PASSWORD);
+        String body = jdbc.sql("""
+                        SELECT v.body_markdown FROM documents d JOIN document_versions v ON v.id = d.current_version_id
+                        WHERE d.code = 'REG-GA-001'
+                        """).query(String.class).single();
+        // 管理画面で新しい版を作るときの初期値になるため、文書の属性（front matter）は本文に含めない
+        assertThat(body)
+                .doesNotStartWith("---")
+                .doesNotContain("version_label:")
+                .contains("### 第5条（結婚祝金）");
+    }
 }

@@ -212,7 +212,8 @@ class SeedLoader {
                     str(meta, "visibility"),
                     str(meta, "version_label"),
                     date(meta.get("effective_from")),
-                    markdown));
+                    // 本文には front matter（文書の属性）を含めない。管理画面で新しい版を作るときの初期値になるため
+                    withoutFrontMatter(markdown)));
         }
         return files.size();
     }
@@ -496,6 +497,10 @@ class SeedLoader {
     private static List<Map<String, Object>> list(Path dir, String file) {
         List<Map<String, Object>> rows = new Yaml().load(read(dir.resolve(file)));
         return rows == null ? List.of() : rows;
+    }
+
+    private static String withoutFrontMatter(String markdown) {
+        return markdown.split("(?m)^---\\s*$", 3)[2].stripLeading();
     }
 
     private static Map<String, Object> frontMatter(String markdown, Path file) {

@@ -41,6 +41,7 @@ class AdminContentApiOutsideTransactionTests {
     UUID document;
     UUID program;
     UUID faq;
+    UUID version;
     KnaviUserDetails editor;
 
     @BeforeEach
@@ -58,6 +59,14 @@ class AdminContentApiOutsideTransactionTests {
                 INSERT INTO documents (code, title, document_type, category_id, owner_department_id)
                 VALUES ('REG-LZ-001', '遅延テスト規程', 'RULE', '%s', '%s') RETURNING id
                 """.formatted(category, dept));
+        version = id("""
+                INSERT INTO document_versions (document_id, version_label, effective_from, body_markdown)
+                VALUES ('%s', 'v1.0', DATE '2026-04-01', '### 第1条（目的）\n\n本文') RETURNING id
+                """.formatted(document));
+        jdbc.sql("""
+                        INSERT INTO sections (document_version_id, ordinal, article_no, heading, content, search_text)
+                        VALUES (:v, 0, '第1条', '目的', '本文', '本文')
+                        """).param("v", version).update();
         program = id("""
                 INSERT INTO programs (code, name, summary, category_id, owner_department_id, search_text)
                 VALUES ('PRG-LZ', '遅延テスト制度', '説明', '%s', '%s', '遅延テスト制度') RETURNING id
@@ -84,6 +93,9 @@ class AdminContentApiOutsideTransactionTests {
     void cleanUp() {
         jdbc.sql("DELETE FROM faqs WHERE id = :id").param("id", faq).update();
         jdbc.sql("DELETE FROM programs WHERE id = :id").param("id", program).update();
+        jdbc.sql("DELETE FROM document_versions WHERE document_id = :id")
+                .param("id", document)
+                .update();
         jdbc.sql("DELETE FROM documents WHERE id = :id").param("id", document).update();
         jdbc.sql("DELETE FROM users WHERE email = 'lazy@example.com'").update();
         jdbc.sql("DELETE FROM contacts WHERE id = :id").param("id", contact).update();
@@ -111,6 +123,17 @@ class AdminContentApiOutsideTransactionTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.category.slug").value("lazy-test"))
                 .andExpect(jsonPath("$.basis[0].articleNo").value("第1条"));
+    }
+
+    @Test
+    void documentVersionsIncludeSections() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/documents/" + document + "/versions").with(user(editor)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sectionCount").value(1));
+        mockMvc.perform(get("/api/v1/admin/documents/" + document + "/versions/" + version)
+                        .with(user(editor)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sections[0].articleNo").value("第1条"));
     }
 
     private UUID id(String sql) {
