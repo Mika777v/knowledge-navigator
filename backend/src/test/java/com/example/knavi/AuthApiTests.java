@@ -3,6 +3,7 @@ package com.example.knavi;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -93,6 +94,38 @@ class AuthApiTests {
     @Test
     void inactiveUserCannotLogin() throws Exception {
         mockMvc.perform(login("retired@example.com", PASSWORD).with(csrf())).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void repeatedFailuresLockTheAccountForAWhile() throws Exception {
+        // 他のテストと状態を共有しないよう、このテスト専用のアカウントを使う
+        var dept = jdbc.sql("SELECT id FROM departments WHERE code = 'SALES'")
+                .query(java.util.UUID.class)
+                .single();
+        insertUser("locked@example.com", "ロック 対象", dept, true);
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(login("locked@example.com", "wrong-password").with(csrf()))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // ロック中は、正しいパスワードでもログインできない
+        mockMvc.perform(login("locked@example.com", PASSWORD).with(csrf()))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("ログインに続けて失敗したため")));
+        // 他のアカウントには影響しない
+        mockMvc.perform(login("sato@example.com", PASSWORD).with(csrf())).andExpect(status().isOk());
+    }
+
+    @Test
+    void nonexistentAccountsAreLockedTheSameWay() throws Exception {
+        // 応答の違いからアカウントの有無が分からないよう、存在しないメールアドレスも同じように数える
+        for (int i = 0; i < 5; i++) {
+            mockMvc.perform(login("ghost@example.com", "wrong-password").with(csrf()))
+                    .andExpect(status().isUnauthorized());
+        }
+        mockMvc.perform(login("ghost@example.com", "wrong-password").with(csrf()))
+                .andExpect(status().isTooManyRequests());
     }
 
     @Test
