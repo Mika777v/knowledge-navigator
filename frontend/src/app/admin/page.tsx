@@ -23,6 +23,14 @@ export default function AdminHomePage() {
           <p className="text-sm text-muted-foreground">自部署が所管する FAQ を作成・編集・公開します（コンテンツ担当者だけ）。</p>
         </li>
         <li>
+          <Link href="/admin/programs" className="font-medium underline">
+            制度
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            自部署が所管する制度を、根拠の条・窓口とあわせて作成・編集・公開します（コンテンツ担当者だけ）。
+          </p>
+        </li>
+        <li>
           <Link href="/admin/analytics" className="font-medium underline">
             検索の分析
           </Link>
