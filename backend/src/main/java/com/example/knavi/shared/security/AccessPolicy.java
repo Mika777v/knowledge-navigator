@@ -132,6 +132,13 @@ public class AccessPolicy {
         }
     }
 
+    /** 検索の分析（ゼロヒット・人気クエリ・フィードバック）を見られるのは CONTENT_EDITOR と SYSTEM_ADMIN */
+    public void checkCanViewAnalytics(AuthenticatedUser user) {
+        if (!CONTENT_EDITOR.equals(user.role()) && !SYSTEM_ADMIN.equals(user.role())) {
+            throw new AccessDeniedException("検索の分析を見られるのはコンテンツ担当者とシステム管理者だけです。");
+        }
+    }
+
     /** 管理画面のコンテンツ機能を使えるか */
     public void checkIsContentEditor(AuthenticatedUser user) {
         if (!CONTENT_EDITOR.equals(user.role())) {

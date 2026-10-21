@@ -54,6 +54,8 @@ knavi:
   insight:
     # 検索ログのユーザー ID を仮名化する HMAC の鍵。本番では必ず KNAVI_USER_HASH_SECRET を設定する
     user-hash-secret: ${KNAVI_USER_HASH_SECRET:local-dev-only-change-me}
+    # 分析で質問ごとの集計を出す最低の利用者数（1人だけの検索は個人の履歴になるため出さない）
+    min-distinct-users: 2
   navigation:
     # 検索スコアの重み（docs/ARCHITECTURE.md §4.3）。data/eval の評価結果を見て調整する
     weights:

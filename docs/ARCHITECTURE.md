@@ -113,7 +113,7 @@ backend/src/main/java/com/example/knavi/
 | CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |
 | POST | `/admin/files`（multipart）→ `POST /admin/ingestion-jobs` | EDITOR（Phase2） |
 | GET | `/admin/ingestion-jobs/{id}` | EDITOR（Phase2） |
-| GET | `/admin/analytics/zero-hits`、`/top-queries`、`/feedback` | EDITOR/ADMIN |
+| GET | `/admin/analytics/zero-hits`、`/top-queries`、`/feedback`（`?from=&to=&limit=`。日本時間の日付、既定は30日間。質問ごとの集計は異なる利用者が2人以上のものだけ） | EDITOR/ADMIN |
 | GET | `/admin/audit-logs` | ADMIN |
 | POST | `/admin/evaluations/run`、GET `/admin/evaluations` | ADMIN |
 
