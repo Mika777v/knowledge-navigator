@@ -122,32 +122,40 @@ backend/src/main/java/com/example/knavi/
 
 ```json
 {
-  "searchLogId": "0192f1c4-...",
-  "query": { "raw": "結婚したら何か制度ある？", "normalized": "結婚", "matchedLifeEvents": ["MARRIAGE"], "expandedTerms": ["結婚", "婚姻", "入籍"] },
+  "query": {
+    "raw": "結婚したら何か制度ある？", "normalized": "結婚 制度",
+    "terms": ["結婚"], "matchedLifeEvents": [{ "code": "MARRIAGE", "name": "結婚" }]
+  },
   "programs": [
     {
-      "id": "...", "name": "結婚祝金", "summary": "社員が婚姻したときに支給", "benefit": "30,000円",
-      "deadline": "入籍後6か月以内",
+      "id": "...", "code": "PRG-MARRIAGE-GIFT", "name": "結婚祝金", "summary": "社員が婚姻したときに支給",
+      "benefit": "30,000円（社員同士の結婚はそれぞれに支給）", "deadlineNote": "入籍後6か月以内",
       "basis": [{ "documentId": "...", "documentTitle": "慶弔見舞金規程", "versionLabel": "v2.1", "sectionId": "...", "articleNo": "第5条" }],
-      "score": 0.92, "reasons": ["LIFE_EVENT:結婚", "KEYWORD:結婚"]
+      "score": 13.5, "reasons": ["LIFE_EVENT:結婚", "KEYWORD:結婚", "TEXT:結婚"]
     },
-    { "id": "...", "name": "結婚休暇", "benefit": "連続5日", "basis": [{ "documentTitle": "就業規則", "articleNo": "第32条" }], "score": 0.88 }
+    { "id": "...", "code": "PRG-MARRIAGE-LEAVE", "name": "結婚休暇", "basis": [{ "documentTitle": "就業規則", "articleNo": "第32条" }], "score": 10.5, "reasons": ["..."] }
   ],
   "documents": [
     {
-      "id": "...", "title": "慶弔見舞金規程", "versionLabel": "v2.1", "effectiveFrom": "2026-04-01",
-      "sections": [{ "id": "...", "articleNo": "第5条", "heading": "結婚祝金", "snippet": "社員が<em>婚姻</em>したときは…", "page": null }]
+      "id": "...", "code": "REG-GA-001", "title": "慶弔見舞金規程", "versionLabel": "v2.1", "effectiveFrom": "2026-04-01",
+      "sections": [{ "id": "...", "articleNo": "第5条", "heading": "結婚祝金", "snippet": "社員が婚姻したときは、結婚祝金として…" }],
+      "score": 6.75
     }
   ],
-  "faqs": [{ "id": "...", "question": "入籍前に申請できますか？" }],
+  "faqs": [{ "id": "...", "code": "FAQ-001", "question": "入籍前に結婚祝金を申請できますか？", "score": 4.1 }],
   "contacts": [
-    { "id": "...", "name": "人事部 労務グループ", "department": "人事部", "phoneExt": "1234", "email": "hr-roumu@example.com", "officeHours": "平日 9:00-17:30", "reason": "結婚休暇の問い合わせ先" },
-    { "id": "...", "name": "総務部 庶務グループ", "department": "総務部", "reason": "結婚祝金の支給窓口" }
+    { "code": "GA-GENERAL", "name": "総務部 庶務グループ", "department": "総務部", "phoneExt": "1310", "email": "...", "chatUrl": null, "officeHours": "平日 9:00-17:30", "reason": "結婚祝金の申請窓口" },
+    { "code": "HR-LABOR", "name": "人事部 労務グループ", "department": "人事部", "reason": "結婚休暇の問い合わせ先" }
   ],
-  "relatedPrograms": [{ "name": "扶養家族の追加" }, { "name": "通勤手当の変更" }],
+  "relatedPrograms": [{ "id": "...", "code": "PRG-PERSONAL-INFO-CHANGE", "name": "氏名・住所・扶養の変更届" }],
   "fallback": false
 }
 ```
+
+- **snippet はプレーンテキスト**（HTML を含まない）。強調は画面側で `query.terms` を使って付ける（条文の内容による HTML 埋め込みを防ぐため）。
+- `reasons` は表示理由: `LIFE_EVENT:<きっかけ>` / `KEYWORD:<辞書の語>` / `TEXT:<本文で一致した語>` / `BASIS:<制度の根拠の文書>` / `PROGRAM_FAQ`（上位の制度に紐づく FAQ）。
+- 窓口は **必ず1件以上**: 上位3件の制度の窓口 → 辞書で見つかった窓口 → FAQ の窓口 の順に最大4件。1件もなければ総合窓口（`app_settings.navigation.default_contact_code`）。`fallback` は制度・文書・FAQ がどれも見つからなかったとき `true`。
+- 検索ログの ID（`searchLogId`）はクリック・フィードバックの記録とあわせて #40 で追加する。
 
 ---
 
@@ -195,7 +203,9 @@ score(item) = Σ  w_source × match_strength
   + 鮮度ボーナス（直近改定）、Phase3でクリック率を加味
 ```
 
-- 重みは設定ファイル化し、**評価用質問セットで A/B 比較**して決める。
+- 重みは設定ファイル化し（`application.yaml` の `knavi.navigation.weights`）、**評価用質問セットで A/B 比較**して決める。
+- 辞書の照合は**最長一致**（「結婚式」に一致したら、それに含まれる「結婚」は使わない）。文書のスコアは条ごとに足さず、最も強く一致した条のスコアを使う（条の多い文書が有利にならないように）。
+- 1位のスコアの 20%（`min-relative-score`）未満の制度は出さない。
 - 制度がヒットしたら、その根拠セクション・文書を自動的に結果に含める（「制度経由の文書」）。
 
 ### 4.4 検索品質評価
