@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { ContactCard } from "@/components/contact-card";
-import { Highlight } from "@/components/highlight";
+import { Markdown } from "@/components/markdown";
 import { QueryState } from "@/components/query-state";
 import { apiFetch } from "@/lib/api/http";
 import type { DocumentDetail } from "@/lib/api/types";
@@ -76,9 +76,7 @@ export function DocumentView() {
           {sections.map((s) => (
             <section key={s.id} id={sectionAnchor(s.id)} className="scroll-mt-4">
               <h2 className="mb-1 font-semibold">{articleTitle(s.articleNo, s.heading)}</h2>
-              <p className="leading-relaxed whitespace-pre-wrap">
-                <Highlight text={s.content} terms={terms} />
-              </p>
+              <Markdown text={s.content} terms={terms} />
             </section>
           ))}
         </div>

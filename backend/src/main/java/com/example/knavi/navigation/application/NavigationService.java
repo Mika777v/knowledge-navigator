@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -369,9 +370,17 @@ public class NavigationService {
                 .toList();
     }
 
-    /** 最初に一致した語の前後を切り出す（改行は空白にする） */
+    /** 表の区切り行（|---|---|）、表の罫線（|）、強調（**）、見出し・引用の記号 */
+    private static final Pattern TABLE_SEPARATOR =
+            Pattern.compile("(?m)^\\s*\\|?\\s*:?-{3,}:?\\s*(\\|\\s*:?-{3,}:?\\s*)*\\|?\\s*$");
+
+    private static final Pattern MARKUP = Pattern.compile("\\||\\*\\*|__|(?m)^\\s*(#{1,6}|>)\\s");
+
+    /** 最初に一致した語の前後を切り出す。Markdown の記号を除き、改行は空白にする（抜粋はプレーンテキストで返す） */
     static String snippet(String content, List<String> terms) {
-        String text = content.replaceAll("\\s+", " ").strip();
+        String plain =
+                MARKUP.matcher(TABLE_SEPARATOR.matcher(content).replaceAll(" ")).replaceAll(" ");
+        String text = plain.replaceAll("\\s+", " ").strip();
         String lower = text.toLowerCase(Locale.ROOT);
         int at = terms.stream()
                 .mapToInt(lower::indexOf)
