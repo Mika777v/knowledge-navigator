@@ -340,7 +340,7 @@ class EmbeddingModel(Protocol):
 | ファイル | MIME/拡張子/マジックバイト検証、サイズ上限、ウイルススキャン（ClamAV）フック、署名付きURLで配信 |
 | 秘密情報 | `.env` は git 管理外、`.env.example` のみコミット。GitHub は Secret scanning / Push protection 有効化 |
 | 依存関係 | Dependabot、CodeQL、Trivy（コンテナイメージ） |
-| ログ | 検索ログはユーザーIDをHMACで仮名化、保持期間を設定。チャット本文は保持期間後に削除 |
+| ログ | 検索ログはユーザーIDをHMACで仮名化。保存期間（既定180日、`knavi.insight.retention-days`）を過ぎた検索ログは毎日 3:17（日本時間）に削除し、クリック・フィードバックも一緒に消える。チャット本文は保持期間後に削除 |
 | 監査 | 公開・改定・権限変更・機密文書閲覧を `audit_logs` に追記専用で記録 |
 | LLM送信 | プロバイダごとに「外部送信可能な公開範囲」を設定（例: OpenAI は INTERNAL のみ、Ollama は全て） |
 | ヘッダ | CSP（ナンスなし。スクリプト・接続先・フォーム送信先を自オリジンに限定、`frame-ancestors 'none'`）、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy、HSTS（HTTPS 公開時に `HTTPS_ONLY=true` でビルド）。設定は `frontend/src/lib/security-headers.ts`。ナンス方式は全ページの動的描画が必要で PPR と両立しないため採用しない |
