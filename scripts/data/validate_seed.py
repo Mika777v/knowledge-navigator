@@ -1,4 +1,4 @@
-"""data/seed/ のダミーデータの整合性を検査する。
+"""data/seed/ のダミーデータと data/eval/ の評価用質問セットの整合性を検査する。
 
 使い方: python3 scripts/data/validate_seed.py [data/seed]
 エラーがあれば一覧を表示して終了コード 1 で終わる。
@@ -205,6 +205,63 @@ def validate_programs_and_faqs(
                 errors.append(f"{label}: links には program か document を指定してください: {link}")
 
 
+EVAL_TAGS = {
+    "life-event", "no-name", "colloquial", "abbreviation", "variant",
+    "name", "document-name", "manager", "no-answer",
+}
+DEFAULT_EVAL_USER = "sato@example.com"
+
+
+def validate_eval(seed_dir: Path, errors: list[str]) -> None:
+    """評価用質問セット（seed_dir の隣の eval/questions.yaml）の参照先を検査する"""
+    path = seed_dir.parent / "eval" / "questions.yaml"
+    if not path.exists():
+        return
+    with path.open(encoding="utf-8") as f:
+        questions = yaml.safe_load(f) or []
+    programs = {p["code"]: p for p in load(seed_dir, "programs.yaml")}
+    faqs = {f["code"]: f for f in load(seed_dir, "faqs.yaml")}
+    contacts = {c["code"] for c in load(seed_dir, "contacts.yaml")}
+    users = {u["email"]: u for u in load(seed_dir, "users.yaml")}
+    documents = set()
+    for doc in (seed_dir / "documents").glob("*.md"):
+        meta, _ = parse_document(doc)
+        documents.add(meta.get("code"))
+
+    check_unique(questions, "id", "eval", errors)
+    for q in questions:
+        label = f"eval[{q.get('id')}]"
+        if not q.get("q"):
+            errors.append(f"{label}: q（質問文）がありません")
+        expect = q.get("expect") or {}
+        if not any(expect.get(k) for k in ("programs", "documents", "faqs", "contacts")):
+            errors.append(f"{label}: expect に正解が1つもありません")
+        for code in expect.get("programs") or []:
+            if code not in programs:
+                errors.append(f"{label}: 制度 {code} が存在しません")
+        for code in expect.get("faqs") or []:
+            if code not in faqs:
+                errors.append(f"{label}: FAQ {code} が存在しません")
+        for code in expect.get("documents") or []:
+            if code not in documents:
+                errors.append(f"{label}: 文書 {code} が存在しません")
+        for code in expect.get("contacts") or []:
+            if code not in contacts:
+                errors.append(f"{label}: 窓口 {code} が存在しません")
+        email = q.get("as", DEFAULT_EVAL_USER)
+        if email not in users:
+            errors.append(f"{label}: ユーザー {email} が存在しません")
+        # 管理職限定の正解を一般社員で評価すると、正しく動いていても必ず外れる
+        role = users.get(email, {}).get("role")
+        restricted = [c for c in expect.get("programs") or [] if programs.get(c, {}).get("visibility") == "MANAGERS"]
+        restricted += [c for c in expect.get("faqs") or [] if faqs.get(c, {}).get("visibility") == "MANAGERS"]
+        if restricted and role != "MANAGER":
+            errors.append(f"{label}: 管理職限定の正解 {restricted} は as に管理職を指定してください")
+        for tag in q.get("tags") or []:
+            if tag not in EVAL_TAGS:
+                errors.append(f"{label}: 未定義のタグ {tag}（data/eval/README.md を参照）")
+
+
 def validate(seed_dir: Path) -> list[str]:
     errors: list[str] = []
     departments = load(seed_dir, "departments.yaml")
@@ -286,6 +343,9 @@ def validate(seed_dir: Path) -> list[str]:
     # ---------- programs / life_events / faqs ----------
     contact_codes = {c["code"] for c in contacts if c.get("code")}
     validate_programs_and_faqs(seed_dir, dept_codes, category_slugs, contact_codes, docs, errors)
+
+    # ---------- eval ----------
+    validate_eval(seed_dir, errors)
 
     return errors
 

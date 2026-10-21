@@ -1,0 +1,229 @@
+# 検索品質の評価用質問セット（#39）
+# 利用者が実際に入力しそうな言い方（口語・制度名を知らない言い方・表記ゆれ）で書く。
+#
+# expect: 正解とみなす案内先（いずれか1つが上位に入れば正解）
+#   programs / documents / faqs: data/seed のコード
+#   contacts: 窓口のコード（窓口ブロックに含まれれば正解）
+# as:      検索するユーザー（省略時は一般社員 sato@example.com）
+# fallback: true のとき、結果がなくても総合窓口（HR-REP）が案内されることを確認する
+# tags:    集計の切り口（life-event = 状況から / colloquial = 口語 / no-name = 制度名を知らない / variant = 表記ゆれ / ...）
+#
+# 評価の指標は data/eval/README.md を参照。
+
+# ---------------------------------------------------------------- 結婚・慶弔
+- id: Q001
+  q: 結婚したら何か制度ある？
+  expect: { programs: [PRG-MARRIAGE-GIFT, PRG-MARRIAGE-LEAVE], contacts: [GA-GENERAL, HR-LABOR] }
+  tags: [life-event, colloquial]
+- id: Q002
+  q: 入籍したんだけどお祝い金もらえる？
+  expect: { programs: [PRG-MARRIAGE-GIFT], contacts: [GA-GENERAL] }
+  tags: [no-name, colloquial]
+- id: Q003
+  q: 結婚式のための休み
+  expect: { programs: [PRG-MARRIAGE-LEAVE], contacts: [HR-LABOR] }
+  tags: [no-name]
+- id: Q004
+  q: 結婚して名字が変わった
+  expect: { programs: [PRG-PERSONAL-INFO-CHANGE], faqs: [FAQ-003], contacts: [HR-LABOR] }
+  tags: [no-name, colloquial]
+- id: Q005
+  q: 祖母が亡くなった
+  expect: { programs: [PRG-BEREAVEMENT-LEAVE, PRG-CONDOLENCE], contacts: [HR-LABOR, GA-GENERAL] }
+  tags: [no-name]
+- id: Q006
+  q: 忌引は何日？
+  expect: { programs: [PRG-BEREAVEMENT-LEAVE], documents: [REG-HR-001] }
+  tags: [name]
+- id: Q007
+  q: 家が台風で浸水した
+  expect: { programs: [PRG-DISASTER-AID], contacts: [GA-GENERAL] }
+  tags: [no-name, colloquial]
+- id: Q008
+  q: 慶弔見舞金規程
+  expect: { documents: [REG-GA-001] }
+  tags: [document-name]
+
+# ---------------------------------------------------------------- 出産・育児
+- id: Q009
+  q: 子どもが生まれる
+  expect: { programs: [PRG-BIRTH-GIFT, PRG-CHILDCARE-LEAVE, PRG-SPOUSE-BIRTH-LEAVE, PRG-PATERNITY-LEAVE], contacts: [HR-LABOR] }
+  tags: [life-event]
+- id: Q010
+  q: 育休を取りたい
+  expect: { programs: [PRG-CHILDCARE-LEAVE], contacts: [HR-LABOR] }
+  tags: [abbreviation]
+- id: Q011
+  q: 男性も育児休暇とれる？
+  expect: { programs: [PRG-PATERNITY-LEAVE, PRG-CHILDCARE-LEAVE] }
+  tags: [variant, colloquial]
+- id: Q012
+  q: 妻の出産に立ち会いたい
+  expect: { programs: [PRG-SPOUSE-BIRTH-LEAVE] }
+  tags: [no-name]
+- id: Q013
+  q: 産休はいつから？
+  expect: { programs: [PRG-MATERNITY-LEAVE] }
+  tags: [abbreviation]
+- id: Q014
+  q: 子どもが熱を出した
+  expect: { programs: [PRG-CHILD-NURSING-LEAVE], faqs: [FAQ-014] }
+  tags: [no-name, colloquial]
+- id: Q015
+  q: 学級閉鎖で休みたい
+  expect: { programs: [PRG-CHILD-NURSING-LEAVE] }
+  tags: [no-name]
+- id: Q016
+  q: 時短勤務したい
+  expect: { programs: [PRG-CHILDCARE-SHORT-HOURS] }
+  tags: [abbreviation]
+- id: Q017
+  q: 保育園に入れなかった
+  expect: { programs: [PRG-CHILDCARE-LEAVE], faqs: [FAQ-011] }
+  tags: [no-name]
+- id: Q018
+  q: 残業を免除してほしい
+  expect: { programs: [PRG-OVERTIME-EXEMPTION] }
+  tags: [name]
+- id: Q019
+  q: ベビーシッター代の補助
+  expect: { programs: [PRG-CARE-SERVICE-AID] }
+  tags: [name]
+
+# ---------------------------------------------------------------- 介護・病気・健康
+- id: Q020
+  q: 親の介護が必要になった
+  expect: { programs: [PRG-CARE-LEAVE, PRG-CARE-DAYS], contacts: [HR-LABOR] }
+  tags: [life-event]
+- id: Q021
+  q: 介護休業と介護休暇の違い
+  expect: { faqs: [FAQ-021], programs: [PRG-CARE-LEAVE, PRG-CARE-DAYS] }
+  tags: [name]
+- id: Q022
+  q: 入院することになった
+  expect: { programs: [PRG-SICK-VISIT, PRG-ANNUAL-LEAVE] }
+  tags: [life-event]
+- id: Q023
+  q: 眠れなくて仕事がつらい
+  expect: { programs: [PRG-HEALTH-CONSULTATION], contacts: [HR-HEALTH] }
+  tags: [no-name, colloquial]
+- id: Q024
+  q: 人間ドックの補助
+  expect: { programs: [PRG-HEALTH-CHECKUP-AID] }
+  tags: [name]
+
+# ---------------------------------------------------------------- 休暇・勤務
+- id: Q025
+  q: 有給は何日ある？
+  expect: { programs: [PRG-ANNUAL-LEAVE], faqs: [FAQ-023] }
+  tags: [abbreviation, colloquial]
+- id: Q026
+  q: 有休を1時間だけ取りたい
+  expect: { programs: [PRG-HOURLY-LEAVE] }
+  tags: [variant]
+- id: Q027
+  q: 出勤時間を遅くしたい
+  expect: { programs: [PRG-TIME-SHIFT] }
+  tags: [no-name]
+- id: Q028
+  q: 副業してもいい？
+  expect: { faqs: [FAQ-027], documents: [REG-HR-001] }
+  tags: [colloquial]
+- id: Q029
+  q: 会社を辞めたい
+  expect: { programs: [PRG-RESIGNATION], contacts: [HR-HIRE] }
+  tags: [life-event, colloquial]
+- id: Q030
+  q: 裁判員に選ばれた
+  expect: { programs: [PRG-JUROR-LEAVE] }
+  tags: [no-name]
+
+# ---------------------------------------------------------------- 在宅勤務
+- id: Q031
+  q: 在宅勤務の申請方法は？
+  expect: { programs: [PRG-REMOTE-WORK], faqs: [FAQ-029], contacts: [HR-LABOR] }
+  tags: [name]
+- id: Q032
+  q: テレワークは週何日まで？
+  expect: { programs: [PRG-REMOTE-WORK], faqs: [FAQ-030] }
+  tags: [variant]
+- id: Q033
+  q: リモートワーク中にカフェで仕事していい？
+  expect: { faqs: [FAQ-031], documents: [REG-HR-003] }
+  tags: [variant, colloquial]
+- id: Q034
+  q: 在宅勤務手当はいくら
+  expect: { programs: [PRG-REMOTE-ALLOWANCE] }
+  tags: [name]
+
+# ---------------------------------------------------------------- 通勤・経費・引越し
+- id: Q035
+  q: 通勤手当はどう申請する？
+  expect: { programs: [PRG-COMMUTE-ALLOWANCE], faqs: [FAQ-034], contacts: [HR-LABOR] }
+  tags: [name]
+- id: Q036
+  q: 引っ越したら何をすればいい？
+  expect: { programs: [PRG-PERSONAL-INFO-CHANGE, PRG-COMMUTE-ALLOWANCE], contacts: [HR-LABOR] }
+  tags: [life-event, colloquial]
+- id: Q037
+  q: 定期代はいつもらえる
+  expect: { programs: [PRG-COMMUTE-ALLOWANCE] }
+  tags: [no-name]
+- id: Q038
+  q: 出社が少ない月の交通費
+  expect: { programs: [PRG-COMMUTE-ACTUAL-COST], contacts: [FIN-EXPENSE] }
+  tags: [no-name]
+- id: Q039
+  q: 出張のホテル代の上限
+  expect: { programs: [PRG-BUSINESS-TRIP], faqs: [FAQ-038], contacts: [FIN-EXPENSE] }
+  tags: [no-name]
+- id: Q040
+  q: 家賃補助ってある？
+  expect: { programs: [PRG-HOUSING-ALLOWANCE] }
+  tags: [variant, colloquial]
+
+# ---------------------------------------------------------------- IT・セキュリティ・相談
+- id: Q041
+  q: PC壊れた
+  expect: { programs: [PRG-PC-REPAIR], contacts: [IT-HELPDESK] }
+  tags: [colloquial]
+- id: Q042
+  q: ＰＣが起動しない
+  expect: { programs: [PRG-PC-REPAIR], contacts: [IT-HELPDESK] }
+  tags: [variant]
+- id: Q043
+  q: スマホをなくした
+  expect: { programs: [PRG-DEVICE-LOSS-REPORT], contacts: [IT-SECURITY] }
+  tags: [colloquial]
+- id: Q044
+  q: パスワードを忘れた
+  expect: { faqs: [FAQ-043], contacts: [IT-HELPDESK] }
+  tags: [colloquial]
+- id: Q045
+  q: ChatGPTを仕事で使っていい？
+  expect: { faqs: [FAQ-044], documents: [REG-IT-001] }
+  tags: [colloquial]
+- id: Q046
+  q: 上司からパワハラを受けている
+  expect: { programs: [PRG-HARASSMENT-CONSULTATION], contacts: [LEGAL-HOTLINE] }
+  tags: [no-name]
+- id: Q047
+  q: 不審なメールが来た
+  expect: { faqs: [FAQ-045], contacts: [IT-SECURITY] }
+  tags: [colloquial]
+
+# ---------------------------------------------------------------- 管理職向け・案内先がないもの
+- id: Q048
+  q: 部下から妊娠の報告を受けた
+  as: tanaka@example.com
+  expect: { programs: [PRG-MANAGER-CHILDCARE-SUPPORT], faqs: [FAQ-049], contacts: [HR-LABOR] }
+  tags: [manager]
+- id: Q049
+  q: 入社したら最初に何をする？
+  expect: { programs: [PRG-COMMUTE-ALLOWANCE, PRG-PERSONAL-INFO-CHANGE], contacts: [HR-LABOR] }
+  tags: [life-event]
+- id: Q050
+  q: 社員食堂のメニュー
+  expect: { contacts: [HR-REP] }
+  fallback: true
+  tags: [no-answer]
