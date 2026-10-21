@@ -309,7 +309,8 @@ class SeedLoader {
                             INSERT INTO life_events (code, name, icon, description, sort_order)
                             VALUES (:code, :name, :icon, :description, :sort)
                             ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon,
-                              description = EXCLUDED.description, sort_order = EXCLUDED.sort_order
+                              description = EXCLUDED.description, sort_order = EXCLUDED.sort_order,
+                              row_version = life_events.row_version + 1, updated_at = now()
                             RETURNING id
                             """)
                     .param("code", str(e, "code"))

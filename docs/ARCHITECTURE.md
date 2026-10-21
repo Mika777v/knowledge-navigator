@@ -108,6 +108,7 @@ backend/src/main/java/com/example/knavi/
 | POST | `/admin/documents/{id}/publish`（`{versionId}`）、`/admin/documents/{id}/archive`（`If-Match` 必須） | EDITOR（所管） |
 | GET/POST/PUT | `/admin/programs`、`/admin/programs/{id}`、`PUT /{id}/basis`（条単位）、`PUT /{id}/contacts`、`POST /{id}/publish`・`/archive`（更新系は `If-Match` 必須） | EDITOR（所管） |
 | GET/POST/PUT | `/admin/faqs`、`/admin/faqs/{id}`、`POST /{id}/publish`・`/archive`（更新系は `If-Match` 必須） | EDITOR（所管） |
+| GET/POST/PUT | `/admin/life-events`、`/admin/life-events/{code}`（紐づける制度もまとめて置き換え。更新は `If-Match` 必須） | EDITOR（部署を問わない） |
 | GET/POST/DELETE | `/admin/navigation-keywords`（`?targetType&targetId` または `?term` で逆引き） | EDITOR / ADMIN |
 | CRUD | `/admin/life-events`、`/admin/synonyms`（Phase3） | EDITOR |
 | CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |
