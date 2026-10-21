@@ -10,3 +10,6 @@ export type ContactView = Schemas["ContactView"];
 export type BasisView = Schemas["BasisView"];
 export type NavigationResult = Schemas["NavigationResult"];
 export type LifeEventSummary = Schemas["LifeEventSummary"];
+export type KeywordResponse = Schemas["KeywordResponse"];
+export type KeywordTarget = Schemas["Target"];
+export type KeywordTargetType = KeywordResponse["targetType"];

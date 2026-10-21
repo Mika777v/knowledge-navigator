@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { fetchMe, logout, meQueryKey, ROLE_LABELS } from "@/lib/auth/api";
+import { canUseAdmin, fetchMe, logout, meQueryKey, ROLE_LABELS } from "@/lib/auth/api";
 
 /** 全画面共通のヘッダー。ログイン中のユーザーとログアウトボタンを表示する（ログイン画面では出さない） */
 export function SiteHeader() {
@@ -41,6 +41,11 @@ function SignedInHeader() {
                 {me.department?.name ?? "所属なし"}・{ROLE_LABELS[me.role]}
               </span>
             </span>
+          )}
+          {canUseAdmin(me) && (
+            <Link href="/admin" className="whitespace-nowrap underline">
+              管理
+            </Link>
           )}
           <button
             type="button"

@@ -4,15 +4,20 @@ import com.example.knavi.audit.AuditLog;
 import com.example.knavi.content.ContentDirectory;
 import com.example.knavi.navigation.domain.KeywordTargetType;
 import com.example.knavi.navigation.domain.NavigationKeyword;
+import com.example.knavi.navigation.infrastructure.KeywordTargetQueries;
+import com.example.knavi.navigation.infrastructure.KeywordTargetQueries.Target;
 import com.example.knavi.navigation.infrastructure.NavigationKeywordRepository;
 import com.example.knavi.organization.ContactDirectory;
 import com.example.knavi.shared.security.AccessPolicy;
+import com.example.knavi.shared.security.AccessScope;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import com.example.knavi.shared.text.TextNormalizer;
 import com.example.knavi.shared.web.ApiErrors;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,18 +31,41 @@ public class NavigationKeywordService {
     private final ContactDirectory contacts;
     private final AccessPolicy accessPolicy;
     private final AuditLog auditLog;
+    private final KeywordTargetQueries targets;
 
     NavigationKeywordService(
             NavigationKeywordRepository keywords,
             ContentDirectory content,
             ContactDirectory contacts,
             AccessPolicy accessPolicy,
-            AuditLog auditLog) {
+            AuditLog auditLog,
+            KeywordTargetQueries targets) {
         this.keywords = keywords;
         this.content = content;
         this.contacts = contacts;
         this.accessPolicy = accessPolicy;
         this.auditLog = auditLog;
+        this.targets = targets;
+    }
+
+    /** 案内先の候補（管理画面で選ぶため） */
+    @Transactional(readOnly = true)
+    public List<Target> targets(KeywordTargetType type, AuthenticatedUser user) {
+        accessPolicy.checkCanManageDictionary(user);
+        return targets.list(type, AccessScope.of(user));
+    }
+
+    /** キーワードの案内先の表示名（閲覧できない案内先は含めない） */
+    @Transactional(readOnly = true)
+    public Map<UUID, String> labels(List<NavigationKeyword> found, AuthenticatedUser user) {
+        accessPolicy.checkCanManageDictionary(user);
+        Map<UUID, String> labels = new HashMap<>();
+        found.stream()
+                .collect(Collectors.groupingBy(
+                        NavigationKeyword::getTargetType,
+                        Collectors.mapping(NavigationKeyword::getTargetId, Collectors.toSet())))
+                .forEach((type, ids) -> labels.putAll(targets.labels(type, ids, AccessScope.of(user))));
+        return labels;
     }
 
     @Transactional(readOnly = true)
