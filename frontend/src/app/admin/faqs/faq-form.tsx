@@ -1,19 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Markdown } from "@/components/markdown";
-import { apiFetch } from "@/lib/api/http";
-import type {
-  AdminFaq,
-  CategoryNode,
-  DepartmentContacts,
-  DocumentSummary,
-  FaqContentRequest,
-  ProgramSummary,
-  Visibility,
-} from "@/lib/api/types";
+import type { AdminFaq, FaqContentRequest, Visibility } from "@/lib/api/types";
 import { VISIBILITY_LABELS } from "@/lib/content-labels";
+import { useContentOptions } from "../content-options";
 
 /** 関連先の1行。制度か規程（条番号を入れるとその条）のどちらか */
 export type LinkRow = { kind: "PROGRAM" | "DOCUMENT"; code: string; articleNo: string };
@@ -79,26 +70,6 @@ export function toContentRequest(values: FaqFormValues): FaqContentPayload {
   };
 }
 
-function useOptions() {
-  const categories = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => apiFetch<CategoryNode[]>("/api/v1/categories"),
-  });
-  const contacts = useQuery({
-    queryKey: ["contacts"],
-    queryFn: () => apiFetch<DepartmentContacts[]>("/api/v1/contacts"),
-  });
-  const programs = useQuery({
-    queryKey: ["programs"],
-    queryFn: () => apiFetch<ProgramSummary[]>("/api/v1/programs"),
-  });
-  const documents = useQuery({
-    queryKey: ["documents"],
-    queryFn: () => apiFetch<DocumentSummary[]>("/api/v1/documents"),
-  });
-  return { categories: categories.data, contacts: contacts.data, programs: programs.data, documents: documents.data };
-}
-
 const inputClass = "rounded-md border border-border bg-background px-3 py-2";
 
 /**
@@ -112,7 +83,7 @@ export function FaqForm({
   values: FaqFormValues;
   onChange: (values: FaqFormValues) => void;
 }) {
-  const options = useOptions();
+  const options = useContentOptions();
   const [preview, setPreview] = useState(false);
   const set = <K extends keyof FaqFormValues>(key: K, value: FaqFormValues[K]) => onChange({ ...values, [key]: value });
   const setLink = (index: number, link: Partial<LinkRow>) =>

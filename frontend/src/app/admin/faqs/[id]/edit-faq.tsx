@@ -4,18 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { ApiError, apiFetch } from "@/lib/api/http";
+import { apiFetch } from "@/lib/api/http";
 import type { AdminFaq } from "@/lib/api/types";
 import { ifMatch, STATUS_LABELS } from "@/lib/content-labels";
+import { adminErrorMessage } from "../../admin-errors";
 import { adminFaqsKey } from "../faq-list";
 import { FaqForm, type FaqFormValues, toContentRequest, toFormValues } from "../faq-form";
-
-function errorMessage(error: unknown) {
-  if (error instanceof ApiError && error.status === 412) {
-    return "ほかの人が先に更新しました。画面を読み込み直してから、もう一度編集してください。";
-  }
-  return error instanceof ApiError ? error.detail : "処理できませんでした。時間をおいて再度お試しください。";
-}
 
 /**
  * FAQ の編集・公開・公開終了。更新は楽観ロック（If-Match）で、ほかの人の更新を上書きしない。
@@ -26,7 +20,7 @@ export function EditFaq() {
     queryKey: [...adminFaqsKey, id],
     queryFn: () => apiFetch<AdminFaq>(`/api/v1/admin/faqs/${encodeURIComponent(id)}`),
   });
-  if (error) return <p role="alert">{errorMessage(error)}</p>;
+  if (error) return <p role="alert">{adminErrorMessage(error)}</p>;
   if (!faq) return <p className="text-muted-foreground">読み込み中…</p>;
   return <EditFaqForm key={faq.id} faq={faq} />;
 }
@@ -99,7 +93,7 @@ function EditFaqForm({ faq: loaded }: { faq: AdminFaq }) {
       )}
       {error && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {errorMessage(error)}
+          {adminErrorMessage(error)}
         </p>
       )}
       <div className="flex flex-wrap gap-2">
