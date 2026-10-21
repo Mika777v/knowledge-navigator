@@ -4,10 +4,10 @@ import { expect, type Page } from "@playwright/test";
 export const PASSWORD = process.env.DEMO_USER_PASSWORD ?? "demo-pass-2026";
 
 /** ログイン画面からログインし、ログイン後の画面（ヘッダーのログアウト）が表示されるまで待つ */
-export async function login(page: Page, email: string) {
+export async function login(page: Page, email: string, password = PASSWORD) {
   await page.goto("/login");
   await page.getByLabel("メールアドレス").fill(email);
-  await page.getByLabel("パスワード").fill(PASSWORD);
+  await page.getByLabel("パスワード").fill(password);
   await page.getByRole("button", { name: "ログイン" }).click();
   // ログイン画面にも「社内規程ナビ」の見出しがあるため、ログイン後にだけ出るものを待つ
   await expect(page.getByRole("button", { name: "ログアウト" })).toBeVisible();

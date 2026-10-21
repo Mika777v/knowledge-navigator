@@ -11,6 +11,10 @@ const RESOURCE_TYPES: Record<string, string> = {
   PROGRAM: "制度",
   FAQ: "FAQ",
   NAVIGATION_KEYWORD: "キーワード",
+  LIFE_EVENT: "きっかけ",
+  DEPARTMENT: "部署",
+  CONTACT: "窓口",
+  USER: "ユーザー",
 };
 
 /** 操作の表示名（backend が記録する操作コード）。知らないコードはそのまま表示する */
@@ -32,6 +36,15 @@ export const ACTION_LABELS: Record<string, string> = {
   FAQ_ARCHIVED: "FAQ を廃止",
   NAVIGATION_KEYWORD_ADDED: "キーワードを追加",
   NAVIGATION_KEYWORD_DELETED: "キーワードを削除",
+  LIFE_EVENT_CREATED: "きっかけを作成",
+  LIFE_EVENT_UPDATED: "きっかけを更新",
+  DEPARTMENT_CREATED: "部署を作成",
+  DEPARTMENT_UPDATED: "部署を更新",
+  CONTACT_CREATED: "窓口を作成",
+  CONTACT_UPDATED: "窓口を更新",
+  USER_CREATED: "ユーザーを作成",
+  USER_UPDATED: "ユーザーを更新",
+  USER_PASSWORD_CHANGED: "パスワードを変更",
 };
 
 type Filter = { from: string; to: string; action: string; resourceType: string };
