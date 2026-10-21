@@ -18,11 +18,13 @@ describe("AdminNav", () => {
     expect(await screen.findByRole("link", { name: "検索の分析" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "キーワード辞書" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "監査ログ" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "組織" })).toBeNull();
   });
 
   it("システム管理者にはすべて出す", async () => {
     vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(me("SYSTEM_ADMIN")));
     renderWithQuery(<AdminNav />);
     expect(await screen.findByRole("link", { name: "監査ログ" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "組織" })).toHaveAttribute("href", "/admin/organization");
   });
 });

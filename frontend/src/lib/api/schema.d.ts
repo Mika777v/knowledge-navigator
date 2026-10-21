@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** ユーザーを更新する（ロール・所属・有効/無効。ロールの変更は次のログインから効く） */
+        put: operations["updateUser"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/programs/{id}": {
         parameters: {
             query?: never;
@@ -128,6 +145,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/departments/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 部署を更新する（上位の部署・表示順・有効/無効を含む） */
+        put: operations["updateDepartment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contacts/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 窓口を更新する */
+        put: operations["updateContact"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search-logs/{id}/feedback": {
         parameters: {
             query?: never;
@@ -173,6 +224,24 @@ export interface paths {
         put?: never;
         /** メールアドレスとパスワードでログインする */
         post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ユーザーの一覧（パスワードは返さない） */
+        get: operations["users"];
+        put?: never;
+        /** ユーザーを作成する（初期パスワードは8文字以上） */
+        post: operations["createUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -389,6 +458,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 部署の一覧 */
+        get: operations["departments"];
+        put?: never;
+        /** 部署を作成する */
+        post: operations["createDepartment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 窓口の一覧 */
+        get: operations["contacts"];
+        put?: never;
+        /** 窓口を作成する（代表窓口にすると、その部署の前の代表窓口は外れる） */
+        post: operations["createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sections/{id}": {
         parameters: {
             query?: never;
@@ -584,7 +689,7 @@ export interface paths {
             cookie?: never;
         };
         /** 部署ごとの問い合わせ窓口 */
-        get: operations["contacts"];
+        get: operations["contacts_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -733,6 +838,29 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        OrgUserRequest: {
+            displayName: string;
+            departmentCode?: string;
+            role: string;
+            employmentType: string;
+            /** Format: date */
+            joinedOn?: string;
+            active?: boolean;
+        };
+        OrgUserView: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            departmentCode: string;
+            role: string;
+            employmentType: string;
+            /** Format: date */
+            joinedOn: string;
+            active: boolean;
+            /** Format: int32 */
+            rowVersion: number;
+        };
         ProgramAttributesRequest: {
             name: string;
             nameKana?: string;
@@ -939,6 +1067,57 @@ export interface components {
             bodyMarkdown: string;
             sections: components["schemas"]["SectionResponse"][];
         };
+        OrgDepartmentRequest: {
+            name: string;
+            description?: string;
+            parentCode?: string;
+            /** Format: int32 */
+            sortOrder?: number;
+            active?: boolean;
+        };
+        OrgDepartmentView: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            description: string;
+            parentCode: string;
+            /** Format: int32 */
+            sortOrder: number;
+            active: boolean;
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        OrgContactRequest: {
+            departmentCode: string;
+            name: string;
+            description?: string;
+            /** Format: email */
+            email?: string;
+            phoneExt?: string;
+            chatUrl?: string;
+            officeHours?: string;
+            primary?: boolean;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        OrgContactView: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            departmentCode: string;
+            name: string;
+            description: string;
+            email: string;
+            phoneExt: string;
+            chatUrl: string;
+            officeHours: string;
+            primary: boolean;
+            /** Format: int32 */
+            sortOrder: number;
+            /** Format: int32 */
+            rowVersion: number;
+        };
         FeedbackRequest: {
             helpful: boolean;
             comment?: string;
@@ -969,6 +1148,12 @@ export interface components {
             employmentType: string;
             /** Format: date */
             joinedOn: string;
+        };
+        CreateOrgUserRequest: {
+            /** Format: email */
+            email: string;
+            initialPassword: string;
+            content: components["schemas"]["OrgUserRequest"];
         };
         CreateProgramRequest: {
             code: string;
@@ -1029,6 +1214,14 @@ export interface components {
         PublishRequest: {
             /** Format: uuid */
             versionId: string;
+        };
+        CreateOrgDepartmentRequest: {
+            code: string;
+            content: components["schemas"]["OrgDepartmentRequest"];
+        };
+        CreateOrgContactRequest: {
+            code: string;
+            content: components["schemas"]["OrgContactRequest"];
         };
         CategoryRef: {
             slug: string;
@@ -1363,6 +1556,34 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    updateUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgUserRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgUserView"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
             query?: never;
@@ -1669,6 +1890,62 @@ export interface operations {
             };
         };
     };
+    updateDepartment: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgDepartmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgDepartmentView"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrgContactRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgContactView"];
+                };
+            };
+        };
+    };
     feedback: {
         parameters: {
             query?: never;
@@ -1737,6 +2014,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    users: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgUserView"][];
+                };
+            };
+        };
+    };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrgUserRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgUserView"];
                 };
             };
         };
@@ -2161,6 +2482,94 @@ export interface operations {
             };
         };
     };
+    departments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgDepartmentView"][];
+                };
+            };
+        };
+    };
+    createDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrgDepartmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgDepartmentView"];
+                };
+            };
+        };
+    };
+    contacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgContactView"][];
+                };
+            };
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrgContactRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OrgContactView"];
+                };
+            };
+        };
+    };
     section: {
         parameters: {
             query?: never;
@@ -2402,7 +2811,7 @@ export interface operations {
             };
         };
     };
-    contacts: {
+    contacts_1: {
         parameters: {
             query?: never;
             header?: never;

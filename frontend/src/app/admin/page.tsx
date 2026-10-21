@@ -9,6 +9,28 @@ export default function AdminHomePage() {
       <h1 className="text-2xl font-bold">管理</h1>
       <ul className="flex flex-col gap-2">
         <li>
+          <Link href="/admin/documents" className="font-medium underline">
+            規程
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            自部署が所管する規程・文書を、版（本文）ごとに作成・改定・公開します（コンテンツ担当者だけ）。
+          </p>
+        </li>
+        <li>
+          <Link href="/admin/programs" className="font-medium underline">
+            制度
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            自部署が所管する制度を、根拠の条・窓口とあわせて作成・編集・公開します（コンテンツ担当者だけ）。
+          </p>
+        </li>
+        <li>
+          <Link href="/admin/faqs" className="font-medium underline">
+            FAQ
+          </Link>
+          <p className="text-sm text-muted-foreground">自部署が所管する FAQ を作成・編集・公開します（コンテンツ担当者だけ）。</p>
+        </li>
+        <li>
           <Link href="/admin/life-events" className="font-medium underline">
             きっかけ
           </Link>
@@ -25,20 +47,6 @@ export default function AdminHomePage() {
           </p>
         </li>
         <li>
-          <Link href="/admin/faqs" className="font-medium underline">
-            FAQ
-          </Link>
-          <p className="text-sm text-muted-foreground">自部署が所管する FAQ を作成・編集・公開します（コンテンツ担当者だけ）。</p>
-        </li>
-        <li>
-          <Link href="/admin/programs" className="font-medium underline">
-            制度
-          </Link>
-          <p className="text-sm text-muted-foreground">
-            自部署が所管する制度を、根拠の条・窓口とあわせて作成・編集・公開します（コンテンツ担当者だけ）。
-          </p>
-        </li>
-        <li>
           <Link href="/admin/analytics" className="font-medium underline">
             検索の分析
           </Link>
@@ -47,11 +55,11 @@ export default function AdminHomePage() {
           </p>
         </li>
         <li>
-          <Link href="/admin/documents" className="font-medium underline">
-            規程
+          <Link href="/admin/organization" className="font-medium underline">
+            組織
           </Link>
           <p className="text-sm text-muted-foreground">
-            自部署が所管する規程・文書を、版（本文）ごとに作成・改定・公開します（コンテンツ担当者だけ）。
+            部署・問い合わせ窓口・ユーザー（ロール・所属・有効/無効）を管理します（システム管理者だけ）。
           </p>
         </li>
         <li>
