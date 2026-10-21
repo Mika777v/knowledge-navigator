@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/http";
-import type { CategoryNode, DepartmentContacts, DocumentSummary, ProgramSummary } from "@/lib/api/types";
+import type { CategoryNode, DirectoryDepartment, DocumentSummary, ProgramSummary } from "@/lib/api/types";
 
 /**
  * 管理画面の入力欄で選ぶもの（カテゴリ・窓口・制度・規程）。制度と規程は、操作する人が閲覧できる公開中のものだけ。
@@ -15,7 +15,7 @@ export function useContentOptions() {
   });
   const contacts = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => apiFetch<DepartmentContacts[]>("/api/v1/contacts"),
+    queryFn: () => apiFetch<DirectoryDepartment[]>("/api/v1/contacts"),
   });
   const programs = useQuery({
     queryKey: ["programs"],

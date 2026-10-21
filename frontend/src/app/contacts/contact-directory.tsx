@@ -4,28 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ContactCard } from "@/components/contact-card";
 import { ApiError, apiFetch } from "@/lib/api/http";
-
-/**
- * GET /api/v1/contacts の応答。OpenAPI では窓口の型名（ContactResponse）が別の API と重なっているため、
- * 生成した型ではなくここで定義する（生成した型と同じく、未設定の項目は null になる）
- */
-type DirectoryContact = {
-  code: string;
-  name: string;
-  description: string;
-  email: string;
-  phoneExt: string;
-  chatUrl: string;
-  officeHours: string;
-  primary: boolean;
-};
-type DirectoryDepartment = {
-  code: string;
-  name: string;
-  description: string;
-  parentCode: string;
-  contacts: DirectoryContact[];
-};
+import type { DirectoryDepartment } from "@/lib/api/types";
 
 /** 階層ごとの字下げ（部 → 課 → 係 まで） */
 const INDENT = ["", "ml-4", "ml-8"];

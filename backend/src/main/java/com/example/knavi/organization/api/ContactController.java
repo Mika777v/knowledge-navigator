@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 部署・窓口の一覧（社内向けの公開情報のため、ログインユーザー全員が閲覧できる） */
+/**
+ * 部署・窓口の一覧（社内向けの公開情報のため、ログインユーザー全員が閲覧できる）。
+ * API の型名（OpenAPI のスキーマ名）が content の ContactResponse と重ならないよう、Directory を付けている
+ */
 @Tag(name = "organization", description = "部署・問い合わせ窓口")
 @RestController
 @RequestMapping("/api/v1")
@@ -21,7 +24,7 @@ class ContactController {
         this.jdbc = jdbc;
     }
 
-    record ContactResponse(
+    record DirectoryContact(
             String code,
             String name,
             String description,
@@ -31,13 +34,13 @@ class ContactController {
             String officeHours,
             boolean primary) {}
 
-    record DepartmentContacts(
-            String code, String name, String description, String parentCode, List<ContactResponse> contacts) {}
+    record DirectoryDepartment(
+            String code, String name, String description, String parentCode, List<DirectoryContact> contacts) {}
 
     @Operation(summary = "部署ごとの問い合わせ窓口")
     @GetMapping("/contacts")
     @Transactional(readOnly = true)
-    List<DepartmentContacts> contacts() {
+    List<DirectoryDepartment> contacts() {
         record Dept(java.util.UUID id, String code, String name, String description, String parentCode) {}
         var departments = jdbc.sql("""
                         SELECT d.id, d.code, d.name, d.description, p.code AS parent_code
@@ -52,7 +55,7 @@ class ContactController {
                         rs.getString("parent_code")))
                 .list();
         return departments.stream()
-                .map(d -> new DepartmentContacts(
+                .map(d -> new DirectoryDepartment(
                         d.code(),
                         d.name(),
                         d.description(),
@@ -62,7 +65,7 @@ class ContactController {
                                         FROM contacts WHERE department_id = :id ORDER BY is_primary DESC, sort_order, code
                                         """)
                                 .param("id", d.id())
-                                .query((rs, i) -> new ContactResponse(
+                                .query((rs, i) -> new DirectoryContact(
                                         rs.getString("code"),
                                         rs.getString("name"),
                                         rs.getString("description"),
