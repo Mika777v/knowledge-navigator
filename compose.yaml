@@ -36,6 +36,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       # make seed でデモユーザーに設定するパスワード
       KNAVI_SEED_DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-}
+      # 検索ログのユーザー ID を仮名化する鍵（未設定ならローカル用の既定値）
+      KNAVI_USER_HASH_SECRET: ${KNAVI_USER_HASH_SECRET:-local-dev-only-change-me}
       TZ: Asia/Tokyo
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"

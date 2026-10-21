@@ -1,5 +1,8 @@
 package com.example.knavi.navigation.application;
 
+import com.example.knavi.insight.SearchLogRecorder;
+import com.example.knavi.insight.SearchLogRecorder.SearchLogEntry;
+import com.example.knavi.insight.SearchLogRecorder.TopHit;
 import com.example.knavi.navigation.application.NavigationResult.BasisRef;
 import com.example.knavi.navigation.application.NavigationResult.ContactHit;
 import com.example.knavi.navigation.application.NavigationResult.DocumentHit;
@@ -48,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>全文検索（{@link SearchPort}）: 制度・条文・FAQ
  *   <li>統合とスコアリング（{@link NavigationWeights}）。上位の制度の根拠文書・FAQ も結果に加える
  *   <li>窓口の導出: 上位の制度の窓口 → 辞書で見つかった窓口 → FAQ の窓口。1件もなければ総合窓口（必ず1件以上返す）
+ *   <li>検索ログの記録（ユーザーは仮名化。記録に失敗しても結果は返す）
  * </ol>
  *
  * <p>制度・文書・FAQ はすべて閲覧権限（SEARCH）で絞り込んでから並べる。見えないものは件数・窓口・関連制度にも影響させない。
@@ -75,11 +79,14 @@ public class NavigationService {
     private final NavigationQueries queries;
     private final SearchPort searchPort;
     private final NavigationWeights weights;
+    private final SearchLogRecorder searchLogs;
 
-    NavigationService(NavigationQueries queries, SearchPort searchPort, NavigationWeights weights) {
+    NavigationService(
+            NavigationQueries queries, SearchPort searchPort, NavigationWeights weights, SearchLogRecorder searchLogs) {
         this.queries = queries;
         this.searchPort = searchPort;
         this.weights = weights;
+        this.searchLogs = searchLogs;
     }
 
     public NavigationResult navigate(String q, AuthenticatedUser user) {
@@ -89,6 +96,7 @@ public class NavigationService {
         if (q.length() > MAX_QUERY_LENGTH) {
             throw ApiErrors.badRequest("質問は" + MAX_QUERY_LENGTH + "文字以内で入力してください。");
         }
+        long started = System.nanoTime();
         AccessScope scope = AccessScope.of(user);
         AnalyzedQuery query = QueryAnalyzer.analyze(q);
 
@@ -219,7 +227,23 @@ public class NavigationService {
                 .map(p -> new RelatedProgram(p.id(), p.code(), p.name()))
                 .toList();
 
+        UUID searchLogId = searchLogs
+                .record(new SearchLogEntry(
+                        user.id(),
+                        user.departmentId(),
+                        query.raw(),
+                        query.cleaned(),
+                        Map.of(
+                                "programs", programHits.size(),
+                                "documents", documentHits.size(),
+                                "faqs", faqHits.size(),
+                                "contacts", contacts.size()),
+                        topHits(programHits, documentHits, faqHits),
+                        (System.nanoTime() - started) / 1_000_000))
+                .orElse(null);
+
         return new NavigationResult(
+                searchLogId,
                 new QueryInfo(query.raw(), query.cleaned(), query.terms(), List.copyOf(matchedLifeEvents.values())),
                 programHits,
                 documentHits,
@@ -227,6 +251,15 @@ public class NavigationService {
                 contacts,
                 related,
                 fallback);
+    }
+
+    /** 検索ログに残す上位の結果（ブロックごとに上位3件） */
+    private static List<TopHit> topHits(List<ProgramHit> programs, List<DocumentHit> documents, List<FaqHit> faqs) {
+        List<TopHit> hits = new ArrayList<>();
+        programs.stream().limit(3).forEach(p -> hits.add(new TopHit("PROGRAM", p.code(), p.score())));
+        documents.stream().limit(3).forEach(d -> hits.add(new TopHit("DOCUMENT", d.code(), d.score())));
+        faqs.stream().limit(3).forEach(f -> hits.add(new TopHit("FAQ", f.code(), f.score())));
+        return hits;
     }
 
     private List<DocumentHit> documentHits(
@@ -316,7 +349,15 @@ public class NavigationService {
 
     private static ContactHit contactHit(ContactRow c, String reason) {
         return new ContactHit(
-                c.code(), c.name(), c.department(), c.phoneExt(), c.email(), c.chatUrl(), c.officeHours(), reason);
+                c.id(),
+                c.code(),
+                c.name(),
+                c.department(),
+                c.phoneExt(),
+                c.email(),
+                c.chatUrl(),
+                c.officeHours(),
+                reason);
     }
 
     /** 辞書の一致のうち、より長い一致に含まれるもの（「結婚式」に対する「結婚」など）を除く */

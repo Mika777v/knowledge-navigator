@@ -10,9 +10,11 @@ import java.util.UUID;
  * <p>抜粋（snippet）は HTML を含まないプレーンテキストで返す。強調する語は {@link QueryInfo#terms} を使って画面側で付ける
  * （サーバーで HTML を組み立てると、条文の中身によってはスクリプトの埋め込みにつながるため）。
  *
+ * @param searchLogId 検索ログの ID（クリック・フィードバックの記録に使う。記録に失敗したときは null）
  * @param fallback 制度・文書・FAQ のどれも見つからず、総合窓口だけを案内している
  */
 public record NavigationResult(
+        UUID searchLogId,
         QueryInfo query,
         List<ProgramHit> programs,
         List<DocumentHit> documents,
@@ -62,6 +64,7 @@ public record NavigationResult(
 
     /** @param reason この窓口を案内する理由（例: 「結婚祝金の申請窓口」） */
     public record ContactHit(
+            UUID id,
             String code,
             String name,
             String department,
