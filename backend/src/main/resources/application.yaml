@@ -51,3 +51,14 @@ knavi:
     enabled: false
     path: ../data/seed
     demo-user-password: ${KNAVI_SEED_DEMO_USER_PASSWORD:}
+  navigation:
+    # 検索スコアの重み（docs/ARCHITECTURE.md §4.3）。data/eval の評価結果を見て調整する
+    weights:
+      dictionary: 3.0
+      program-name: 2.5
+      faq-question: 2.0
+      heading: 1.5
+      body: 1.0
+      basis: 0.5
+      linked-faq: 0.3
+      min-relative-score: 0.2
