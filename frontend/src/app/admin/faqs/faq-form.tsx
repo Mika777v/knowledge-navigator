@@ -200,9 +200,9 @@ export function FaqForm({
         {values.links.length === 0 && <p className="text-muted-foreground">まだありません。</p>}
         {values.links.map((link, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-1">
-              <span className="sr-only">関連先 {i + 1} の種類</span>
+            <div className="flex flex-col gap-1">
               <select
+                aria-label={`関連先 ${i + 1} の種類`}
                 value={link.kind}
                 onChange={(e) => setLink(i, { kind: e.target.value as LinkRow["kind"], code: "", articleNo: "" })}
                 className={inputClass}
@@ -210,10 +210,14 @@ export function FaqForm({
                 <option value="PROGRAM">制度</option>
                 <option value="DOCUMENT">規程</option>
               </select>
-            </label>
-            <label className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="sr-only">関連先 {i + 1}</span>
-              <select value={link.code} onChange={(e) => setLink(i, { code: e.target.value })} className={inputClass}>
+            </div>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <select
+                aria-label={`関連先 ${i + 1}`}
+                value={link.code}
+                onChange={(e) => setLink(i, { code: e.target.value })}
+                className={inputClass}
+              >
                 <option value="">選んでください</option>
                 {(link.kind === "PROGRAM" ? options.programs : options.documents)?.map((o) => (
                   <option key={o.code} value={o.code}>
@@ -221,17 +225,17 @@ export function FaqForm({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             {link.kind === "DOCUMENT" && (
-              <label className="flex w-28 flex-col gap-1">
-                <span className="sr-only">関連先 {i + 1} の条</span>
+              <div className="flex w-28 flex-col gap-1">
                 <input
+                  aria-label={`関連先 ${i + 1} の条`}
                   value={link.articleNo}
                   onChange={(e) => setLink(i, { articleNo: e.target.value })}
                   placeholder="第5条（任意）"
                   className={inputClass}
                 />
-              </label>
+              </div>
             )}
             <button
               type="button"
