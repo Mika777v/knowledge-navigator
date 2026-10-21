@@ -339,7 +339,7 @@ class EmbeddingModel(Protocol):
 | 入力 | Bean Validation、Markdown は sanitize（DOMPurify / OWASP HTML Sanitizer）してから描画 |
 | ファイル | MIME/拡張子/マジックバイト検証、サイズ上限、ウイルススキャン（ClamAV）フック、署名付きURLで配信 |
 | 秘密情報 | `.env` は git 管理外、`.env.example` のみコミット。GitHub は Secret scanning / Push protection 有効化 |
-| 依存関係 | Dependabot、CodeQL、Trivy（コンテナイメージ） |
+| 依存関係 | Dependabot（Actions・Gradle・npm・Docker）、CodeQL（Java・TypeScript、`security-extended`、PR と毎週）、Secret scanning / Push protection（有効化済み）。Trivy（コンテナイメージ）は、Action をコミット SHA で固定して導入する予定 |
 | ログ | 検索ログはユーザーIDをHMACで仮名化。保存期間（既定180日、`knavi.insight.retention-days`）を過ぎた検索ログは毎日 3:17（日本時間）に削除し、クリック・フィードバックも一緒に消える。チャット本文は保持期間後に削除 |
 | 監査 | 公開・改定・権限変更・機密文書閲覧を `audit_logs` に追記専用で記録 |
 | LLM送信 | プロバイダごとに「外部送信可能な公開範囲」を設定（例: OpenAI は INTERNAL のみ、Ollama は全て） |
