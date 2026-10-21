@@ -49,7 +49,7 @@ class AdminAuditLogApiTests {
 
     @BeforeEach
     void setUp() {
-        admin = new KnaviUserDetails(UUID.randomUUID(), null, "admin@example.com", null, "SYSTEM_ADMIN", true);
+        admin = as("SYSTEM_ADMIN");
         editorId = jdbc.sql("""
                         INSERT INTO users (email, display_name, role) VALUES ('editor@example.com', '編集 花子', 'CONTENT_EDITOR')
                         RETURNING id
@@ -131,7 +131,7 @@ class AdminAuditLogApiTests {
     @ParameterizedTest(name = "{0} は監査ログを見られる: {1}")
     @CsvSource({"EMPLOYEE, false", "MANAGER, false", "CONTENT_EDITOR, false", "SYSTEM_ADMIN, true"})
     void onlySystemAdminsCanViewAuditLogs(String role, boolean allowed) throws Exception {
-        var who = new KnaviUserDetails(UUID.randomUUID(), null, "x@example.com", null, role, true);
+        var who = as(role);
         mockMvc.perform(get("/api/v1/admin/audit-logs").with(user(who)))
                 .andExpect(allowed ? status().isOk() : status().isForbidden());
     }
@@ -142,5 +142,16 @@ class AdminAuditLogApiTests {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
+    }
+
+    /** その役割のユーザーを登録して返す（セッションのユーザーは、リクエストごとに users テーブルで確かめられるため） */
+    private KnaviUserDetails as(String role) {
+        String email = role.toLowerCase() + "-" + UUID.randomUUID() + "@example.com";
+        UUID id = jdbc.sql("INSERT INTO users (email, display_name, role) VALUES (:e, :e, :r) RETURNING id")
+                .param("e", email)
+                .param("r", role)
+                .query(UUID.class)
+                .single();
+        return new KnaviUserDetails(id, null, email, null, role, true);
     }
 }

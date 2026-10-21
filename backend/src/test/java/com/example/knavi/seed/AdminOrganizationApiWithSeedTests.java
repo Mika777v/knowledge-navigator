@@ -1,6 +1,7 @@
 package com.example.knavi.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.knavi.TestcontainersConfiguration;
+import com.example.knavi.organization.application.OrganizationAdminService;
 import com.example.knavi.organization.infrastructure.KnaviUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import java.nio.file.Path;
@@ -53,6 +55,9 @@ class AdminOrganizationApiWithSeedTests {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    OrganizationAdminService organizationAdmin;
 
     KnaviUserDetails admin;
 
@@ -209,12 +214,16 @@ class AdminOrganizationApiWithSeedTests {
                         .content(json.writeValueAsString(userContent("渡辺 翔", "IT", "SYSTEM_ADMIN", false))))
                 .andExpect(status().isOk());
 
-        // 無効にされた渡辺さんのセッションが残っていても、最後の管理者（二郎さん）は外せない
+        // 無効にされた渡辺さんのセッションは、次のリクエストで破棄される（ログインし直しを求める）
         send(
                         put("/api/v1/admin/users/" + other).header("If-Match", "\"0\""),
                         userContent("管理者 二郎", "IT", "EMPLOYEE", true))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.detail").value("最後のシステム管理者は外せません。先に別のシステム管理者を設定してください。"));
+                .andExpect(status().isUnauthorized());
+
+        // セッションの確認をすり抜けた場合（確認と更新の間に無効化されたときなど）も、最後の管理者（二郎さん）は外せない
+        var lastAdmin = new OrganizationAdminService.UserInput("管理者 二郎", "IT", "EMPLOYEE", "REGULAR", null, true);
+        assertThatThrownBy(() -> organizationAdmin.updateUser(UUID.fromString(other), 0, lastAdmin, admin))
+                .hasMessageContaining("最後のシステム管理者は外せません");
     }
 
     // ------------------------------------------------------------------ 補助

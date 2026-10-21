@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
@@ -24,6 +25,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
  *   <li>セッション Cookie による認証（ブラウザは Next.js の BFF 経由で同一オリジンとして呼ぶ。ADR-0005）
  *   <li>CSRF は SPA 向けの方式（XSRF-TOKEN Cookie を読んで X-XSRF-TOKEN ヘッダーで送る）
  *   <li>未認証の API 呼び出しにはリダイレクトではなく 401 を返す
+ *   <li>無効化・ロールや所属の変更があったユーザーのセッションは、次のリクエストで破棄する（SessionRevalidationFilter）
  * </ul>
  *
  * <p>データ単位の認可（公開範囲・所管部署）は AccessPolicy（#34）で行う。ADR-0004
@@ -34,7 +36,8 @@ public class SecurityConfig {
     /** Web サーバーを起動しないとき（make seed など）は HttpSecurity が無いため作らない */
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, SessionPrincipalChecker principalChecker)
+            throws Exception {
         http.authorizeHttpRequests(auth -> auth.requestMatchers(
                                 "/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll()
@@ -44,6 +47,8 @@ public class SecurityConfig {
                         .authenticated())
                 .csrf(csrf -> csrf.spa())
                 .securityContext(context -> context.securityContextRepository(securityContextRepository()))
+                // 認可（ロールの確認）より前に、セッションのロールが今も正しいかを確かめる
+                .addFilterBefore(new SessionRevalidationFilter(principalChecker), AuthorizationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .logout(logout -> logout.logoutUrl("/api/v1/auth/logout")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT)))

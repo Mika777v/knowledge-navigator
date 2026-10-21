@@ -41,13 +41,14 @@ class AdminAnalyticsApiTests {
     @Autowired
     JdbcClient jdbc;
 
-    KnaviUserDetails editor = as("CONTENT_EDITOR");
+    KnaviUserDetails editor;
 
     // 検索ログは検索とは別のトランザクションで書かれるため、他のテストの検索が残っている。
     // このテストのトランザクションの中で消して（終了時に巻き戻る）、ここで入れたログだけを集計する
     @BeforeEach
     void clearSearchLogs() {
         jdbc.sql("DELETE FROM search_logs").update();
+        editor = as("CONTENT_EDITOR");
     }
 
     @Test
@@ -196,7 +197,14 @@ class AdminAnalyticsApiTests {
                 .update();
     }
 
-    private static KnaviUserDetails as(String role) {
-        return new KnaviUserDetails(UUID.randomUUID(), null, role.toLowerCase() + "@example.com", null, role, true);
+    /** その役割のユーザーを登録して返す（セッションのユーザーは、リクエストごとに users テーブルで確かめられるため） */
+    private KnaviUserDetails as(String role) {
+        String email = role.toLowerCase() + "-" + UUID.randomUUID() + "@example.com";
+        UUID id = jdbc.sql("INSERT INTO users (email, display_name, role) VALUES (:e, :e, :r) RETURNING id")
+                .param("e", email)
+                .param("r", role)
+                .query(UUID.class)
+                .single();
+        return new KnaviUserDetails(id, null, email, null, role, true);
     }
 }
