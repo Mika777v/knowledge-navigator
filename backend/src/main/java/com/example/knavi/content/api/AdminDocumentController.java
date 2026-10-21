@@ -23,6 +23,7 @@ import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +40,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "admin-documents", description = "文書・版の管理（コンテンツ担当者）")
 @RestController
+// 応答への変換（版のセクションなどの遅延読み込み）もサービスと同じトランザクションの中で行う。
+// サービスは保存後に flush するため、応答の版番号（ETag）は更新後の値になる
+@Transactional
 @RequestMapping("/api/v1/admin/documents")
 class AdminDocumentController {
 
