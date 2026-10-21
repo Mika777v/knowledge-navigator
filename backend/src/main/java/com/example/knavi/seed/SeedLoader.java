@@ -96,7 +96,7 @@ class SeedLoader {
                             INSERT INTO departments (code, name, description, sort_order)
                             VALUES (:code, :name, :description, :sort)
                             ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description,
-                              sort_order = EXCLUDED.sort_order, updated_at = now()
+                              sort_order = EXCLUDED.sort_order, row_version = departments.row_version + 1, updated_at = now()
                             """)
                     .param("code", str(d, "code"))
                     .param("name", str(d, "name"))
@@ -128,7 +128,8 @@ class SeedLoader {
                             ON CONFLICT (code) DO UPDATE SET department_id = EXCLUDED.department_id,
                               name = EXCLUDED.name, description = EXCLUDED.description, email = EXCLUDED.email,
                               phone_ext = EXCLUDED.phone_ext, chat_url = EXCLUDED.chat_url,
-                              office_hours = EXCLUDED.office_hours, is_primary = EXCLUDED.is_primary, updated_at = now()
+                              office_hours = EXCLUDED.office_hours, is_primary = EXCLUDED.is_primary,
+                              row_version = contacts.row_version + 1, updated_at = now()
                             """)
                     .param("code", str(c, "code"))
                     .param("dept", departmentId(str(c, "department")))
@@ -174,7 +175,8 @@ class SeedLoader {
                             ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name,
                               department_id = EXCLUDED.department_id, role = EXCLUDED.role,
                               employment_type = EXCLUDED.employment_type, joined_on = EXCLUDED.joined_on,
-                              password_hash = EXCLUDED.password_hash, is_active = true, updated_at = now()
+                              password_hash = EXCLUDED.password_hash, is_active = true,
+                              row_version = users.row_version + 1, updated_at = now()
                             """)
                     .param("email", str(u, "email"))
                     .param("name", str(u, "display_name"))

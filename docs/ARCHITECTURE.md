@@ -111,7 +111,8 @@ backend/src/main/java/com/example/knavi/
 | GET/POST/PUT | `/admin/life-events`、`/admin/life-events/{code}`（紐づける制度もまとめて置き換え。更新は `If-Match` 必須） | EDITOR（部署を問わない） |
 | GET/POST/DELETE | `/admin/navigation-keywords`（`?targetType&targetId` または `?term` で逆引き） | EDITOR / ADMIN |
 | CRUD | `/admin/life-events`、`/admin/synonyms`（Phase3） | EDITOR |
-| CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |
+| GET/POST/PUT | `/admin/departments`・`/admin/departments/{code}`、`/admin/contacts`・`/{code}`、`/admin/users`・`/{id}`（更新は `If-Match` 必須。パスワードは返さない。自分自身のロール変更・無効化と、最後のシステム管理者を外すことは不可。ロールの変更は次のログインから効く） | ADMIN |
+| CRUD | `/admin/categories`、`/admin/tags` | ADMIN（未実装） |
 | POST | `/admin/files`（multipart）→ `POST /admin/ingestion-jobs` | EDITOR（Phase2） |
 | GET | `/admin/ingestion-jobs/{id}` | EDITOR（Phase2） |
 | GET | `/admin/analytics/zero-hits`、`/top-queries`、`/feedback`（`?from=&to=&limit=`。日本時間の日付、既定は30日間。質問ごとの集計は異なる利用者が2人以上のものだけ） | EDITOR/ADMIN |
