@@ -31,6 +31,14 @@ export default function AdminHomePage() {
           </p>
         </li>
         <li>
+          <Link href="/admin/documents" className="font-medium underline">
+            規程
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            自部署が所管する規程・文書を、版（本文）ごとに作成・改定・公開します（コンテンツ担当者だけ）。
+          </p>
+        </li>
+        <li>
           <Link href="/admin/audit-logs" className="font-medium underline">
             監査ログ
           </Link>

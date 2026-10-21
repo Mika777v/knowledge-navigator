@@ -14,6 +14,7 @@ const MENU: MenuItem[] = [
   // FAQ の編集は所管部署のコンテンツ担当者だけ（システム管理者は職務分離のため編集できない）
   { href: "/admin/faqs", label: "FAQ", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/analytics", label: "検索の分析", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
+  { href: "/admin/documents", label: "規程", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/audit-logs", label: "監査ログ", roles: ["SYSTEM_ADMIN"] },
 ];
 
