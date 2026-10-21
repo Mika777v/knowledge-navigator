@@ -121,6 +121,7 @@ backend/src/main/java/com/example/knavi/
 
 ```json
 {
+  "searchLogId": "0192f1c4-...",
   "query": {
     "raw": "結婚したら何か制度ある？", "normalized": "結婚 制度",
     "terms": ["結婚"], "matchedLifeEvents": [{ "code": "MARRIAGE", "name": "結婚" }]
@@ -143,8 +144,8 @@ backend/src/main/java/com/example/knavi/
   ],
   "faqs": [{ "id": "...", "code": "FAQ-001", "question": "入籍前に結婚祝金を申請できますか？", "score": 4.1 }],
   "contacts": [
-    { "code": "GA-GENERAL", "name": "総務部 庶務グループ", "department": "総務部", "phoneExt": "1310", "email": "...", "chatUrl": null, "officeHours": "平日 9:00-17:30", "reason": "結婚祝金の申請窓口" },
-    { "code": "HR-LABOR", "name": "人事部 労務グループ", "department": "人事部", "reason": "結婚休暇の問い合わせ先" }
+    { "id": "...", "code": "GA-GENERAL", "name": "総務部 庶務グループ", "department": "総務部", "phoneExt": "1310", "email": "...", "chatUrl": null, "officeHours": "平日 9:00-17:30", "reason": "結婚祝金の申請窓口" },
+    { "id": "...", "code": "HR-LABOR", "name": "人事部 労務グループ", "department": "人事部", "reason": "結婚休暇の問い合わせ先" }
   ],
   "relatedPrograms": [{ "id": "...", "code": "PRG-PERSONAL-INFO-CHANGE", "name": "氏名・住所・扶養の変更届" }],
   "fallback": false
@@ -154,7 +155,8 @@ backend/src/main/java/com/example/knavi/
 - **snippet はプレーンテキスト**（HTML を含まない）。強調は画面側で `query.terms` を使って付ける（条文の内容による HTML 埋め込みを防ぐため）。
 - `reasons` は表示理由: `LIFE_EVENT:<きっかけ>` / `KEYWORD:<辞書の語>` / `TEXT:<本文で一致した語>` / `BASIS:<制度の根拠の文書>` / `PROGRAM_FAQ`（上位の制度に紐づく FAQ）。
 - 窓口は **必ず1件以上**: 上位3件の制度の窓口 → 辞書で見つかった窓口 → FAQ の窓口 の順に最大4件。1件もなければ総合窓口（`app_settings.navigation.default_contact_code`）。`fallback` は制度・文書・FAQ がどれも見つからなかったとき `true`。
-- 検索ログの ID（`searchLogId`）はクリック・フィードバックの記録とあわせて #40 で追加する。
+- `searchLogId` は検索ログの ID。結果のクリックは `POST /search-logs/{id}/clicks`（`{targetType, targetId, rank}`）、役に立ったかは `POST /search-logs/{id}/feedback`（`{helpful, comment}`、押し直しは上書き）で記録する。**検索した本人だけが記録でき**、他人の検索ログの ID は 404。ログの記録に失敗しても検索結果は返す（そのときは `null`）。
+- 検索ログのユーザーは `HMAC-SHA256(user_id)` で仮名化して保存する（鍵は `KNAVI_USER_HASH_SECRET`）。鍵がなければログから個人の検索履歴は分からないが、同じ人の検索は同じ値になるため利用者数の集計と本人確認に使える。
 
 ---
 

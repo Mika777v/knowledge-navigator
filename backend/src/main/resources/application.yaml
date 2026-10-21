@@ -51,6 +51,9 @@ knavi:
     enabled: false
     path: ../data/seed
     demo-user-password: ${KNAVI_SEED_DEMO_USER_PASSWORD:}
+  insight:
+    # 検索ログのユーザー ID を仮名化する HMAC の鍵。本番では必ず KNAVI_USER_HASH_SECRET を設定する
+    user-hash-secret: ${KNAVI_USER_HASH_SECRET:local-dev-only-change-me}
   navigation:
     # 検索スコアの重み（docs/ARCHITECTURE.md §4.3）。data/eval の評価結果を見て調整する
     weights:
