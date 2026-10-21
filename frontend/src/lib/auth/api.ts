@@ -20,6 +20,11 @@ export const ROLE_LABELS: Record<Me["role"], string> = {
 
 export const meQueryKey = ["me"] as const;
 
+/** 管理画面を使えるロール（辞書・分析はコンテンツ担当者とシステム管理者。各 API でも確認する） */
+export function canUseAdmin(me: Pick<Me, "role"> | undefined): boolean {
+  return me?.role === "CONTENT_EDITOR" || me?.role === "SYSTEM_ADMIN";
+}
+
 export function fetchMe(): Promise<Me> {
   return apiFetch<Me>("/api/v1/me");
 }

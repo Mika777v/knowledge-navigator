@@ -591,6 +591,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/navigation-keywords/targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 案内先の候補（種類ごと。閲覧できるものだけ） */
+        get: operations["targets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/navigation-keywords/{id}": {
         parameters: {
             query?: never;
@@ -836,6 +853,7 @@ export interface components {
             targetType: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
             /** Format: uuid */
             targetId: string;
+            targetLabel: string;
             /** Format: float */
             weight: number;
         };
@@ -1107,6 +1125,12 @@ export interface components {
             parameterName: string;
             token: string;
             headerName: string;
+        };
+        Target: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            label: string;
         };
         VersionSummaryResponse: {
             /** Format: uuid */
@@ -2135,6 +2159,28 @@ export interface operations {
                     "*/*": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    targets: {
+        parameters: {
+            query: {
+                targetType: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Target"][];
                 };
             };
         };
