@@ -110,6 +110,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search-logs/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 検索結果が役に立ったかを記録する（押し直すと上書き） */
+        post: operations["feedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search-logs/{id}/clicks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 検索結果のクリックを記録する */
+        post: operations["click"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -362,6 +396,23 @@ export interface paths {
         };
         /** 制度の詳細（根拠の条・窓口・関連 FAQ・きっかけ） */
         get: operations["program"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/navigate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ナビゲーション検索（制度・文書・FAQ・窓口の4ブロック） */
+        get: operations["navigate"];
         put?: never;
         post?: never;
         delete?: never;
@@ -731,6 +782,17 @@ export interface components {
             bodyMarkdown: string;
             sections: components["schemas"]["SectionResponse"][];
         };
+        FeedbackRequest: {
+            helpful: boolean;
+            comment?: string;
+        };
+        ClickRequest: {
+            targetType: string;
+            /** Format: uuid */
+            targetId: string;
+            /** Format: int32 */
+            rank?: number;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -898,6 +960,94 @@ export interface components {
             contacts: components["schemas"]["ContactView"][];
             faqs: components["schemas"]["FaqSummary"][];
             lifeEvents: components["schemas"]["LifeEventSummary"][];
+        };
+        BasisRef: {
+            /** Format: uuid */
+            documentId: string;
+            documentTitle: string;
+            versionLabel: string;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+        };
+        ContactHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            department: string;
+            phoneExt: string;
+            email: string;
+            chatUrl: string;
+            officeHours: string;
+            reason: string;
+        };
+        DocumentHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            title: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            sections: components["schemas"]["SectionRef"][];
+            /** Format: double */
+            score: number;
+        };
+        FaqHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            question: string;
+            /** Format: double */
+            score: number;
+        };
+        LifeEventRef: {
+            code: string;
+            name: string;
+        };
+        NavigationResult: {
+            /** Format: uuid */
+            searchLogId: string;
+            query: components["schemas"]["QueryInfo"];
+            programs: components["schemas"]["ProgramHit"][];
+            documents: components["schemas"]["DocumentHit"][];
+            faqs: components["schemas"]["FaqHit"][];
+            contacts: components["schemas"]["ContactHit"][];
+            relatedPrograms: components["schemas"]["RelatedProgram"][];
+            fallback: boolean;
+        };
+        ProgramHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            summary: string;
+            benefit: string;
+            deadlineNote: string;
+            basis: components["schemas"]["BasisRef"][];
+            /** Format: double */
+            score: number;
+            reasons: string[];
+        };
+        QueryInfo: {
+            raw: string;
+            normalized: string;
+            terms: string[];
+            matchedLifeEvents: components["schemas"]["LifeEventRef"][];
+        };
+        RelatedProgram: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        SectionRef: {
+            /** Format: uuid */
+            id: string;
+            articleNo: string;
+            heading: string;
+            snippet: string;
         };
         LifeEventDetail: {
             lifeEvent: components["schemas"]["LifeEventSummary"];
@@ -1233,6 +1383,54 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["VersionResponse"];
                 };
+            };
+        };
+    };
+    feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    click: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClickRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1698,6 +1896,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ProgramDetail"];
+                };
+            };
+        };
+    };
+    navigate: {
+        parameters: {
+            query: {
+                /** @description 知りたいこと（例: 結婚したら何か制度ある？）。200文字まで */
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NavigationResult"];
                 };
             };
         };

@@ -1,5 +1,11 @@
 import type { ContactView } from "@/lib/api/types";
 
+/** 詳細画面の窓口（ContactView）と検索結果の窓口（ContactHit）のどちらも表示できるよう、使う項目だけを受け取る */
+export type ContactCardData = Pick<ContactView, "name" | "email" | "phoneExt" | "chatUrl" | "officeHours"> & {
+  description?: string | null;
+  role?: string | null;
+};
+
 const ROLE_LABELS: Record<string, string> = {
   APPLY: "申請先",
   INQUIRY: "問い合わせ先",
@@ -7,7 +13,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 /** 問い合わせ先の窓口。連絡手段（内線・メール・チャット）と受付時間を表示する */
-export function ContactCard({ contact, note }: { contact: ContactView; note?: string }) {
+export function ContactCard({ contact, note }: { contact: ContactCardData; note?: string }) {
   const label = note ?? (contact.role ? ROLE_LABELS[contact.role] : undefined);
   return (
     <div className="flex flex-col gap-1 rounded-lg border border-border p-3 text-sm">
