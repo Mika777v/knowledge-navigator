@@ -23,6 +23,7 @@ describe("HomePage", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: "社内規程ナビ" })).toBeInTheDocument();
     expect(screen.getByText(/架空企業「架空商事株式会社」/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "部署ごとの問い合わせ先の一覧" })).toHaveAttribute("href", "/contacts");
     expect(await screen.findByRole("link", { name: "結婚" })).toHaveAttribute(
       "href",
       `/search?q=${encodeURIComponent("結婚")}`,
