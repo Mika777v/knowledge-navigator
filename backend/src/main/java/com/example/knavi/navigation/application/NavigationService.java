@@ -103,7 +103,7 @@ public class NavigationService {
 
         // 2. 辞書の照合
         List<KeywordMatch> keywords =
-                longestMatches(queries.keywordsIn(query.normalized().replace(" ", "")));
+                longestMatches(queries.keywordsIn(query.normalized().replace(" ", ""), weights.keywordStem()));
         query = query.withTerms(
                 keywords.stream().map(KeywordMatch::term).distinct().toList());
 

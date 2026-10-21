@@ -95,11 +95,11 @@ flowchart LR
 
 | 指標 | 現在の値 |
 |---|---|
-| Hit@1（1位に正解） | 86% |
-| Hit@5（上位5件に正解） | 96% |
-| MRR | 0.90 |
+| Hit@1（1位に正解） | 92% |
+| Hit@5（上位5件に正解） | 100% |
+| MRR | 0.96 |
 | 窓口正答率 | 100% |
-| ゼロヒット率 | 2% |
+| ゼロヒット率 | 0% |
 
 - backend: JUnit + Testcontainers（実際の PostgreSQL + pg_bigm）、Spring Modulith のモジュール境界テスト、権限マトリクステスト
 - frontend: Vitest + Testing Library、E2E は Playwright（`make up` した環境をブラウザで操作し、CI でも実行）

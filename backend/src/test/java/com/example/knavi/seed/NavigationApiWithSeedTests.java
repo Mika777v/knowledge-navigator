@@ -77,6 +77,18 @@ class NavigationApiWithSeedTests {
     }
 
     @Test
+    void keywordsMatchDifferentInflectionsByStem() throws Exception {
+        // 辞書の「眠れない」に対して「眠れなくて」、「出勤時間をずらす」に対して「出勤時間を遅くしたい」
+        String sleep = navigate("眠れなくて仕事がつらい", sato);
+        assertThat(JsonPath.<List<String>>read(sleep, "$.programs[*].code")).contains("PRG-HEALTH-CONSULTATION");
+        assertThat(JsonPath.<List<String>>read(sleep, "$.programs[?(@.code == 'PRG-HEALTH-CONSULTATION')].reasons[*]"))
+                .contains("KEYWORD:眠れ");
+
+        String shift = navigate("出勤時間を遅くしたい", sato);
+        assertThat(JsonPath.<String>read(shift, "$.programs[0].code")).isEqualTo("PRG-TIME-SHIFT");
+    }
+
+    @Test
     void unknownQuestionFallsBackToTheGeneralContact() throws Exception {
         String body = navigate("ぴよぴよ", sato);
 
