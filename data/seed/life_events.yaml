@@ -1,0 +1,103 @@
+# きっかけ（利用者の状況）。ホーム画面の「きっかけから探す」と、検索語からの案内に使う
+# programs: relation が PRIMARY = まず確認する制度 / RELATED = あわせて必要になりやすい手続き
+# keywords: この状況を表す言葉（検索語に含まれたら、このきっかけの制度を案内する）
+
+- code: MARRIAGE
+  name: 結婚
+  icon: ring
+  description: 結婚したとき・する予定のときに使える制度と、必要な手続き。
+  keywords: [結婚, 婚姻, 入籍, 挙式, 結婚式, 新婚]
+  programs:
+    - { program: PRG-MARRIAGE-GIFT, relation: PRIMARY }
+    - { program: PRG-MARRIAGE-LEAVE, relation: PRIMARY }
+    - { program: PRG-PERSONAL-INFO-CHANGE, relation: RELATED }
+    - { program: PRG-COMMUTE-ALLOWANCE, relation: RELATED }
+    - { program: PRG-HOUSING-ALLOWANCE, relation: RELATED }
+
+- code: BIRTH
+  name: 出産・育児
+  icon: baby
+  description: 本人または配偶者の出産と、子育てと仕事の両立に使える制度。
+  keywords: [出産, 妊娠, 子供が生まれる, 子どもが生まれる, 赤ちゃん, 育児, 子育て, 産休, 育休]
+  programs:
+    - { program: PRG-BIRTH-GIFT, relation: PRIMARY }
+    - { program: PRG-MATERNITY-LEAVE, relation: PRIMARY }
+    - { program: PRG-SPOUSE-BIRTH-LEAVE, relation: PRIMARY }
+    - { program: PRG-CHILDCARE-LEAVE, relation: PRIMARY }
+    - { program: PRG-PATERNITY-LEAVE, relation: PRIMARY }
+    - { program: PRG-CHILD-NURSING-LEAVE, relation: PRIMARY }
+    - { program: PRG-CHILDCARE-SHORT-HOURS, relation: PRIMARY }
+    - { program: PRG-OVERTIME-EXEMPTION, relation: RELATED }
+    - { program: PRG-FLEXIBLE-WORK-CHILDCARE, relation: RELATED }
+    - { program: PRG-CARE-SERVICE-AID, relation: RELATED }
+    - { program: PRG-PERSONAL-INFO-CHANGE, relation: RELATED }
+
+- code: MOVE
+  name: 引越し
+  icon: home
+  description: 住所が変わったときに必要な届出と、住まいに関する制度。
+  keywords: [引越し, 引っ越し, 転居, 住所変更, 新居]
+  programs:
+    - { program: PRG-PERSONAL-INFO-CHANGE, relation: PRIMARY }
+    - { program: PRG-COMMUTE-ALLOWANCE, relation: PRIMARY }
+    - { program: PRG-HOUSING-ALLOWANCE, relation: RELATED }
+    - { program: PRG-COMPANY-HOUSING, relation: RELATED }
+
+- code: CARE
+  name: 介護
+  icon: care
+  description: 家族の介護と仕事を両立するための休業・休暇・働き方の制度。
+  keywords: [介護, 親の介護, 要介護, 介護認定, 介護施設]
+  programs:
+    - { program: PRG-CARE-LEAVE, relation: PRIMARY }
+    - { program: PRG-CARE-DAYS, relation: PRIMARY }
+    - { program: PRG-OVERTIME-EXEMPTION, relation: PRIMARY }
+    - { program: PRG-CARE-SERVICE-AID, relation: RELATED }
+    - { program: PRG-TIME-SHIFT, relation: RELATED }
+    - { program: PRG-REMOTE-WORK, relation: RELATED }
+
+- code: ILLNESS
+  name: 病気・けが
+  icon: health
+  description: 病気やけがで休むとき、体調に不安があるときに使える制度と相談先。
+  keywords: [病気, けが, 怪我, 入院, 体調不良, 通院, 手術]
+  programs:
+    - { program: PRG-ANNUAL-LEAVE, relation: PRIMARY }
+    - { program: PRG-HOURLY-LEAVE, relation: PRIMARY }
+    - { program: PRG-SICK-VISIT, relation: PRIMARY }
+    - { program: PRG-HEALTH-CONSULTATION, relation: PRIMARY }
+    - { program: PRG-HEALTH-CHECKUP-AID, relation: RELATED }
+
+- code: JOIN
+  name: 入社
+  icon: start
+  description: 入社したときに必要な手続きと、最初に知っておきたい制度。
+  keywords: [入社, 新入社員, 中途入社, 入社手続き, 初出社]
+  programs:
+    - { program: PRG-COMMUTE-ALLOWANCE, relation: PRIMARY }
+    - { program: PRG-PERSONAL-INFO-CHANGE, relation: PRIMARY }
+    - { program: PRG-ANNUAL-LEAVE, relation: PRIMARY }
+    - { program: PRG-REMOTE-WORK, relation: RELATED }
+    - { program: PRG-PC-REPAIR, relation: RELATED }
+    - { program: PRG-HOUSING-ALLOWANCE, relation: RELATED }
+
+- code: RESIGN
+  name: 退職
+  icon: door
+  description: 退職するときの申出と手続き。
+  keywords: [退職, 退社, 辞める, 退職届, 転職]
+  programs:
+    - { program: PRG-RESIGNATION, relation: PRIMARY }
+    - { program: PRG-ANNUAL-LEAVE, relation: RELATED }
+
+- code: REMOTE
+  name: 在宅勤務
+  icon: laptop
+  description: 在宅勤務を始めるときの申請と、在宅勤務中のルール・手当。
+  keywords: [在宅勤務, テレワーク, リモートワーク, 在宅, 家で仕事]
+  programs:
+    - { program: PRG-REMOTE-WORK, relation: PRIMARY }
+    - { program: PRG-REMOTE-ALLOWANCE, relation: PRIMARY }
+    - { program: PRG-COMMUTE-ACTUAL-COST, relation: PRIMARY }
+    - { program: PRG-PC-REPAIR, relation: RELATED }
+    - { program: PRG-DEVICE-LOSS-REPORT, relation: RELATED }

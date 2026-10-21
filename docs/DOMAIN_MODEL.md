@@ -192,6 +192,8 @@ classDiagram
 > - `contacts.code`、`departments.description`、`app_settings`（総合窓口などの設定）を追加
 > - `documents.current_version_id` は「同じ文書の版」しか指せない複合外部キー（遅延制約）
 > - `audit_logs` の更新・削除はトリガーで禁止（DB ロールの権限分離は本番構成で行う）
+> - `program_basis` は条単位（`article_no`）で複数持てる。改定でセクションが作り直されても条番号で再リンクできる（V2、#33）
+> - `faqs.code` を追加（seed の再投入で FAQ を特定するため。V2）
 >
 > 拡張: `pg_bigm`（日本語部分一致）、`vector`（pgvector, Phase4）、`pgcrypto`。
 > Docker では `pgvector/pgvector:pg17` をベースに pg_bigm をビルドした独自イメージを `infra/docker/postgres/` に置く。

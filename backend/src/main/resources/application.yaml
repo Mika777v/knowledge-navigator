@@ -44,3 +44,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
   paths-to-match: /api/**
+
+knavi:
+  seed:
+    # make seed で true にする（通常の起動では投入しない）
+    enabled: false
+    path: ../data/seed
+    demo-user-password: ${KNAVI_SEED_DEMO_USER_PASSWORD:}

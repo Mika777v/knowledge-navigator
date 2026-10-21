@@ -10,7 +10,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.domain.Persistable;
 
 /**
  * 文書のある時点の内容。公開された版の本文とセクションは変更できない（改定は新しい版で行う）。
@@ -26,7 +30,7 @@ import org.hibernate.annotations.CreationTimestamp;
  */
 @Entity
 @Table(name = "document_versions")
-public class DocumentVersion {
+public class DocumentVersion implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -61,6 +65,13 @@ public class DocumentVersion {
     @OrderBy("ordinal")
     private List<Section> sections = new ArrayList<>();
 
+    /**
+     * ID をアプリで採番するため、Spring Data が新規かどうかを判定できるようにする
+     * （判定できないと save() が persist ではなく merge になり、別インスタンスが管理対象になる）
+     */
+    @Transient
+    private boolean isNew = true;
+
     protected DocumentVersion() {}
 
     DocumentVersion(Document document, String versionLabel, LocalDate effectiveFrom, String changeNote) {
@@ -69,6 +80,17 @@ public class DocumentVersion {
         this.versionLabel = versionLabel;
         this.effectiveFrom = effectiveFrom;
         this.changeNote = changeNote;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
     }
 
     public boolean isPublished() {
@@ -112,6 +134,7 @@ public class DocumentVersion {
         }
     }
 
+    @Override
     public UUID getId() {
         return id;
     }

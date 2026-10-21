@@ -1,0 +1,695 @@
+# 制度（すべて架空の会社の制度）。ADR-0003
+# basis:     根拠の文書（documents の code）と条番号。同じ文書の複数の条を指定できる
+# contacts:  窓口（contacts の code）と役割  APPLY=申請先 / INQUIRY=問い合わせ先 / PAYMENT=支給担当
+# keywords:  利用者が使いそうな言葉（制度名を知らなくてもヒットさせるため）
+# visibility は根拠文書の公開範囲より広くしてはいけない（INTERNAL が最も広い）
+
+# =====================================================================
+# 慶弔（慶弔見舞金規程）
+# =====================================================================
+- code: PRG-MARRIAGE-GIFT
+  name: 結婚祝金
+  name_kana: けっこんいわいきん
+  summary: 社員が結婚したときに会社から支給されるお祝い金。
+  eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  benefit: 30,000円（社員同士の結婚はそれぞれに支給）
+  how_to_apply: 社内ポータルの「慶弔申請」から、婚姻を証明する書類を添付して申請する。
+  deadline_note: 入籍日から6か月以内
+  required_documents: 戸籍謄本または婚姻届受理証明書の写し
+  category: welfare-ceremony
+  owner_department: GA
+  visibility: INTERNAL
+  basis:
+    - { document: REG-GA-001, article: 第5条 }
+    - { document: REG-GA-001, article: 第3条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [結婚, 婚姻, 入籍, 結婚祝い, ご祝儀, 祝い金]
+
+- code: PRG-BIRTH-GIFT
+  name: 出産祝金
+  name_kana: しゅっさんいわいきん
+  summary: 社員または配偶者が出産したときに支給されるお祝い金。
+  eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  benefit: 子1人につき20,000円
+  how_to_apply: 社内ポータルの「慶弔申請」から、出生を証明する書類を添付して申請する。
+  deadline_note: 出生日から6か月以内
+  required_documents: 出生届受理証明書または母子健康手帳の出生届出済証明の写し
+  category: welfare-ceremony
+  owner_department: GA
+  visibility: INTERNAL
+  basis:
+    - { document: REG-GA-001, article: 第6条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [出産, 出生, 子供が生まれた, 赤ちゃん, 出産祝い]
+
+- code: PRG-CONDOLENCE
+  name: 弔慰金・供花
+  name_kana: ちょういきん
+  summary: 社員や家族が亡くなったときに支給される弔慰金と、会社名での供花の手配。
+  eligibility: 社員（勤続期間にかかわらず支給）
+  benefit: 本人100,000円、配偶者50,000円、子・父母30,000円、祖父母・兄弟姉妹・配偶者の父母10,000円
+  how_to_apply: 社内ポータルの「慶弔申請」から申請する。供花は総務部 庶務グループに連絡する。
+  deadline_note: 事由の発生日から6か月以内
+  category: welfare-ceremony
+  owner_department: GA
+  visibility: INTERNAL
+  basis:
+    - { document: REG-GA-001, article: 第8条 }
+    - { document: REG-GA-001, article: 第9条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [弔慰金, 香典, 葬儀, 葬式, 亡くなった, 死亡, 供花, 不幸]
+
+- code: PRG-SICK-VISIT
+  name: 傷病見舞金
+  name_kana: しょうびょうみまいきん
+  summary: 業務外の病気・けがで連続14日以上欠勤したときに支給される見舞金。
+  eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  benefit: 10,000円
+  how_to_apply: 社内ポータルの「慶弔申請」から申請する。
+  deadline_note: 事由の発生日から6か月以内
+  category: welfare-ceremony
+  owner_department: GA
+  visibility: INTERNAL
+  basis:
+    - { document: REG-GA-001, article: 第11条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [入院, 病気, けが, 怪我, 長期欠勤, 見舞金]
+
+- code: PRG-DISASTER-AID
+  name: 災害見舞金
+  name_kana: さいがいみまいきん
+  summary: 住居が火災・自然災害で被害を受けたときに支給される見舞金。
+  eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  benefit: 全壊・全焼100,000円、半壊・半焼50,000円、一部損壊20,000円
+  how_to_apply: 社内ポータルの「慶弔申請」から、被害を証明する書類（罹災証明書など）を添付して申請する。
+  deadline_note: 事由の発生日から6か月以内
+  required_documents: 罹災証明書など
+  category: welfare-ceremony
+  owner_department: GA
+  visibility: INTERNAL
+  basis:
+    - { document: REG-GA-001, article: 第12条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [火事, 火災, 地震, 台風, 水害, 浸水, 被災, 災害]
+
+# =====================================================================
+# 休暇（就業規則）
+# =====================================================================
+- code: PRG-MARRIAGE-LEAVE
+  name: 結婚休暇
+  name_kana: けっこんきゅうか
+  summary: 本人が結婚するときに取得できる有給の特別休暇。
+  eligibility: 全社員
+  benefit: 連続5日（休日を含まない）
+  how_to_apply: 勤怠システムで事前に「特別休暇（結婚）」を申請する。
+  deadline_note: 入籍日または挙式日から1年以内
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第32条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [結婚, 婚姻, 入籍, 挙式, 結婚式, 新婚旅行, ハネムーン]
+
+- code: PRG-SPOUSE-BIRTH-LEAVE
+  name: 配偶者出産休暇
+  name_kana: はいぐうしゃしゅっさんきゅうか
+  summary: 配偶者が出産するときに取得できる有給の特別休暇。
+  eligibility: 全社員
+  benefit: 2日
+  how_to_apply: 勤怠システムで「特別休暇（配偶者出産）」を申請する。
+  deadline_note: 出産予定日の前後各2週間以内
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第32条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [妻の出産, 配偶者の出産, 立ち会い出産, 出産, パパ]
+
+- code: PRG-BEREAVEMENT-LEAVE
+  name: 忌引休暇
+  name_kana: きびききゅうか
+  summary: 家族が亡くなったときに取得できる有給の特別休暇。
+  eligibility: 全社員
+  benefit: 配偶者・子・父母は5日、祖父母・兄弟姉妹・配偶者の父母は3日
+  how_to_apply: 勤怠システムで「特別休暇（忌引）」を申請する。事後の申請でもよい。
+  deadline_note: 死亡日から2週間以内に取得
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第32条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [忌引, 葬儀, 葬式, 亡くなった, 死亡, 不幸, 法事]
+
+- code: PRG-REFRESH-LEAVE
+  name: リフレッシュ休暇・永年勤続表彰
+  name_kana: りふれっしゅきゅうか
+  summary: 勤続10年・20年・30年に達したときの休暇と記念品（旅行券）。
+  eligibility: 勤続10年・20年・30年に達した社員
+  benefit: 休暇5日と旅行券（10年 30,000円分、20年 50,000円分、30年 100,000円分）
+  how_to_apply: 対象者には人事部から通知がある。休暇は勤怠システムで申請する。
+  deadline_note: 達した日から1年以内に取得
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第32条 }
+    - { document: REG-HR-005, article: 第14条 }
+  contacts:
+    - { contact: HR-REP, role: INQUIRY }
+  keywords: [勤続, 永年勤続, 10年, 表彰, 記念品, 旅行券]
+
+- code: PRG-ANNUAL-LEAVE
+  name: 年次有給休暇
+  name_kana: ねんじゆうきゅうきゅうか
+  summary: 入社6か月後から付与される有給休暇。勤続年数に応じて日数が増える。
+  eligibility: 6か月以上継続勤務し、所定労働日の8割以上出勤した社員
+  benefit: 入社6か月で10日、以後1年ごとに増え、6年6か月以上で年20日。翌年度に繰り越し可
+  how_to_apply: 原則として前日までに勤怠システムで申請する。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第25条 }
+    - { document: REG-HR-001, article: 第26条 }
+    - { document: REG-HR-001, article: 第27条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [有給, 有休, 年休, 休みたい, 休暇, 有給休暇, 繰り越し]
+
+- code: PRG-HOURLY-LEAVE
+  name: 時間単位の年次有給休暇
+  name_kana: じかんたんいねんきゅう
+  summary: 年次有給休暇を1時間単位で取得できる制度（通院や子どもの送迎などに）。
+  eligibility: 年次有給休暇がある社員
+  benefit: 1年に5日分まで
+  how_to_apply: 勤怠システムで「時間単位年休」を申請する。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第28条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [時間休, 時間単位, 中抜け, 通院, 半休]
+
+- code: PRG-MATERNITY-LEAVE
+  name: 産前産後休業
+  name_kana: さんぜんさんごきゅうぎょう
+  summary: 出産前後に取得できる休業。産後8週間は原則として就業できない。
+  eligibility: 出産予定の女性社員
+  benefit: 産前6週間（多胎妊娠は14週間）、産後8週間
+  how_to_apply: 出産予定日がわかったら、人事部 労務グループに申し出る。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第30条 }
+    - { document: REG-HR-001, article: 第31条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [産休, 産前休業, 産後休業, 妊娠, 出産, 母性健康管理]
+
+- code: PRG-JUROR-LEAVE
+  name: 裁判員休暇
+  name_kana: さいばんいんきゅうか
+  summary: 裁判員または裁判員候補者として裁判所に出頭するときの有給の休暇。
+  eligibility: 全社員
+  benefit: 必要な日数
+  how_to_apply: 呼出状の写しを添えて、勤怠システムで申請する。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第35条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [裁判員, 呼出状, 裁判所]
+
+# =====================================================================
+# 育児・介護（育児介護休業規程）
+# =====================================================================
+- code: PRG-CHILDCARE-LEAVE
+  name: 育児休業
+  name_kana: いくじきゅうぎょう
+  summary: 1歳未満の子を育てるための休業。2回まで分割でき、保育所に入れない場合などは最長2歳まで延長できる。
+  eligibility: 1歳未満の子を養育する社員（契約社員は、子が1歳6か月になるまでに契約が満了することが明らかでない場合）
+  benefit: 原則として子が1歳になるまで（2回まで分割可）
+  how_to_apply: 人事システムの「育児休業申出書」で申し出る。
+  deadline_note: 原則として休業開始予定日の1か月前まで
+  required_documents: 育児休業申出書
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第4条 }
+    - { document: REG-HR-002, article: 第5条 }
+    - { document: REG-HR-002, article: 第6条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [育休, 育児休暇, 育児休業, 子育て, 育児, 保育園に入れない]
+
+- code: PRG-PATERNITY-LEAVE
+  name: 産後パパ育休（出生時育児休業）
+  name_kana: さんごぱぱいくきゅう
+  summary: 子の出生後8週間以内に、最大4週間取得できる休業。通常の育児休業とは別に取得できる。
+  eligibility: 子の出生後8週間以内の子を養育する社員
+  benefit: 4週間（28日）まで、2回まで分割可
+  how_to_apply: 人事システムの「育児休業申出書」で出生時育児休業として申し出る。
+  deadline_note: 原則として休業開始予定日の2週間前まで
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第7条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [産後パパ育休, パパ育休, 男性育休, 出生時育児休業, 父親, 育休]
+
+- code: PRG-CHILD-NURSING-LEAVE
+  name: 子の看護等休暇
+  name_kana: こかんごとうきゅうか
+  summary: 子どもの病気・予防接種・学級閉鎖・入園式などのための有給の休暇。時間単位で取得できる。
+  eligibility: 小学校3年生修了までの子を養育する社員
+  benefit: 子1人は年5日、2人以上は年10日（有給、時間単位可）
+  how_to_apply: 勤怠システムで「子の看護等休暇」を申請する。当日の申請でもよい。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第12条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [看護休暇, 子供の病気, 子どもが熱, 学級閉鎖, 入学式, 入園式, 卒園式, 予防接種]
+
+- code: PRG-CARE-LEAVE
+  name: 介護休業
+  name_kana: かいごきゅうぎょう
+  summary: 要介護状態の家族を介護するための休業。対象家族1人につき通算93日、3回まで分割できる。
+  eligibility: 要介護状態にある家族を介護する社員
+  benefit: 対象家族1人につき通算93日まで（3回まで分割可）
+  how_to_apply: 人事システムの「介護休業申出書」で申し出る。
+  deadline_note: 原則として休業開始予定日の2週間前まで
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第10条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [介護, 介護休暇, 親の介護, 要介護, 介護休業]
+
+- code: PRG-CARE-DAYS
+  name: 介護休暇
+  name_kana: かいごきゅうか
+  summary: 家族の通院の付き添いや介護サービスの手続きなどのための有給の休暇。時間単位で取得できる。
+  eligibility: 要介護状態にある家族の介護や世話を行う社員
+  benefit: 対象家族1人は年5日、2人以上は年10日（有給、時間単位可）
+  how_to_apply: 勤怠システムで「介護休暇」を申請する。
+  category: hr-leave
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第13条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [介護, 通院の付き添い, ケアマネ, 介護休暇]
+
+- code: PRG-CHILDCARE-SHORT-HOURS
+  name: 育児短時間勤務
+  name_kana: いくじたんじかんきんむ
+  summary: 3歳未満の子を育てる社員が、1日の所定労働時間を6時間にできる制度。
+  eligibility: 3歳に満たない子を養育する社員
+  benefit: 1日6時間勤務
+  how_to_apply: 人事システムで申し出て、始業・終業時刻を所属長と相談して決める。
+  category: hr-work
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第16条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [時短, 時短勤務, 短時間勤務, 6時間勤務, 保育園のお迎え]
+
+- code: PRG-OVERTIME-EXEMPTION
+  name: 残業免除・時間外労働の制限
+  name_kana: ざんぎょうめんじょ
+  summary: 小学校就学前の子の養育や家族の介護をする社員が、残業や深夜業の制限を請求できる制度。
+  eligibility: 小学校就学前の子を養育する社員、要介護状態の家族を介護する社員
+  benefit: 所定外労働の免除、時間外労働を月24時間・年150時間以内に制限、深夜業の免除
+  how_to_apply: 人事システムで請求する。
+  category: hr-work
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第14条 }
+    - { document: REG-HR-002, article: 第15条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [残業免除, 残業したくない, 定時で帰りたい, 深夜業, 時間外]
+
+- code: PRG-FLEXIBLE-WORK-CHILDCARE
+  name: 育児のための柔軟な働き方（時差出勤・テレワーク）
+  name_kana: じゅうなんなはたらきかた
+  summary: 3歳から小学校就学前の子を育てる社員が、時差出勤か月10日以上のテレワークを選んで利用できる制度。
+  eligibility: 3歳から小学校就学前の子を養育する社員
+  benefit: 時差出勤（始業・終業時刻の変更）またはテレワーク（月10日以上・時間単位可）のどちらか1つ
+  how_to_apply: 人事部 労務グループに相談のうえ、人事システムで申し出る。
+  category: hr-work
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-002, article: 第17条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [柔軟な働き方, 時差出勤, テレワーク, 在宅, 保育園の送迎]
+
+- code: PRG-MANAGER-CHILDCARE-SUPPORT
+  name: 部下の妊娠・出産・介護の申出への対応（管理職向け）
+  name_kana: ぶかのいくじかいごたいおう
+  summary: 部下から妊娠・出産・介護の申出を受けた管理職が行う対応（人事への連絡、制度の個別周知、ハラスメントの防止）。
+  eligibility: 管理職
+  how_to_apply: 申出を受けたら速やかに人事部 労務グループに連絡する。制度の個別周知と意向確認は人事部と一緒に行う。
+  category: hr-leave
+  owner_department: HR
+  visibility: MANAGERS
+  basis:
+    - { document: REG-HR-002, article: 第3条 }
+    - { document: REG-HR-002, article: 第9条 }
+    - { document: REG-LEGAL-001, article: 第5条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [部下, 管理職, 育休の申出, 妊娠の報告, マタハラ]
+
+# =====================================================================
+# 働き方（就業規則・在宅勤務規程・通勤手当規程）
+# =====================================================================
+- code: PRG-REMOTE-WORK
+  name: 在宅勤務
+  name_kana: ざいたくきんむ
+  summary: 自宅などで勤務できる制度。週3日まで（育児・介護の場合は上限なし）。
+  eligibility: 試用期間を終えた社員で、所属長が認めた者（育児・介護などの事情があれば試用期間中も可）
+  benefit: 週3日まで在宅勤務できる
+  how_to_apply: 初回は人事システムの「在宅勤務利用申請」で所属長の承認を得る。以後は前日までに勤怠システムで日ごとに申請する。
+  deadline_note: 日ごとの申請は前日の終業時刻まで
+  category: hr-work
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-003, article: 第4条 }
+    - { document: REG-HR-003, article: 第5条 }
+    - { document: REG-HR-003, article: 第7条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [在宅, 在宅勤務, テレワーク, リモートワーク, リモート, 家で仕事]
+
+- code: PRG-REMOTE-ALLOWANCE
+  name: 在宅勤務手当
+  name_kana: ざいたくきんむてあて
+  summary: 在宅勤務の通信費・光熱費の補助として支給される手当。
+  eligibility: 在宅勤務の登録をし、その月に1日以上在宅勤務をした社員
+  benefit: 月額3,000円
+  how_to_apply: 在宅勤務の利用登録をすれば申請は不要（翌月の給与と合わせて支給）。
+  category: hr-pay
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-003, article: 第12条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [在宅勤務手当, 通信費, 光熱費, 電気代, ネット代]
+
+- code: PRG-COMMUTE-ALLOWANCE
+  name: 通勤手当
+  name_kana: つうきんてあて
+  summary: 通勤にかかる費用として毎月支給される手当。入社・引越し・経路変更のときは申請が必要。
+  eligibility: 通勤距離が片道2km以上の社員（パートタイム社員を含む）
+  benefit: 電車・バスは6か月定期代の6分の1（月50,000円まで）。自転車・自家用車は距離に応じた定額
+  how_to_apply: 人事システムの「通勤経路申請」に定期券の金額がわかる資料を添付して申請する。
+  deadline_note: 事由が発生した日から14日以内（遅れた場合はさかのぼって支給しない）
+  category: hr-pay
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-004, article: 第4条 }
+    - { document: REG-HR-004, article: 第7条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [通勤手当, 交通費, 定期代, 定期券, 通勤経路, 電車代]
+
+- code: PRG-COMMUTE-ACTUAL-COST
+  name: 在宅勤務併用時の通勤費の実費精算
+  name_kana: つうきんひじっぴせいさん
+  summary: 1か月の出社予定が10日以下の社員は、定期代の代わりに出社した日の往復運賃を実費で精算する。
+  eligibility: 在宅勤務を併用し、1か月の出社予定日が10日以下の社員
+  benefit: 出社した日の往復運賃の実費
+  how_to_apply: 経費精算システムで月ごとに申請する。定期代との切り替えは前月20日までに人事部に申請する。
+  deadline_note: 切り替えは前月の20日まで
+  category: hr-pay
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-004, article: 第8条 }
+  contacts:
+    - { contact: FIN-EXPENSE, role: APPLY }
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [実費精算, 出社日の交通費, 在宅勤務の交通費, 定期をやめる]
+
+- code: PRG-PERSONAL-INFO-CHANGE
+  name: 氏名・住所・扶養の変更届
+  name_kana: しめいじゅうしょへんこう
+  summary: 結婚・引越し・出産などで氏名・住所・扶養家族が変わったときの届出。
+  eligibility: 全社員
+  how_to_apply: 人事システムの「身上異動届」で届け出る。通勤経路が変わる場合は通勤手当の申請も行う。
+  deadline_note: 変更の日から14日以内
+  category: hr
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第10条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [住所変更, 引越し, 引っ越し, 転居, 氏名変更, 名字が変わる, 扶養, 扶養家族, 身上異動]
+
+- code: PRG-TIME-SHIFT
+  name: 時差出勤
+  name_kana: じさしゅっきん
+  summary: 業務や育児・介護の事情に応じて、始業・終業時刻を1時間の範囲で前後にずらせる制度。
+  eligibility: 所属長の承認を得た社員
+  benefit: 始業・終業時刻を1時間の範囲で繰り上げ・繰り下げ
+  how_to_apply: 所属長の承認を得て、勤怠システムで申請する。
+  category: hr-work
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第17条 }
+  contacts:
+    - { contact: HR-LABOR, role: INQUIRY }
+  keywords: [時差出勤, 早く帰りたい, 出勤時間をずらす, 始業時間]
+
+- code: PRG-RESIGNATION
+  name: 退職の手続き
+  name_kana: たいしょくのてつづき
+  summary: 退職するときの申出の時期と、業務の引き継ぎ・PC や社員証の返却などの手続き。
+  eligibility: 退職する社員
+  how_to_apply: できるだけ退職日の1か月前までに所属長に申し出る。退職日までに引き継ぎを行い、PC・社員証などを返却する。
+  deadline_note: 退職日の1か月前までに申出（目安）
+  category: hr
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-001, article: 第39条 }
+    - { document: REG-HR-001, article: 第42条 }
+    - { document: REG-IT-002, article: 第11条 }
+  contacts:
+    - { contact: HR-HIRE, role: APPLY }
+    - { contact: IT-HELPDESK, role: INQUIRY }
+  keywords: [退職, 辞めたい, 退社, 退職届, 引き継ぎ, 返却]
+
+# =====================================================================
+# 福利厚生（福利厚生規程）
+# =====================================================================
+- code: PRG-HOUSING-ALLOWANCE
+  name: 住宅手当
+  name_kana: じゅうたくてあて
+  summary: 世帯主として賃貸住宅を契約している正社員に支給される手当。
+  eligibility: 世帯主として賃貸住宅を契約している正社員
+  benefit: 月額20,000円
+  how_to_apply: 人事システムの「住宅手当申請」に賃貸借契約書の写しを添付して申請する。結婚・転居などで変わったら14日以内に届け出る。
+  deadline_note: 変更は14日以内に届出
+  required_documents: 賃貸借契約書の写し
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第5条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [住宅手当, 家賃補助, 家賃, 賃貸, 世帯主]
+
+- code: PRG-COMPANY-HOUSING
+  name: 社宅
+  name_kana: しゃたく
+  summary: 会社の命令で転居を伴う異動をした社員が入居できる借り上げ社宅。
+  eligibility: 会社の命令により転居を伴う異動をした社員
+  benefit: 家賃の80%を会社が負担（入居は原則5年以内）
+  how_to_apply: 異動の内示後、総務部 庶務グループに申し込む。
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第6条 }
+  contacts:
+    - { contact: GA-GENERAL, role: APPLY }
+  keywords: [社宅, 転勤, 異動で引越し, 借り上げ社宅]
+
+- code: PRG-HEALTH-CHECKUP-AID
+  name: 人間ドック補助
+  name_kana: にんげんどっくほじょ
+  summary: 35歳以上の社員が人間ドックを受けたときの費用補助。定期健康診断の代わりになる。
+  eligibility: 満35歳以上の正社員・契約社員
+  benefit: 1年度に1回、30,000円まで
+  how_to_apply: 社内ポータルの「健康補助申請」から領収書を添付して申請する。
+  deadline_note: 受診後3か月以内
+  required_documents: 領収書
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第7条 }
+  contacts:
+    - { contact: HR-HEALTH, role: INQUIRY }
+  keywords: [人間ドック, 健康診断, 健診, 検診]
+
+- code: PRG-QUALIFICATION-AWARD
+  name: 資格取得奨励金・研修補助
+  name_kana: しかくしゅとくしょうれいきん
+  summary: 会社が指定する資格を取ったときの奨励金と、通信教育・外部研修の受講料補助。
+  eligibility: 正社員・契約社員
+  benefit: 資格ごとの奨励金、通信教育・外部研修は受講料の2分の1（年50,000円まで）
+  how_to_apply: 合格通知・修了証を添えて人事部 採用・研修グループに申請する。
+  deadline_note: 合格通知を受けた日から3か月以内
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第10条 }
+    - { document: REG-HR-005, article: 第11条 }
+  contacts:
+    - { contact: HR-HIRE, role: APPLY }
+  keywords: [資格, 資格取得, 奨励金, 通信教育, 研修, 自己啓発, 受験]
+
+- code: PRG-CARE-SERVICE-AID
+  name: ベビーシッター・介護サービスの利用補助
+  name_kana: べびーしったーほじょ
+  summary: 会社の契約するベビーシッター・介護サービスを利用したときの補助。
+  eligibility: 小学校就学前の子を養育する社員、要介護状態の家族を介護する社員
+  benefit: 1回2,000円（1か月10回まで）
+  how_to_apply: 利用月の翌月10日までに人事部 労務グループに申請する。
+  deadline_note: 利用月の翌月10日まで
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第12条 }
+  contacts:
+    - { contact: HR-LABOR, role: APPLY }
+  keywords: [ベビーシッター, シッター, 介護サービス, ヘルパー, 子どもの預け先]
+
+- code: PRG-HEALTH-CONSULTATION
+  name: 健康相談（産業医・保健師）
+  name_kana: けんこうそうだん
+  summary: 心身の不調について産業医・保健師に相談できる。相談内容は本人の同意なく人事評価に使われない。
+  eligibility: 全社員
+  how_to_apply: 健康管理室にメールまたは内線で予約する。
+  category: welfare
+  owner_department: HR
+  visibility: INTERNAL
+  basis:
+    - { document: REG-HR-005, article: 第8条 }
+    - { document: REG-HR-001, article: 第38条 }
+  contacts:
+    - { contact: HR-HEALTH, role: INQUIRY }
+  keywords: [体調不良, メンタル, ストレス, 眠れない, 産業医, 保健師, 健康相談, しんどい]
+
+# =====================================================================
+# 経費・IT・コンプライアンス
+# =====================================================================
+- code: PRG-BUSINESS-TRIP
+  name: 出張旅費（交通費・宿泊費・日当）
+  name_kana: しゅっちょうりょひ
+  summary: 出張の申請と、交通費・宿泊費（上限あり）・日当の精算。
+  eligibility: 業務で出張する社員
+  benefit: 交通費は実費、宿泊費は1泊10,000〜12,000円まで、日当は日帰り1,000円・宿泊1日2,000円
+  how_to_apply: 出発の3営業日前までに経費精算システムで出張申請し、帰着後2週間以内に精算する。
+  deadline_note: 申請は出発の3営業日前まで、精算は帰着から2週間以内
+  required_documents: 宿泊費・航空券・タクシー代の領収書
+  category: finance
+  owner_department: FIN
+  visibility: INTERNAL
+  basis:
+    - { document: REG-FIN-001, article: 第4条 }
+    - { document: REG-FIN-001, article: 第7条 }
+    - { document: REG-FIN-001, article: 第12条 }
+  contacts:
+    - { contact: FIN-EXPENSE, role: APPLY }
+  keywords: [出張, 旅費, 宿泊費, ホテル代, 日当, 新幹線, 経費精算]
+
+- code: PRG-PC-REPAIR
+  name: PC の故障・代替機
+  name_kana: ぴーしーこしょう
+  summary: 貸与 PC が故障したときの連絡先と代替機の貸与（翌営業日までに用意）。
+  eligibility: 全社員
+  benefit: 修理の間、代替機を貸与
+  how_to_apply: ITヘルプデスクに連絡する。自分で分解・修理はしない。
+  category: it
+  owner_department: IT
+  visibility: INTERNAL
+  basis:
+    - { document: REG-IT-002, article: 第8条 }
+  contacts:
+    - { contact: IT-HELPDESK, role: APPLY }
+  keywords: [PC, パソコン, 壊れた, 故障, 動かない, 起動しない, 代替機]
+
+- code: PRG-DEVICE-LOSS-REPORT
+  name: PC・スマートフォンの紛失・盗難の報告
+  name_kana: ふんしつとうなん
+  summary: 貸与機器や書類をなくしたとき、盗まれたときは、夜間・休日でも直ちに報告する。
+  eligibility: 全社員
+  how_to_apply: 情報セキュリティ窓口に直ちに報告する。盗難の場合は警察に届け出て受理番号を伝える。
+  deadline_note: 直ちに（24時間受付）
+  category: it
+  owner_department: IT
+  visibility: INTERNAL
+  basis:
+    - { document: REG-IT-001, article: 第16条 }
+    - { document: REG-IT-002, article: 第9条 }
+  contacts:
+    - { contact: IT-SECURITY, role: APPLY }
+  keywords: [紛失, なくした, 落とした, 盗まれた, 盗難, 置き忘れ, スマホ]
+
+- code: PRG-HARASSMENT-CONSULTATION
+  name: ハラスメント相談
+  name_kana: はらすめんとそうだん
+  summary: パワハラ・セクハラ・マタハラなどの相談窓口。匿名でも相談でき、相談したことで不利益な扱いは受けない。
+  eligibility: 全社員（見聞きした人も相談できる）
+  how_to_apply: コンプライアンス・ハラスメント相談窓口に面談・電話・メール・チャットで相談する。
+  category: compliance
+  owner_department: LEGAL
+  visibility: INTERNAL
+  basis:
+    - { document: REG-LEGAL-001, article: 第8条 }
+    - { document: REG-LEGAL-001, article: 第13条 }
+  contacts:
+    - { contact: LEGAL-HOTLINE, role: INQUIRY }
+  keywords: [ハラスメント, パワハラ, セクハラ, マタハラ, いじめ, 嫌がらせ, 相談]

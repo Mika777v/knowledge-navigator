@@ -18,6 +18,10 @@ DOCUMENT_FIELDS = (
     "visibility", "version_label", "effective_from", "summary",
 )
 DISCLAIMER = "架空企業「架空商事株式会社」のサンプル"
+CONTACT_ROLES = {"APPLY", "INQUIRY", "PAYMENT"}
+LIFE_EVENT_RELATIONS = {"PRIMARY", "RELATED"}
+# 公開範囲の広さ（数字が小さいほど広い）。制度・FAQ は根拠文書より広くしてはいけない
+VISIBILITY_RANK = {"INTERNAL": 0, "MANAGERS": 1, "RESTRICTED": 2, "CONFIDENTIAL": 3}
 ARTICLE_HEADING = re.compile(r"^### 第(\d+)条（(.+)）\s*$", re.MULTILINE)
 EMPLOYMENT_TYPES = {"REGULAR", "CONTRACT", "PART_TIME"}
 # 架空データであることを保証するため、連絡先は予約済みドメインのみ許可する
@@ -50,7 +54,7 @@ def parse_document(path: Path) -> tuple[dict, str]:
 
 def validate_documents(
     seed_dir: Path, dept_codes: set[str], category_slugs: set[str], errors: list[str]
-) -> None:
+) -> dict[str, tuple[dict, str, set[int]]]:
     docs: dict[str, tuple[dict, str, set[int]]] = {}
     for path in sorted((seed_dir / "documents").glob("*.md")):
         label = f"documents/{path.name}"
@@ -92,6 +96,113 @@ def validate_documents(
             for n in re.findall(re.escape(title) + r"第(\d+)条", body):
                 if int(n) not in numbers:
                     errors.append(f"documents[{code}]: 参照先「{title}第{n}条」が存在しません")
+    return docs
+
+
+def check_document_ref(
+    label: str, ref: dict, docs: dict[str, tuple[dict, str, set[int]]], errors: list[str]
+) -> dict | None:
+    """{document, article} の参照先（文書と条）が存在するか。存在すれば文書の front matter を返す"""
+    code = ref.get("document")
+    if code not in docs:
+        errors.append(f"{label}: 文書 {code} が存在しません")
+        return None
+    article = ref.get("article")
+    if article is not None:
+        m = re.fullmatch(r"第(\d+)条", str(article))
+        if not m or int(m.group(1)) not in docs[code][2]:
+            errors.append(f"{label}: {docs[code][0].get('title')}に {article} がありません")
+    return docs[code][0]
+
+
+def check_visibility_not_wider(label: str, visibility: str, doc_meta: dict | None, errors: list[str]) -> None:
+    if doc_meta is None or visibility not in VISIBILITY_RANK:
+        return
+    if VISIBILITY_RANK[visibility] < VISIBILITY_RANK.get(doc_meta.get("visibility"), 0):
+        errors.append(
+            f"{label}: 公開範囲 {visibility} が根拠文書 {doc_meta.get('code')} の {doc_meta.get('visibility')} より広くなっています"
+        )
+
+
+def validate_programs_and_faqs(
+    seed_dir: Path,
+    dept_codes: set[str],
+    category_slugs: set[str],
+    contact_codes: set[str],
+    docs: dict[str, tuple[dict, str, set[int]]],
+    errors: list[str],
+) -> None:
+    programs = load(seed_dir, "programs.yaml")
+    life_events = load(seed_dir, "life_events.yaml")
+    faqs = load(seed_dir, "faqs.yaml")
+
+    check_unique(programs, "code", "programs", errors)
+    program_codes = {p["code"] for p in programs}
+    for p in programs:
+        label = f"programs[{p.get('code')}]"
+        for field in ("code", "name", "summary", "category", "owner_department", "visibility"):
+            if not p.get(field):
+                errors.append(f"{label}: {field} がありません")
+        if p.get("category") not in category_slugs:
+            errors.append(f"{label}: カテゴリ {p.get('category')} が存在しません")
+        if p.get("owner_department") not in dept_codes:
+            errors.append(f"{label}: 所管部署 {p.get('owner_department')} が存在しません")
+        if p.get("visibility") not in VISIBILITIES:
+            errors.append(f"{label}: visibility が不正です: {p.get('visibility')}")
+        if not p.get("contacts"):
+            errors.append(f"{label}: 窓口（contacts）が1件もありません（公開する制度には必須）")
+        for c in p.get("contacts") or []:
+            if c.get("contact") not in contact_codes:
+                errors.append(f"{label}: 窓口 {c.get('contact')} が存在しません")
+            if c.get("role") not in CONTACT_ROLES:
+                errors.append(f"{label}: 窓口の role が不正です: {c.get('role')}")
+        if not p.get("basis"):
+            errors.append(f"{label}: 根拠（basis）が1件もありません")
+        for ref in p.get("basis") or []:
+            meta = check_document_ref(label, ref, docs, errors)
+            check_visibility_not_wider(label, p.get("visibility"), meta, errors)
+
+    check_unique(life_events, "code", "life_events", errors)
+    for e in life_events:
+        label = f"life_events[{e.get('code')}]"
+        for field in ("code", "name"):
+            if not e.get(field):
+                errors.append(f"{label}: {field} がありません")
+        if not e.get("programs"):
+            errors.append(f"{label}: 制度（programs）が1件もありません")
+        for link in e.get("programs") or []:
+            if link.get("program") not in program_codes:
+                errors.append(f"{label}: 制度 {link.get('program')} が存在しません")
+            if link.get("relation") not in LIFE_EVENT_RELATIONS:
+                errors.append(f"{label}: relation が不正です: {link.get('relation')}")
+
+    check_unique(faqs, "code", "faqs", errors)
+    for f in faqs:
+        label = f"faqs[{f.get('code')}]"
+        for field in ("code", "question", "answer", "category", "owner_department"):
+            if not f.get(field):
+                errors.append(f"{label}: {field} がありません")
+        if f.get("category") not in category_slugs:
+            errors.append(f"{label}: カテゴリ {f.get('category')} が存在しません")
+        if f.get("owner_department") not in dept_codes:
+            errors.append(f"{label}: 所管部署 {f.get('owner_department')} が存在しません")
+        visibility = f.get("visibility", "INTERNAL")
+        if visibility not in VISIBILITIES:
+            errors.append(f"{label}: visibility が不正です: {visibility}")
+        if f.get("contact") and f["contact"] not in contact_codes:
+            errors.append(f"{label}: 窓口 {f['contact']} が存在しません")
+        links = f.get("links") or []
+        if not f.get("contact") and not any("program" in link for link in links):
+            errors.append(f"{label}: 窓口（contact）か関連制度（links.program）のどちらかが必要です")
+        for link in links:
+            if "program" in link:
+                if link["program"] not in program_codes:
+                    errors.append(f"{label}: 制度 {link['program']} が存在しません")
+            elif "document" in link:
+                meta = check_document_ref(label, link, docs, errors)
+                check_visibility_not_wider(label, visibility, meta, errors)
+            else:
+                errors.append(f"{label}: links には program か document を指定してください: {link}")
 
 
 def validate(seed_dir: Path) -> list[str]:
@@ -170,7 +281,11 @@ def validate(seed_dir: Path) -> list[str]:
         errors.append(f"users: ロール {role} のデモユーザーがいません")
 
     # ---------- documents ----------
-    validate_documents(seed_dir, dept_codes, category_slugs, errors)
+    docs = validate_documents(seed_dir, dept_codes, category_slugs, errors)
+
+    # ---------- programs / life_events / faqs ----------
+    contact_codes = {c["code"] for c in contacts if c.get("code")}
+    validate_programs_and_faqs(seed_dir, dept_codes, category_slugs, contact_codes, docs, errors)
 
     return errors
 
