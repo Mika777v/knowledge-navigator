@@ -26,7 +26,7 @@ jobs:
         run: make seed
       - name: Log in as a demo user through the BFF
         run: |
-          jar=$(mktemp)
+          jar="$RUNNER_TEMP/cookies.txt"
           curl -fsS -c "$jar" -b "$jar" http://localhost:3000/api/v1/auth/csrf > /dev/null
           token=$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$jar")
           password=$(grep '^DEMO_USER_PASSWORD=' .env | cut -d= -f2)
@@ -37,7 +37,11 @@ jobs:
       - name: Check frontend and BFF
         run: |
           curl -fsS http://localhost:3000/api/health | tee /dev/stderr | grep -q '"backend":"UP"'
-          curl -fsS http://localhost:3000/ | grep -q '社内規程ナビ'
+          # 未ログインならログイン画面へ移動させ、ログイン済みならホームを表示する
+          curl -fsS -o /dev/null -w '%{http_code} %{redirect_url}\n' http://localhost:3000/ | tee /dev/stderr \
+            | grep -q '^307 .*/login?next=%2F$'
+          curl -fsS http://localhost:3000/login | grep -q 'ログイン'
+          curl -fsS -b "$RUNNER_TEMP/cookies.txt" http://localhost:3000/ | grep -q '社内規程ナビ'
       - name: Show logs on failure
         if: failure()
         run: docker compose logs
