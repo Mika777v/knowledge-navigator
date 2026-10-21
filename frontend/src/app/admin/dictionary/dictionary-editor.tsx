@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api/http";
 import type { KeywordResponse, KeywordTarget, KeywordTargetType } from "@/lib/api/types";
@@ -42,8 +43,10 @@ export function DictionaryEditor() {
 }
 
 function TermLookup() {
-  const [input, setInput] = useState("");
-  const [term, setTerm] = useState("");
+  // 分析画面の「辞書で確認」から ?term= 付きで開かれたときは、その言葉を確認した状態にする
+  const initial = useSearchParams().get("term")?.trim() ?? "";
+  const [input, setInput] = useState(initial);
+  const [term, setTerm] = useState(initial);
   const { data, isFetching, error } = useQuery({
     queryKey: [...keywordsKey, "term", term],
     queryFn: () => apiFetch<KeywordResponse[]>(`${BASE}?term=${encodeURIComponent(term)}`),

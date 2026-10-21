@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQuery } from "@/test/render";
 import { DictionaryEditor } from "./dictionary-editor";
 
+let search = new URLSearchParams();
+vi.mock("next/navigation", () => ({ useSearchParams: () => search }));
+
 const keyword = (over: Record<string, unknown> = {}) => ({
   id: "k1",
   term: "入籍",
@@ -27,6 +30,7 @@ function routes(handler: (url: string, method: string, body: unknown) => Respons
 
 describe("DictionaryEditor", () => {
   beforeEach(() => {
+    search = new URLSearchParams();
     document.cookie = "XSRF-TOKEN=t; path=/";
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -51,6 +55,21 @@ describe("DictionaryEditor", () => {
       "href",
       `/search?q=${encodeURIComponent("入籍")}`,
     );
+  });
+
+  it("?term= で開くと、その言葉を確認した状態になる", async () => {
+    search = new URLSearchParams({ term: "社食" });
+    vi.stubGlobal(
+      "fetch",
+      routes((url) => {
+        if (url.includes("/targets")) return Response.json([]);
+        if (url.includes(`term=${encodeURIComponent("社食")}`)) return Response.json([]);
+      }),
+    );
+    renderWithQuery(<DictionaryEditor />);
+
+    expect(screen.getByLabelText("確認する言葉")).toHaveValue("社食");
+    expect(await screen.findByText("「社食」は辞書に登録されていません。")).toBeInTheDocument();
   });
 
   it("案内先を選んで言葉を追加すると、一覧を読み直す", async () => {
