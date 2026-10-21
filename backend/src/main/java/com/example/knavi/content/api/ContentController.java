@@ -46,10 +46,13 @@ class ContentController {
         return service.listDocuments(AccessScope.of(user), category);
     }
 
-    @Operation(summary = "文書の詳細（公開版の条文一覧）")
+    @Operation(summary = "文書の詳細（条文・版の一覧・この文書を根拠にする制度と窓口）。version で過去の版を表示できる")
     @GetMapping("/documents/{id}")
-    DocumentDetail document(@PathVariable UUID id, @AuthenticationPrincipal AuthenticatedUser user) {
-        return service.getDocument(AccessScope.of(user), id);
+    DocumentDetail document(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID version,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return service.getDocument(AccessScope.of(user), id, version);
     }
 
     @Operation(summary = "条文（引用リンクの行き先。過去の版の条文も表示できる）")
