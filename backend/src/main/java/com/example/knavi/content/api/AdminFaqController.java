@@ -18,6 +18,7 @@ import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
 /** FAQ の管理 API（所管部署の CONTENT_EDITOR のみ）。更新系は If-Match 必須 */
 @Tag(name = "admin-faqs", description = "FAQ の管理（コンテンツ担当者）")
 @RestController
+// 応答への変換（関連先・根拠・カテゴリなどの遅延読み込み）もサービスと同じトランザクションの中で行う。
+// サービスは保存後に flush するため、応答の版番号（ETag）は更新後の値になる
+@Transactional
 @RequestMapping("/api/v1/admin/faqs")
 class AdminFaqController {
 
@@ -102,6 +106,7 @@ class AdminFaqController {
                 departments.findById(faq.getOwnerDepartmentId()).orElse(null),
                 faq.getContactId() == null
                         ? null
-                        : contacts.findById(faq.getContactId()).orElse(null));
+                        : contacts.findById(faq.getContactId()).orElse(null),
+                service.describeLinks(faq));
     }
 }

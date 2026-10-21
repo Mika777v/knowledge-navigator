@@ -17,6 +17,12 @@ export default function AdminHomePage() {
           </p>
         </li>
         <li>
+          <Link href="/admin/faqs" className="font-medium underline">
+            FAQ
+          </Link>
+          <p className="text-sm text-muted-foreground">自部署が所管する FAQ を作成・編集・公開します（コンテンツ担当者だけ）。</p>
+        </li>
+        <li>
           <Link href="/admin/analytics" className="font-medium underline">
             検索の分析
           </Link>
