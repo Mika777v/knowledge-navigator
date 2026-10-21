@@ -1,0 +1,62 @@
+name: search-eval-comment
+
+# ci の検索品質の評価結果（ci-compose が保存した search-eval）を、PR にコメントする。
+# 2回目からは同じコメントを書き換えるので、PR にコメントが増えていかない。
+# PR のコードを動かすジョブに書き込み権限を渡さないよう、ci が終わってから別のワークフローとして動かす
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  comment:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Download the search-eval report
+        id: download
+        # 評価は compose に関係する変更のときだけ動くので、結果が無ければ何もしない
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: search-eval
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: eval
+      - name: Post or update the comment
+        if: steps.download.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          # 成果物は PR のコードが作ったものなので、そのまま信用しない
+          pr=$(head -c 20 eval/pr-number.txt | tr -d '[:space:]')
+          if ! [[ "$pr" =~ ^[0-9]+$ ]]; then
+            echo "PR 番号が不正です"; exit 1
+          fi
+          # 評価した commit と、その PR の今の head が同じときだけコメントする（ほかの PR に書かせない）
+          if [ "$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)" != "$HEAD_SHA" ]; then
+            echo "PR #$pr の head が評価した commit と違うため、コメントしません"; exit 0
+          fi
+          marker='<!-- search-eval -->'
+          {
+            echo "$marker"
+            head -c 60000 eval/report.md
+            echo
+            echo "<sub>commit ${HEAD_SHA:0:7} ・ [ci の実行]($RUN_URL)</sub>"
+          } > body.md
+          id=$(gh api "repos/$REPO/issues/$pr/comments" --paginate \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id" | head -1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@body.md > /dev/null
+          else
+            gh api "repos/$REPO/issues/$pr/comments" -F body=@body.md > /dev/null
+          fi

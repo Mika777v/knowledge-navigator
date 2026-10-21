@@ -26,7 +26,14 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from metrics import QuestionResult, evaluate_question, regressions, summarize, summarize_by_tag  # noqa: E402
+from metrics import (  # noqa: E402
+    QuestionResult,
+    evaluate_question,
+    regressions,
+    summarize,
+    summarize_by_tag,
+    summary_table,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_USER = "sato@example.com"
@@ -80,19 +87,10 @@ def percent(value: float | None) -> str:
     return "—" if value is None else f"{value * 100:.1f}%"
 
 
-def markdown_report(summary: dict, by_tag: dict, results: list[QuestionResult], worse: list[str], min_hit5: float) -> str:
-    lines = [
-        "## 検索品質の評価（data/eval）",
-        "",
-        "| 指標 | 値 |",
-        "|---|---|",
-        f"| Hit@1 | {percent(summary['hit1'])} |",
-        f"| Hit@5 | {percent(summary['hit5'])}（目標 {percent(min_hit5)} 以上） |",
-        f"| MRR | {summary['mrr']:.3f} |",
-        f"| 窓口正答率 | {percent(summary['contact_accuracy'])} |",
-        f"| ゼロヒット率 | {percent(summary['zero_hit_rate'])} |",
-        "",
-    ]
+def markdown_report(
+    summary: dict, baseline: dict, by_tag: dict, results: list[QuestionResult], worse: list[str], min_hit5: float
+) -> str:
+    lines = ["## 検索品質の評価（data/eval）", "", *summary_table(summary, baseline, min_hit5), ""]
     if worse:
         lines += ["**基準値（data/eval/baseline.json）より悪化した指標**", ""] + [f"- {w}" for w in worse] + [""]
     lines += ["### タグ別", "", "| タグ | 問数 | Hit@1 | Hit@5 | 窓口正答率 |", "|---|---|---|---|---|"]
@@ -138,7 +136,7 @@ def main() -> int:
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else {}
     worse = regressions(summary, baseline.get("summary", {}))
 
-    report = markdown_report(summary, by_tag, results, worse, args.min_hit5)
+    report = markdown_report(summary, baseline.get("summary", {}), by_tag, results, worse, args.min_hit5)
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "report.md").write_text(report, encoding="utf-8")
     (args.output / "result.json").write_text(

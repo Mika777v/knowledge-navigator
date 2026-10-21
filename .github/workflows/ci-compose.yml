@@ -33,6 +33,21 @@ jobs:
         run: |
           pip install pyyaml
           python scripts/eval/run_eval.py
+      - name: Save the search-eval report for the PR comment
+        # 結果は search-eval-comment.yml が PR にコメントする（このジョブには書き込み権限を渡さない）
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles('build/eval/report.md') != '' }}
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$PR_NUMBER" > build/eval/pr-number.txt
+      - name: Upload the search-eval report
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && hashFiles('build/eval/report.md') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: search-eval
+          path: |
+            build/eval/report.md
+            build/eval/pr-number.txt
+          retention-days: 7
       - name: Log in as a demo user through the BFF
         run: |
           jar="$RUNNER_TEMP/cookies.txt"

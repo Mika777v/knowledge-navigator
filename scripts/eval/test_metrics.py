@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from metrics import evaluate_question, regressions, summarize  # noqa: E402
+from metrics import evaluate_question, regressions, summarize, summary_table  # noqa: E402
 
 
 def response(programs=(), documents=(), faqs=(), contacts=()):
@@ -65,6 +65,22 @@ class SummarizeTest(unittest.TestCase):
         worse = regressions({"hit5": 0.8, "zero_hit_rate": 0.2}, {"hit5": 0.9, "zero_hit_rate": 0.1})
         self.assertEqual(len(worse), 2)
 
+
+
+class SummaryTableTest(unittest.TestCase):
+    def test_marks_changes_against_the_baseline(self):
+        current = {"hit1": 0.94, "hit5": 1.0, "mrr": 0.95, "contact_accuracy": 1.0, "zero_hit_rate": 0.02}
+        baseline = {"hit1": 0.92, "hit5": 1.0, "mrr": 0.9567, "contact_accuracy": 1.0, "zero_hit_rate": 0.0}
+        rows = {line.split(" | ")[0].lstrip("| "): line for line in summary_table(current, baseline, 0.7)[2:]}
+        self.assertIn("94.0% | 92.0% | ▲ 良くなった", rows["Hit@1"])
+        self.assertIn("（目標 70.0% 以上） | 100.0% |  |", rows["Hit@5"])
+        self.assertIn("0.950 | 0.957 | ▼ 悪くなった", rows["MRR"])
+        # ゼロヒット率は低いほど良い
+        self.assertIn("2.0% | 0.0% | ▼ 悪くなった", rows["ゼロヒット率"])
+
+    def test_without_baseline(self):
+        rows = summary_table({"hit1": 0.5, "hit5": 0.8, "mrr": 0.6, "contact_accuracy": 1.0, "zero_hit_rate": 0.0}, {}, 0.7)
+        self.assertTrue(all("| — |" in row for row in rows[2:]))
 
 if __name__ == "__main__":
     unittest.main()

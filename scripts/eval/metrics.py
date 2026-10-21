@@ -108,3 +108,30 @@ def regressions(current: dict, baseline: dict) -> list[str]:
         if baseline.get(key) is not None and current.get(key) is not None and current[key] > baseline[key]:
             worse.append(f"{key}: {baseline[key]:.4f} → {current[key]:.4f}")
     return worse
+
+
+def _format(key: str, value: float) -> str:
+    return f"{value:.3f}" if key == "mrr" else f"{value * 100:.1f}%"
+
+
+def summary_table(current: dict, baseline: dict, min_hit5: float) -> list[str]:
+    """指標の表（Markdown の行）。基準値があれば並べて、変化を ▲（良くなった）・▼（悪くなった）で示す"""
+    labels = {
+        "hit1": "Hit@1",
+        "hit5": "Hit@5",
+        "mrr": "MRR",
+        "contact_accuracy": "窓口正答率",
+        "zero_hit_rate": "ゼロヒット率",
+    }
+    lines = ["| 指標 | 今回 | 基準値 | 変化 |", "|---|---|---|---|"]
+    for key, label in labels.items():
+        value, base = current.get(key), baseline.get(key)
+        shown = "—" if value is None else _format(key, value)
+        if key == "hit5":
+            shown += f"（目標 {min_hit5 * 100:.1f}% 以上）"
+        change = ""
+        if value is not None and base is not None and round(value - base, 4) != 0:
+            better = value > base if key in HIGHER_IS_BETTER else value < base
+            change = "▲ 良くなった" if better else "▼ 悪くなった"
+        lines.append(f"| {label} | {shown} | {'—' if base is None else _format(key, base)} | {change} |")
+    return lines
