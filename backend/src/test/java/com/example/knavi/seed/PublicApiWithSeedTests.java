@@ -125,6 +125,66 @@ class PublicApiWithSeedTests {
     }
 
     @Test
+    void documentDetailListsProgramsBasedOnItAndTheirContacts() throws Exception {
+        UUID id = jdbc.sql("SELECT id FROM documents WHERE code = 'REG-GA-001'")
+                .query(UUID.class)
+                .single();
+
+        String body = mockMvc.perform(get("/api/v1/documents/" + id).with(user(sato)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version.current").value(true))
+                .andExpect(jsonPath("$.versions.length()").value(1))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        List<String> articles = JsonPath.read(body, "$.programs[?(@.code == 'PRG-MARRIAGE-GIFT')].articleNos[*]");
+        List<String> contacts = JsonPath.read(body, "$.contacts[*].code");
+        assertThat(articles).contains("第5条").doesNotHaveDuplicates();
+        assertThat(contacts).contains("GA-GENERAL").doesNotHaveDuplicates();
+    }
+
+    @Test
+    void pastPublishedVersionCanBeShownButDraftsCannot() throws Exception {
+        UUID id = jdbc.sql("SELECT id FROM documents WHERE code = 'REG-GA-001'")
+                .query(UUID.class)
+                .single();
+        UUID past = insertVersion(id, "v0.9", "2020-04-01", true);
+        UUID draft = insertVersion(id, "v9.0", "2030-04-01", false);
+
+        mockMvc.perform(get("/api/v1/documents/" + id)
+                        .param("version", past.toString())
+                        .with(user(sato)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version.versionLabel").value("v0.9"))
+                .andExpect(jsonPath("$.version.current").value(false))
+                .andExpect(jsonPath("$.versions[*].versionLabel").value(org.hamcrest.Matchers.contains("v2.1", "v0.9")))
+                .andExpect(jsonPath("$.sections[0].heading").value("旧版の条文"));
+        mockMvc.perform(get("/api/v1/documents/" + id)
+                        .param("version", draft.toString())
+                        .with(user(sato)))
+                .andExpect(status().isNotFound());
+    }
+
+    private UUID insertVersion(UUID documentId, String label, String effectiveFrom, boolean published) {
+        UUID versionId = UUID.randomUUID();
+        jdbc.sql("""
+                        INSERT INTO document_versions (id, document_id, version_label, effective_from, body_markdown, published_at)
+                        VALUES (:id, :doc, :label, CAST(:from AS date), 'body', CASE WHEN :published THEN now() END)
+                        """)
+                .param("id", versionId)
+                .param("doc", documentId)
+                .param("label", label)
+                .param("from", effectiveFrom)
+                .param("published", published)
+                .update();
+        jdbc.sql("""
+                        INSERT INTO sections (document_version_id, ordinal, article_no, heading, content, search_text)
+                        VALUES (:v, 1, '第1条', '旧版の条文', '旧版の本文', '旧版の本文')
+                        """).param("v", versionId).update();
+        return versionId;
+    }
+
+    @Test
     void filtersByParentCategoryIncludingChildren() throws Exception {
         String body = mockMvc.perform(
                         get("/api/v1/documents").param("category", "hr").with(user(sato)))

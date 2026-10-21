@@ -3,10 +3,975 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+    "/api/v1/admin/programs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 制度の詳細 */
+        get: operations["get"];
+        /** 制度の説明を更新する */
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/programs/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 窓口をすべて置き換える */
+        put: operations["replaceContacts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/programs/{id}/basis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 根拠の条をすべて置き換える（条は文書の公開版から探す） */
+        put: operations["replaceBasis"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faqs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** FAQ の詳細 */
+        get: operations["get_1"];
+        /** FAQ を更新する */
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文書の詳細 */
+        get: operations["get_2"];
+        /** 文書の属性を更新する */
+        put: operations["update_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents/{id}/versions/{versionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 版の詳細（本文と分割されたセクション） */
+        get: operations["version"];
+        /** 下書きの版を更新する（公開済みの版は変更できない） */
+        put: operations["updateVersion"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** メールアドレスとパスワードでログインする */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 自部署が所管する制度の一覧 */
+        get: operations["list"];
+        put?: never;
+        /** 制度を作成する（下書き） */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/programs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 公開する（窓口1件以上・根拠1件以上・公開範囲が根拠文書より広くないこと） */
+        post: operations["publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/programs/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** アーカイブする（公開をやめる） */
+        post: operations["archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/navigation-keywords": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 案内先ごとのキーワード一覧、または言葉からの逆引き（term） */
+        get: operations["list_1"];
+        put?: never;
+        /** キーワードを追加する（全角半角などは自動で正規化される） */
+        post: operations["add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faqs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 自部署が所管する FAQ の一覧 */
+        get: operations["list_2"];
+        put?: never;
+        /** FAQ を作成する（下書き） */
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faqs/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 公開する（窓口か関連制度が必要。公開範囲は関連文書より広くできない） */
+        post: operations["publish_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/faqs/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** アーカイブする（公開をやめる） */
+        post: operations["archive_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 自部署が所管する文書の一覧 */
+        get: operations["list_3"];
+        put?: never;
+        /** 文書を作成する（下書き） */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents/{id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 版の一覧（新しい順） */
+        get: operations["versions"];
+        put?: never;
+        /** 新しい版を作成する（本文は条・見出し単位のセクションに自動分割される） */
+        post: operations["createVersion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 指定した版を公開する */
+        post: operations["publish_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/documents/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 文書をアーカイブする（公開をやめる） */
+        post: operations["archive_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sections/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 条文（引用リンクの行き先。過去の版の条文も表示できる） */
+        get: operations["section"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 制度の一覧 */
+        get: operations["programs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 制度の詳細（根拠の条・窓口・関連 FAQ・きっかけ） */
+        get: operations["program"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ログイン中のユーザーを返す */
+        get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/life-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** きっかけの一覧（ホーム画面の「きっかけから探す」） */
+        get: operations["lifeEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/life-events/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** きっかけの詳細（まず確認する制度・あわせて必要な手続き） */
+        get: operations["lifeEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/faqs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** FAQ の一覧 */
+        get: operations["faqs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/faqs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** FAQ の詳細（回答・窓口・関連する制度と条文） */
+        get: operations["faq"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文書の一覧（カテゴリで絞り込み可。親カテゴリを指定すると子カテゴリも含む） */
+        get: operations["documents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文書の詳細（条文・版の一覧・この文書を根拠にする制度と窓口）。version で過去の版を表示できる */
+        get: operations["document"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 部署ごとの問い合わせ窓口 */
+        get: operations["contacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** カテゴリのツリー */
+        get: operations["categories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/csrf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** CSRF トークンを発行する（XSRF-TOKEN Cookie を設定する）。ログイン前に1回呼ぶ */
+        get: operations["csrf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/navigation-keywords/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** キーワードを削除する */
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        ProgramAttributesRequest: {
+            name: string;
+            nameKana?: string;
+            summary: string;
+            eligibility?: string;
+            benefit?: string;
+            howToApply?: string;
+            deadlineNote?: string;
+            requiredDocuments?: string;
+            categorySlug: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+        };
+        BasisResponse: {
+            documentCode: string;
+            documentTitle: string;
+            articleNo: string;
+            /** Format: uuid */
+            sectionId: string;
+            heading: string;
+        };
+        CategoryResponse: {
+            slug: string;
+            name: string;
+        };
+        ContactResponse: {
+            code: string;
+            name: string;
+            /** @enum {string} */
+            role: "APPLY" | "INQUIRY" | "PAYMENT";
+        };
+        DepartmentResponse: {
+            code: string;
+            name: string;
+        };
+        ProgramResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            nameKana: string;
+            summary: string;
+            eligibility: string;
+            benefit: string;
+            howToApply: string;
+            deadlineNote: string;
+            requiredDocuments: string;
+            category: components["schemas"]["CategoryResponse"];
+            ownerDepartment: components["schemas"]["DepartmentResponse"];
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            /** @enum {string} */
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            basis: components["schemas"]["BasisResponse"][];
+            contacts: components["schemas"]["ContactResponse"][];
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        ContactRequest: {
+            contactCode: string;
+            /** @enum {string} */
+            role: "APPLY" | "INQUIRY" | "PAYMENT";
+        };
+        ReplaceContactsRequest: {
+            contacts: components["schemas"]["ContactRequest"][];
+        };
+        BasisRequest: {
+            documentCode: string;
+            articleNo?: string;
+        };
+        ReplaceBasisRequest: {
+            basis: components["schemas"]["BasisRequest"][];
+        };
+        FaqContentRequest: {
+            question: string;
+            answerMarkdown: string;
+            categorySlug: string;
+            contactCode?: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            links?: components["schemas"]["LinkRequest"][];
+        };
+        LinkRequest: {
+            programCode: string;
+            documentCode: string;
+            articleNo: string;
+        };
+        FaqResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            question: string;
+            answerMarkdown: string;
+            category: components["schemas"]["CategoryResponse"];
+            contactCode: string;
+            ownerDepartment: components["schemas"]["DepartmentResponse"];
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            /** @enum {string} */
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            links: components["schemas"]["LinkResponse"][];
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        LinkResponse: {
+            /** @enum {string} */
+            targetType: "PROGRAM" | "DOCUMENT" | "SECTION";
+            /** Format: uuid */
+            targetId: string;
+        };
+        UpdateDocumentRequest: {
+            title: string;
+            summary?: string;
+            /** @enum {string} */
+            documentType: "REGULATION" | "PROCEDURE" | "MANUAL" | "RULE" | "ORG_CHART";
+            categorySlug: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            /** Format: date */
+            reviewDueOn?: string;
+        };
+        DocumentResponse: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            title: string;
+            summary: string;
+            /** @enum {string} */
+            documentType: "REGULATION" | "PROCEDURE" | "MANUAL" | "RULE" | "ORG_CHART";
+            category: components["schemas"]["CategoryResponse"];
+            ownerDepartment: components["schemas"]["DepartmentResponse"];
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            /** @enum {string} */
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            /** Format: uuid */
+            currentVersionId: string;
+            /** Format: date */
+            reviewDueOn: string;
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        UpdateVersionRequest: {
+            /** Format: date */
+            effectiveFrom: string;
+            bodyMarkdown: string;
+            changeNote?: string;
+        };
+        SectionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            ordinal: number;
+            path: string;
+            articleNo: string;
+            heading: string;
+            content: string;
+        };
+        VersionResponse: {
+            /** Format: uuid */
+            id: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            changeNote: string;
+            /** Format: date-time */
+            publishedAt: string;
+            bodyMarkdown: string;
+            sections: components["schemas"]["SectionResponse"][];
+        };
+        LoginRequest: {
+            /** Format: email */
+            email: string;
+            password: string;
+        };
+        DepartmentSummary: {
+            code: string;
+            name: string;
+        };
+        MeResponse: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            department: components["schemas"]["DepartmentSummary"];
+            role: string;
+            employmentType: string;
+            /** Format: date */
+            joinedOn: string;
+        };
+        CreateProgramRequest: {
+            code: string;
+            ownerDepartmentCode: string;
+            attributes: components["schemas"]["ProgramAttributesRequest"];
+        };
+        AddKeywordRequest: {
+            term: string;
+            /** @enum {string} */
+            targetType: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
+            /** Format: uuid */
+            targetId: string;
+            /** Format: float */
+            weight?: number;
+        };
+        KeywordResponse: {
+            /** Format: uuid */
+            id: string;
+            term: string;
+            normalizedTerm: string;
+            /** @enum {string} */
+            targetType: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
+            /** Format: uuid */
+            targetId: string;
+            /** Format: float */
+            weight: number;
+        };
+        CreateFaqRequest: {
+            code: string;
+            ownerDepartmentCode: string;
+            content: components["schemas"]["FaqContentRequest"];
+        };
+        CreateDocumentRequest: {
+            code: string;
+            title: string;
+            summary?: string;
+            /** @enum {string} */
+            documentType: "REGULATION" | "PROCEDURE" | "MANUAL" | "RULE" | "ORG_CHART";
+            categorySlug: string;
+            ownerDepartmentCode: string;
+            /** @enum {string} */
+            visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
+            /** Format: date */
+            reviewDueOn?: string;
+        };
+        CreateVersionRequest: {
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            bodyMarkdown: string;
+            changeNote?: string;
+        };
+        PublishRequest: {
+            /** Format: uuid */
+            versionId: string;
+        };
+        CategoryRef: {
+            slug: string;
+            name: string;
+        };
+        DepartmentRef: {
+            code: string;
+            name: string;
+        };
+        DocumentSummary: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            title: string;
+            summary: string;
+            documentType: string;
+            category: components["schemas"]["CategoryRef"];
+            ownerDepartment: components["schemas"]["DepartmentRef"];
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+        };
+        SectionDetail: {
+            section: components["schemas"]["SectionView"];
+            document: components["schemas"]["DocumentSummary"];
+            versionLabel: string;
+            currentVersion: boolean;
+        };
+        SectionView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            ordinal: number;
+            path: string;
+            articleNo: string;
+            heading: string;
+            content: string;
+        };
+        ProgramSummary: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            summary: string;
+            benefit: string;
+            deadlineNote: string;
+            category: components["schemas"]["CategoryRef"];
+        };
+        BasisView: {
+            /** Format: uuid */
+            documentId: string;
+            documentCode: string;
+            documentTitle: string;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+            heading: string;
+        };
+        ContactView: {
+            code: string;
+            name: string;
+            description: string;
+            department: components["schemas"]["DepartmentRef"];
+            email: string;
+            phoneExt: string;
+            chatUrl: string;
+            officeHours: string;
+            role: string;
+        };
+        FaqSummary: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            question: string;
+            category: components["schemas"]["CategoryRef"];
+        };
+        LifeEventSummary: {
+            code: string;
+            name: string;
+            icon: string;
+            description: string;
+        };
+        ProgramDetail: {
+            program: components["schemas"]["ProgramSummary"];
+            nameKana: string;
+            eligibility: string;
+            howToApply: string;
+            requiredDocuments: string;
+            ownerDepartment: components["schemas"]["DepartmentRef"];
+            basis: components["schemas"]["BasisView"][];
+            contacts: components["schemas"]["ContactView"][];
+            faqs: components["schemas"]["FaqSummary"][];
+            lifeEvents: components["schemas"]["LifeEventSummary"][];
+        };
+        LifeEventDetail: {
+            lifeEvent: components["schemas"]["LifeEventSummary"];
+            programs: components["schemas"]["LifeEventProgram"][];
+        };
+        LifeEventProgram: {
+            program: components["schemas"]["ProgramSummary"];
+            relation: string;
+        };
+        FaqDetail: {
+            faq: components["schemas"]["FaqSummary"];
+            answerMarkdown: string;
+            contact: components["schemas"]["ContactView"];
+            programs: components["schemas"]["ProgramSummary"][];
+            references: components["schemas"]["BasisView"][];
+        };
+        DocumentDetail: {
+            document: components["schemas"]["DocumentSummary"];
+            /** Format: uuid */
+            currentVersionId: string;
+            version: components["schemas"]["VersionView"];
+            versions: components["schemas"]["VersionView"][];
+            sections: components["schemas"]["SectionView"][];
+            programs: components["schemas"]["DocumentProgram"][];
+            contacts: components["schemas"]["ContactView"][];
+        };
+        DocumentProgram: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            summary: string;
+            articleNos: string[];
+        };
+        VersionView: {
+            /** Format: uuid */
+            id: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            changeNote: string;
+            current: boolean;
+        };
+        DepartmentContacts: {
+            code: string;
+            name: string;
+            description: string;
+            parentCode: string;
+            contacts: components["schemas"]["ContactResponse"][];
+        };
+        CategoryNode: {
+            slug: string;
+            name: string;
+            children: components["schemas"]["CategoryNode"][];
+        };
+        CsrfToken: {
+            parameterName: string;
+            token: string;
+            headerName: string;
+        };
+        VersionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            changeNote: string;
+            /** Format: date-time */
+            publishedAt: string;
+            current: boolean;
+            /** Format: int32 */
+            sectionCount: number;
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -14,4 +979,963 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramAttributesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    replaceContacts: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceContactsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    replaceBasis: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceBasisRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FaqContentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"];
+                };
+            };
+        };
+    };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
+    version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VersionResponse"];
+                };
+            };
+        };
+    };
+    updateVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                versionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VersionResponse"];
+                };
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateProgramRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    publish: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    archive: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: {
+                targetType?: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
+                targetId?: string;
+                term?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["KeywordResponse"][];
+                };
+            };
+        };
+    };
+    add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddKeywordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["KeywordResponse"];
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"][];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFaqRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"];
+                };
+            };
+        };
+    };
+    publish_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"];
+                };
+            };
+        };
+    };
+    archive_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"][];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDocumentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
+    versions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VersionSummaryResponse"][];
+                };
+            };
+        };
+    };
+    createVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateVersionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["VersionResponse"];
+                };
+            };
+        };
+    };
+    publish_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
+    archive_2: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentResponse"];
+                };
+            };
+        };
+    };
+    section: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SectionDetail"];
+                };
+            };
+        };
+    };
+    programs: {
+        parameters: {
+            query?: {
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramSummary"][];
+                };
+            };
+        };
+    };
+    program: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramDetail"];
+                };
+            };
+        };
+    };
+    me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    lifeEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LifeEventSummary"][];
+                };
+            };
+        };
+    };
+    lifeEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LifeEventDetail"];
+                };
+            };
+        };
+    };
+    faqs: {
+        parameters: {
+            query?: {
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqSummary"][];
+                };
+            };
+        };
+    };
+    faq: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqDetail"];
+                };
+            };
+        };
+    };
+    documents: {
+        parameters: {
+            query?: {
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentSummary"][];
+                };
+            };
+        };
+    };
+    document: {
+        parameters: {
+            query?: {
+                version?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DocumentDetail"];
+                };
+            };
+        };
+    };
+    contacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DepartmentContacts"][];
+                };
+            };
+        };
+    };
+    categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CategoryNode"][];
+                };
+            };
+        };
+    };
+    csrf: {
+        parameters: {
+            query: {
+                token: components["schemas"]["CsrfToken"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+}

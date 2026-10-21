@@ -26,7 +26,28 @@ public final class ContentViews {
 
     public record SectionView(UUID id, int ordinal, String path, String articleNo, String heading, String content) {}
 
-    public record DocumentDetail(DocumentSummary document, UUID currentVersionId, List<SectionView> sections) {}
+    /**
+     * 文書の詳細。
+     *
+     * @param version 表示している版（指定がなければ公開中の版）
+     * @param versions 公開済みの版（新しい順）。過去の版も閲覧できる
+     * @param programs この文書を根拠にしている制度
+     * @param contacts それらの制度の窓口（重複を除く）
+     */
+    public record DocumentDetail(
+            DocumentSummary document,
+            UUID currentVersionId,
+            VersionView version,
+            List<VersionView> versions,
+            List<SectionView> sections,
+            List<DocumentProgram> programs,
+            List<ContactView> contacts) {}
+
+    public record VersionView(
+            UUID id, String versionLabel, LocalDate effectiveFrom, String changeNote, boolean current) {}
+
+    /** @param articleNos 根拠になっている条（文書全体が根拠なら空） */
+    public record DocumentProgram(UUID id, String code, String name, String summary, List<String> articleNos) {}
 
     /** 条文単体（引用リンクの行き先）。過去の版の条文も、文書が見えれば表示する */
     public record SectionDetail(

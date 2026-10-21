@@ -6,6 +6,7 @@ import com.example.knavi.content.application.ContentViews.CategoryRef;
 import com.example.knavi.content.application.ContentViews.ContactView;
 import com.example.knavi.content.application.ContentViews.DepartmentRef;
 import com.example.knavi.content.application.ContentViews.DocumentDetail;
+import com.example.knavi.content.application.ContentViews.DocumentProgram;
 import com.example.knavi.content.application.ContentViews.DocumentSummary;
 import com.example.knavi.content.application.ContentViews.FaqDetail;
 import com.example.knavi.content.application.ContentViews.FaqSummary;
@@ -16,6 +17,7 @@ import com.example.knavi.content.application.ContentViews.ProgramDetail;
 import com.example.knavi.content.application.ContentViews.ProgramSummary;
 import com.example.knavi.content.application.ContentViews.SectionDetail;
 import com.example.knavi.content.application.ContentViews.SectionView;
+import com.example.knavi.content.application.ContentViews.VersionView;
 import com.example.knavi.shared.security.AccessPolicy;
 import com.example.knavi.shared.security.AccessPolicy.Purpose;
 import com.example.knavi.shared.security.AccessScope;
@@ -80,7 +82,12 @@ public class ContentReadService {
                 .list();
     }
 
-    public DocumentDetail getDocument(AccessScope scope, UUID id) {
+    /**
+     * 文書の詳細。
+     *
+     * @param versionId 表示する版（null なら公開中の版）。公開済みの過去の版も指定できる
+     */
+    public DocumentDetail getDocument(AccessScope scope, UUID id, UUID versionId) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.VIEW);
         var row = jdbc.sql("SELECT " + DOCUMENT_COLUMNS + ", d.current_version_id " + DOCUMENT_FROM
                         + " WHERE d.id = :id AND " + visible.sql())
@@ -89,14 +96,86 @@ public class ContentReadService {
                 .query((rs, i) -> Map.entry(documentSummary(rs, i), rs.getObject("current_version_id", UUID.class)))
                 .optional()
                 .orElseThrow(() -> ApiErrors.notFound("文書が見つかりません。"));
+        UUID currentVersionId = row.getValue();
+
+        List<VersionView> versions = jdbc.sql("""
+                        SELECT id, version_label, effective_from, change_note FROM document_versions
+                        WHERE document_id = :id AND published_at IS NOT NULL ORDER BY effective_from DESC, published_at DESC
+                        """)
+                .param("id", id)
+                .query((rs, i) -> {
+                    UUID vid = rs.getObject("id", UUID.class);
+                    return new VersionView(
+                            vid,
+                            rs.getString("version_label"),
+                            rs.getObject("effective_from", LocalDate.class),
+                            rs.getString("change_note"),
+                            vid.equals(currentVersionId));
+                })
+                .list();
+        UUID shownId = versionId == null ? currentVersionId : versionId;
+        // 下書きの版や他の文書の版は「見つからない」扱いにする
+        VersionView shown = versions.stream()
+                .filter(v -> v.id().equals(shownId))
+                .findFirst()
+                .orElseThrow(() -> ApiErrors.notFound("文書の版が見つかりません。"));
+
         var sections = jdbc.sql("""
                         SELECT id, ordinal, path, article_no, heading, content FROM sections
                         WHERE document_version_id = :version ORDER BY ordinal
                         """)
-                .param("version", row.getValue())
+                .param("version", shown.id())
                 .query(ContentReadService::sectionView)
                 .list();
-        return new DocumentDetail(row.getKey(), row.getValue(), sections);
+
+        SqlPredicate programVisible = accessPolicy.readPredicate(scope, "programs", "p", Purpose.VIEW);
+        record BasisRow(UUID id, String code, String name, String summary, String articleNo) {}
+        var basisRows = jdbc.sql("SELECT p.id, p.code, p.name, p.summary, b.article_no FROM program_basis b"
+                        + " JOIN programs p ON p.id = b.program_id WHERE b.document_id = :id AND "
+                        + programVisible.sql()
+                        + " ORDER BY p.code, b.sort_order")
+                .params(programVisible.params())
+                .param("id", id)
+                .query((rs, i) -> new BasisRow(
+                        rs.getObject("id", UUID.class),
+                        rs.getString("code"),
+                        rs.getString("name"),
+                        rs.getString("summary"),
+                        rs.getString("article_no")))
+                .list();
+        Map<UUID, DocumentProgram> programs = new LinkedHashMap<>();
+        for (BasisRow b : basisRows) {
+            DocumentProgram p = programs.computeIfAbsent(
+                    b.id(), k -> new DocumentProgram(b.id(), b.code(), b.name(), b.summary(), new ArrayList<>()));
+            if (b.articleNo() != null && !p.articleNos().contains(b.articleNo())) {
+                p.articleNos().add(b.articleNo());
+            }
+        }
+
+        List<ContactView> contacts = programs.isEmpty()
+                ? List.of()
+                : jdbc.sql("""
+                                SELECT DISTINCT ON (ct.code) ct.code, ct.name, ct.description, dep.code AS dept_code,
+                                  dep.name AS dept_name, ct.email, ct.phone_ext, ct.chat_url, ct.office_hours, NULL AS role
+                                FROM program_contacts pc JOIN contacts ct ON ct.id = pc.contact_id
+                                JOIN departments dep ON dep.id = ct.department_id
+                                WHERE pc.program_id IN (:ids) ORDER BY ct.code
+                                """)
+                        .param("ids", programs.keySet())
+                        .query(ContentReadService::contactView)
+                        .list();
+
+        return new DocumentDetail(
+                row.getKey(),
+                currentVersionId,
+                shown,
+                versions,
+                sections,
+                programs.values().stream()
+                        .map(p -> new DocumentProgram(
+                                p.id(), p.code(), p.name(), p.summary(), List.copyOf(p.articleNos())))
+                        .toList(),
+                contacts);
     }
 
     public SectionDetail getSection(AccessScope scope, UUID sectionId) {

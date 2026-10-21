@@ -86,8 +86,7 @@ backend/src/main/java/com/example/knavi/
 | GET | `/life-events` / `/life-events/{code}` | きっかけ一覧/詳細（PRIMARY = まず確認する制度、RELATED = あわせて必要な手続き） | 1 |
 | GET | `/programs`（`?category=`）/ `/programs/{id}` | 制度一覧 / 詳細（根拠条文・窓口・関連FAQ・きっかけ。根拠は文書ごとに閲覧範囲で絞る） | 1 |
 | GET | `/documents?category=` | 文書一覧（親カテゴリを指定すると子カテゴリも含む） | 1 |
-| GET | `/documents/{id}` | 文書詳細（公開版の条文一覧） | 1 |
-| GET | `/documents/{id}/versions` / `/{id}/versions/{versionId}` | 版履歴 | 1 |
+| GET | `/documents/{id}`（`?version={versionId}` で公開済みの過去の版） | 文書詳細（条文・版の履歴・この文書を根拠にする制度と窓口） | 1 |
 | GET | `/sections/{id}` | 条文単体（引用リンク先。過去の版の条文も表示し、公開版かどうかを返す） | 1 |
 | GET | `/sections/{id}/similar` | 類似条文 | 4 |
 | GET | `/faqs`（`?category=`）/ `/faqs/{id}` | FAQ 一覧 / 詳細（回答・窓口・関連する制度と条文） | 1 |

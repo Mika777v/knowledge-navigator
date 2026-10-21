@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -14,7 +15,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ja" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
         <Providers>
-          <SiteHeader />
+          {/* ヘッダーは URL（ログイン画面かどうか）を見るため、動的なページでも先に描画できるよう Suspense で囲む */}
+          <Suspense>
+            <SiteHeader />
+          </Suspense>
           {children}
         </Providers>
       </body>
