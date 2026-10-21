@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
  *       （管理できる人がいなくなるのを防ぐ）。ロールの変更は、その人が次にログインしたときから効く
  * </ul>
  */
+// API の型名（OpenAPI のスキーマ名）が content の ContactView などと重ならないよう、Org を付けている
 @Service
 @Transactional
 public class OrganizationAdminService {
@@ -50,7 +51,7 @@ public class OrganizationAdminService {
 
     // ------------------------------------------------------------------ 部署
 
-    public record DepartmentView(
+    public record OrgDepartmentView(
             UUID id,
             String code,
             String name,
@@ -63,14 +64,14 @@ public class OrganizationAdminService {
     public record DepartmentInput(String name, String description, String parentCode, int sortOrder, boolean active) {}
 
     @Transactional(readOnly = true)
-    public List<DepartmentView> departments(AuthenticatedUser user) {
+    public List<OrgDepartmentView> departments(AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         return jdbc.sql(DEPARTMENT_SELECT + " ORDER BY d.sort_order, d.code")
                 .query((rs, i) -> department(rs))
                 .list();
     }
 
-    public DepartmentView createDepartment(String code, DepartmentInput in, AuthenticatedUser user) {
+    public OrgDepartmentView createDepartment(String code, DepartmentInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         UUID parent = parentId(in.parentCode(), null);
         if (exists("SELECT EXISTS (SELECT 1 FROM departments WHERE code = :v)", code)) {
@@ -97,10 +98,10 @@ public class OrganizationAdminService {
         return findDepartment(code);
     }
 
-    public DepartmentView updateDepartment(
+    public OrgDepartmentView updateDepartment(
             String code, int expectedRowVersion, DepartmentInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
-        DepartmentView current = findDepartment(code);
+        OrgDepartmentView current = findDepartment(code);
         UUID parent = parentId(in.parentCode(), current.id());
         int updated = jdbc.sql("""
                         UPDATE departments SET name = :name, description = :description, parent_id = :parent,
@@ -152,7 +153,7 @@ public class OrganizationAdminService {
             FROM departments d LEFT JOIN departments p ON p.id = d.parent_id
             """;
 
-    private DepartmentView findDepartment(String code) {
+    private OrgDepartmentView findDepartment(String code) {
         return jdbc.sql(DEPARTMENT_SELECT + " WHERE d.code = :code")
                 .param("code", code)
                 .query((rs, i) -> department(rs))
@@ -160,8 +161,8 @@ public class OrganizationAdminService {
                 .orElseThrow(() -> ApiErrors.notFound("部署が見つかりません: " + code));
     }
 
-    private static DepartmentView department(ResultSet rs) throws SQLException {
-        return new DepartmentView(
+    private static OrgDepartmentView department(ResultSet rs) throws SQLException {
+        return new OrgDepartmentView(
                 rs.getObject("id", UUID.class),
                 rs.getString("code"),
                 rs.getString("name"),
@@ -174,7 +175,7 @@ public class OrganizationAdminService {
 
     // ------------------------------------------------------------------ 窓口
 
-    public record ContactView(
+    public record OrgContactView(
             UUID id,
             String code,
             String departmentCode,
@@ -200,14 +201,14 @@ public class OrganizationAdminService {
             int sortOrder) {}
 
     @Transactional(readOnly = true)
-    public List<ContactView> contacts(AuthenticatedUser user) {
+    public List<OrgContactView> contacts(AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         return jdbc.sql(CONTACT_SELECT + " ORDER BY d.sort_order, c.sort_order, c.code")
                 .query((rs, i) -> contact(rs))
                 .list();
     }
 
-    public ContactView createContact(String code, ContactInput in, AuthenticatedUser user) {
+    public OrgContactView createContact(String code, ContactInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         UUID department = checkContact(in);
         if (exists("SELECT EXISTS (SELECT 1 FROM contacts WHERE code = :v)", code)) {
@@ -234,9 +235,9 @@ public class OrganizationAdminService {
         return findContact(code);
     }
 
-    public ContactView updateContact(String code, int expectedRowVersion, ContactInput in, AuthenticatedUser user) {
+    public OrgContactView updateContact(String code, int expectedRowVersion, ContactInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
-        ContactView current = findContact(code);
+        OrgContactView current = findContact(code);
         UUID department = checkContact(in);
         if (in.primary()) {
             clearPrimary(department);
@@ -296,7 +297,7 @@ public class OrganizationAdminService {
             FROM contacts c JOIN departments d ON d.id = c.department_id
             """;
 
-    private ContactView findContact(String code) {
+    private OrgContactView findContact(String code) {
         return jdbc.sql(CONTACT_SELECT + " WHERE c.code = :code")
                 .param("code", code)
                 .query((rs, i) -> contact(rs))
@@ -304,8 +305,8 @@ public class OrganizationAdminService {
                 .orElseThrow(() -> ApiErrors.notFound("窓口が見つかりません: " + code));
     }
 
-    private static ContactView contact(ResultSet rs) throws SQLException {
-        return new ContactView(
+    private static OrgContactView contact(ResultSet rs) throws SQLException {
+        return new OrgContactView(
                 rs.getObject("id", UUID.class),
                 rs.getString("code"),
                 rs.getString("dept_code"),
@@ -322,7 +323,7 @@ public class OrganizationAdminService {
 
     // ------------------------------------------------------------------ ユーザー
 
-    public record UserView(
+    public record OrgUserView(
             UUID id,
             String email,
             String displayName,
@@ -342,14 +343,14 @@ public class OrganizationAdminService {
             boolean active) {}
 
     @Transactional(readOnly = true)
-    public List<UserView> users(AuthenticatedUser user) {
+    public List<OrgUserView> users(AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         return jdbc.sql(USER_SELECT + " ORDER BY u.email")
                 .query((rs, i) -> user(rs))
                 .list();
     }
 
-    public UserView createUser(String email, String initialPassword, UserInput in, AuthenticatedUser user) {
+    public OrgUserView createUser(String email, String initialPassword, UserInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
         if (initialPassword == null || initialPassword.length() < MIN_PASSWORD_LENGTH) {
             throw ApiErrors.badRequest("初期パスワードは" + MIN_PASSWORD_LENGTH + "文字以上にしてください。");
@@ -378,9 +379,9 @@ public class OrganizationAdminService {
         return findUser(id);
     }
 
-    public UserView updateUser(UUID id, int expectedRowVersion, UserInput in, AuthenticatedUser user) {
+    public OrgUserView updateUser(UUID id, int expectedRowVersion, UserInput in, AuthenticatedUser user) {
         accessPolicy.checkIsSystemAdmin(user);
-        UserView current = findUser(id);
+        OrgUserView current = findUser(id);
         if (id.equals(user.id()) && (!in.role().equals(current.role()) || !in.active())) {
             throw ApiErrors.badRequest("自分自身のロールの変更や無効化はできません（管理できる人がいなくなるのを防ぐため）。");
         }
@@ -437,7 +438,7 @@ public class OrganizationAdminService {
             FROM users u LEFT JOIN departments d ON d.id = u.department_id
             """;
 
-    private UserView findUser(UUID id) {
+    private OrgUserView findUser(UUID id) {
         return jdbc.sql(USER_SELECT + " WHERE u.id = :id")
                 .param("id", id)
                 .query((rs, i) -> user(rs))
@@ -445,8 +446,8 @@ public class OrganizationAdminService {
                 .orElseThrow(() -> ApiErrors.notFound("ユーザーが見つかりません。"));
     }
 
-    private static UserView user(ResultSet rs) throws SQLException {
-        return new UserView(
+    private static OrgUserView user(ResultSet rs) throws SQLException {
+        return new OrgUserView(
                 rs.getObject("id", UUID.class),
                 rs.getString("email"),
                 rs.getString("display_name"),

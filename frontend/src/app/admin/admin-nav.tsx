@@ -10,14 +10,15 @@ type MenuItem = { href: string; label: string; roles: Me["role"][] };
 
 /** 管理メニュー。各画面の API と同じロールにだけ表示する */
 const MENU: MenuItem[] = [
+  // コンテンツの編集は所管部署のコンテンツ担当者だけ（システム管理者は職務分離のため編集できない）
+  { href: "/admin/documents", label: "規程", roles: ["CONTENT_EDITOR"] },
+  { href: "/admin/programs", label: "制度", roles: ["CONTENT_EDITOR"] },
+  { href: "/admin/faqs", label: "FAQ", roles: ["CONTENT_EDITOR"] },
   // きっかけは部署をまたぐため、どの部署のコンテンツ担当者でも編集できる
   { href: "/admin/life-events", label: "きっかけ", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/dictionary", label: "キーワード辞書", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
-  // FAQ の編集は所管部署のコンテンツ担当者だけ（システム管理者は職務分離のため編集できない）
-  { href: "/admin/faqs", label: "FAQ", roles: ["CONTENT_EDITOR"] },
-  { href: "/admin/programs", label: "制度", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/analytics", label: "検索の分析", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
-  { href: "/admin/documents", label: "規程", roles: ["CONTENT_EDITOR"] },
+  { href: "/admin/organization", label: "組織", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/audit-logs", label: "監査ログ", roles: ["SYSTEM_ADMIN"] },
 ];
 

@@ -2,11 +2,11 @@ package com.example.knavi.organization.api;
 
 import com.example.knavi.organization.application.OrganizationAdminService;
 import com.example.knavi.organization.application.OrganizationAdminService.ContactInput;
-import com.example.knavi.organization.application.OrganizationAdminService.ContactView;
 import com.example.knavi.organization.application.OrganizationAdminService.DepartmentInput;
-import com.example.knavi.organization.application.OrganizationAdminService.DepartmentView;
+import com.example.knavi.organization.application.OrganizationAdminService.OrgContactView;
+import com.example.knavi.organization.application.OrganizationAdminService.OrgDepartmentView;
+import com.example.knavi.organization.application.OrganizationAdminService.OrgUserView;
 import com.example.knavi.organization.application.OrganizationAdminService.UserInput;
-import com.example.knavi.organization.application.OrganizationAdminService.UserView;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import com.example.knavi.shared.web.ETags;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,7 +52,7 @@ class AdminOrganizationController {
 
     // ------------------------------------------------------------------ 部署
 
-    record DepartmentRequest(
+    record OrgDepartmentRequest(
             @NotBlank @Size(max = 100) String name,
             @Size(max = 500) String description,
             String parentCode,
@@ -64,23 +64,23 @@ class AdminOrganizationController {
         }
     }
 
-    record CreateDepartmentRequest(
+    record CreateOrgDepartmentRequest(
             @NotBlank @Size(max = 32) @Pattern(regexp = CODE, message = CODE_MESSAGE)
             String code,
 
-            @NotNull @Valid DepartmentRequest content) {}
+            @NotNull @Valid OrgDepartmentRequest content) {}
 
     @Operation(summary = "部署の一覧")
     @GetMapping("/departments")
-    List<DepartmentView> departments(@AuthenticationPrincipal AuthenticatedUser user) {
+    List<OrgDepartmentView> departments(@AuthenticationPrincipal AuthenticatedUser user) {
         return service.departments(user);
     }
 
     @Operation(summary = "部署を作成する")
     @PostMapping("/departments")
-    ResponseEntity<DepartmentView> createDepartment(
-            @Valid @RequestBody CreateDepartmentRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
-        DepartmentView created =
+    ResponseEntity<OrgDepartmentView> createDepartment(
+            @Valid @RequestBody CreateOrgDepartmentRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
+        OrgDepartmentView created =
                 service.createDepartment(body.code(), body.content().toInput(), user);
         return ResponseEntity.created(URI.create("/api/v1/admin/departments/" + created.code()))
                 .eTag(ETags.of(created.rowVersion()))
@@ -89,18 +89,18 @@ class AdminOrganizationController {
 
     @Operation(summary = "部署を更新する（上位の部署・表示順・有効/無効を含む）")
     @PutMapping("/departments/{code}")
-    ResponseEntity<DepartmentView> updateDepartment(
+    ResponseEntity<OrgDepartmentView> updateDepartment(
             @PathVariable String code,
             @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
-            @Valid @RequestBody DepartmentRequest body,
+            @Valid @RequestBody OrgDepartmentRequest body,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        DepartmentView updated = service.updateDepartment(code, ETags.parseIfMatch(ifMatch), body.toInput(), user);
+        OrgDepartmentView updated = service.updateDepartment(code, ETags.parseIfMatch(ifMatch), body.toInput(), user);
         return ResponseEntity.ok().eTag(ETags.of(updated.rowVersion())).body(updated);
     }
 
     // ------------------------------------------------------------------ 窓口
 
-    record ContactRequest(
+    record OrgContactRequest(
             @NotBlank String departmentCode,
             @NotBlank @Size(max = 100) String name,
             @Size(max = 500) String description,
@@ -117,23 +117,24 @@ class AdminOrganizationController {
         }
     }
 
-    record CreateContactRequest(
+    record CreateOrgContactRequest(
             @NotBlank @Size(max = 32) @Pattern(regexp = CODE, message = CODE_MESSAGE)
             String code,
 
-            @NotNull @Valid ContactRequest content) {}
+            @NotNull @Valid OrgContactRequest content) {}
 
     @Operation(summary = "窓口の一覧")
     @GetMapping("/contacts")
-    List<ContactView> contacts(@AuthenticationPrincipal AuthenticatedUser user) {
+    List<OrgContactView> contacts(@AuthenticationPrincipal AuthenticatedUser user) {
         return service.contacts(user);
     }
 
     @Operation(summary = "窓口を作成する（代表窓口にすると、その部署の前の代表窓口は外れる）")
     @PostMapping("/contacts")
-    ResponseEntity<ContactView> createContact(
-            @Valid @RequestBody CreateContactRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
-        ContactView created = service.createContact(body.code(), body.content().toInput(), user);
+    ResponseEntity<OrgContactView> createContact(
+            @Valid @RequestBody CreateOrgContactRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
+        OrgContactView created =
+                service.createContact(body.code(), body.content().toInput(), user);
         return ResponseEntity.created(URI.create("/api/v1/admin/contacts/" + created.code()))
                 .eTag(ETags.of(created.rowVersion()))
                 .body(created);
@@ -141,18 +142,18 @@ class AdminOrganizationController {
 
     @Operation(summary = "窓口を更新する")
     @PutMapping("/contacts/{code}")
-    ResponseEntity<ContactView> updateContact(
+    ResponseEntity<OrgContactView> updateContact(
             @PathVariable String code,
             @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
-            @Valid @RequestBody ContactRequest body,
+            @Valid @RequestBody OrgContactRequest body,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        ContactView updated = service.updateContact(code, ETags.parseIfMatch(ifMatch), body.toInput(), user);
+        OrgContactView updated = service.updateContact(code, ETags.parseIfMatch(ifMatch), body.toInput(), user);
         return ResponseEntity.ok().eTag(ETags.of(updated.rowVersion())).body(updated);
     }
 
     // ------------------------------------------------------------------ ユーザー
 
-    record UserRequest(
+    record OrgUserRequest(
             @NotBlank @Size(max = 100) String displayName,
             String departmentCode,
 
@@ -170,25 +171,25 @@ class AdminOrganizationController {
         }
     }
 
-    record CreateUserRequest(
+    record CreateOrgUserRequest(
             @NotBlank @Email @Size(max = 255) String email,
 
             @NotBlank @Size(min = OrganizationAdminService.MIN_PASSWORD_LENGTH, max = 200)
             String initialPassword,
 
-            @NotNull @Valid UserRequest content) {}
+            @NotNull @Valid OrgUserRequest content) {}
 
     @Operation(summary = "ユーザーの一覧（パスワードは返さない）")
     @GetMapping("/users")
-    List<UserView> users(@AuthenticationPrincipal AuthenticatedUser user) {
+    List<OrgUserView> users(@AuthenticationPrincipal AuthenticatedUser user) {
         return service.users(user);
     }
 
     @Operation(summary = "ユーザーを作成する（初期パスワードは8文字以上）")
     @PostMapping("/users")
-    ResponseEntity<UserView> createUser(
-            @Valid @RequestBody CreateUserRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
-        UserView created = service.createUser(
+    ResponseEntity<OrgUserView> createUser(
+            @Valid @RequestBody CreateOrgUserRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
+        OrgUserView created = service.createUser(
                 body.email(), body.initialPassword(), body.content().toInput(), user);
         return ResponseEntity.created(URI.create("/api/v1/admin/users/" + created.id()))
                 .eTag(ETags.of(created.rowVersion()))
@@ -197,12 +198,12 @@ class AdminOrganizationController {
 
     @Operation(summary = "ユーザーを更新する（ロール・所属・有効/無効。ロールの変更は次のログインから効く）")
     @PutMapping("/users/{id}")
-    ResponseEntity<UserView> updateUser(
+    ResponseEntity<OrgUserView> updateUser(
             @PathVariable UUID id,
             @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
-            @Valid @RequestBody UserRequest body,
+            @Valid @RequestBody OrgUserRequest body,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        UserView updated = service.updateUser(id, ETags.parseIfMatch(ifMatch), body.toInput(), user);
+        OrgUserView updated = service.updateUser(id, ETags.parseIfMatch(ifMatch), body.toInput(), user);
         return ResponseEntity.ok().eTag(ETags.of(updated.rowVersion())).body(updated);
     }
 }
