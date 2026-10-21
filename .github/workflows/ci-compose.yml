@@ -50,6 +50,11 @@ jobs:
           curl -fsS -o /dev/null -w '%{http_code} %{redirect_url}\n' http://localhost:3000/ | tee /dev/stderr \
             | grep -q '^307 .*/login?next=%2F$'
           curl -fsS http://localhost:3000/login | grep -q 'ログイン'
+          # セキュリティヘッダー（frontend/src/lib/security-headers.ts）
+          headers=$(curl -fsS -D - -o /dev/null http://localhost:3000/login)
+          echo "$headers" | grep -qi "^content-security-policy: .*frame-ancestors 'none'"
+          echo "$headers" | grep -qi '^x-content-type-options: nosniff'
+          ! echo "$headers" | grep -qi '^x-powered-by'
           curl -fsS -b "$RUNNER_TEMP/cookies.txt" http://localhost:3000/ | grep -q '社内規程ナビ'
       - name: Show logs on failure
         if: failure()
