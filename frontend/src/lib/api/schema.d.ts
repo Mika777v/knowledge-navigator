@@ -806,6 +806,10 @@ export interface components {
             targetType: "PROGRAM" | "DOCUMENT" | "SECTION";
             /** Format: uuid */
             targetId: string;
+            programCode: string;
+            documentCode: string;
+            articleNo: string;
+            label: string;
         };
         UpdateDocumentRequest: {
             title: string;

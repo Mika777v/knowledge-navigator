@@ -56,7 +56,14 @@ final class FaqDtos {
             @NotBlank String ownerDepartmentCode,
             @NotNull @Valid FaqContentRequest content) {}
 
-    record LinkResponse(LinkTargetType targetType, UUID targetId) {}
+    /** 関連先。programCode / documentCode / articleNo は更新時（LinkRequest）にそのまま送り返せる */
+    record LinkResponse(
+            LinkTargetType targetType,
+            UUID targetId,
+            String programCode,
+            String documentCode,
+            String articleNo,
+            String label) {}
 
     record FaqResponse(
             UUID id,
@@ -71,7 +78,7 @@ final class FaqDtos {
             List<LinkResponse> links,
             int rowVersion) {
 
-        static FaqResponse of(Faq f, DepartmentRef owner, ContactRef contact) {
+        static FaqResponse of(Faq f, DepartmentRef owner, ContactRef contact, List<FaqService.LinkView> links) {
             return new FaqResponse(
                     f.getId(),
                     f.getCode(),
@@ -85,8 +92,14 @@ final class FaqDtos {
                     DocumentDtos.DepartmentResponse.of(owner),
                     f.getVisibility(),
                     f.getStatus(),
-                    f.getLinks().stream()
-                            .map(l -> new LinkResponse(l.targetType(), l.targetId()))
+                    links.stream()
+                            .map(l -> new LinkResponse(
+                                    l.targetType(),
+                                    l.targetId(),
+                                    l.programCode(),
+                                    l.documentCode(),
+                                    l.articleNo(),
+                                    l.label()))
                             .toList(),
                     f.getRowVersion());
         }

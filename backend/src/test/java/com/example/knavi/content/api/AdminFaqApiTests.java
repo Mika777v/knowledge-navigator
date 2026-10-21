@@ -57,7 +57,11 @@ class AdminFaqApiTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"))
                 .andExpect(jsonPath("$.contactCode").value("GA-GENERAL"))
-                .andExpect(jsonPath("$.links[0].targetType").value("SECTION"));
+                .andExpect(jsonPath("$.links[0].targetType").value("SECTION"))
+                // 管理画面で編集し直せるよう、更新時に送る形（文書コード・条番号）と表示名も返す
+                .andExpect(jsonPath("$.links[0].documentCode").value("REG-GA-001"))
+                .andExpect(jsonPath("$.links[0].articleNo").value("第5条"))
+                .andExpect(jsonPath("$.links[0].label").value(org.hamcrest.Matchers.endsWith("第5条")));
     }
 
     @Test

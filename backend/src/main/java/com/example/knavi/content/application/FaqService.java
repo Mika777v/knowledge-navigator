@@ -41,6 +41,52 @@ public class FaqService {
     /** 関連先。program か document（article を指定すると条）のどちらか */
     public record LinkItem(String programCode, String documentCode, String articleNo) {}
 
+    /**
+     * 関連先を、更新時に送る形（コード・条番号）と表示名で表したもの。管理画面で編集し直せるように返す。
+     *
+     * @param label 表示名（制度名・文書名と条）。関連先が削除されていれば null
+     */
+    public record LinkView(
+            LinkTargetType targetType,
+            UUID targetId,
+            String programCode,
+            String documentCode,
+            String articleNo,
+            String label) {}
+
+    /** FAQ の関連先を、コードと表示名に変換する */
+    @Transactional(readOnly = true)
+    public List<LinkView> describeLinks(Faq faq) {
+        return faq.getLinks().stream()
+                .map(link -> switch (link.targetType()) {
+                    case PROGRAM ->
+                        programs.findById(link.targetId())
+                                .map(p -> new LinkView(
+                                        link.targetType(), link.targetId(), p.getCode(), null, null, p.getName()))
+                                .orElse(new LinkView(link.targetType(), link.targetId(), null, null, null, null));
+                    case DOCUMENT ->
+                        documents
+                                .findById(link.targetId())
+                                .map(d -> new LinkView(
+                                        link.targetType(), link.targetId(), null, d.getCode(), null, d.getTitle()))
+                                .orElse(new LinkView(link.targetType(), link.targetId(), null, null, null, null));
+                    case SECTION ->
+                        sections.findById(link.targetId())
+                                .map(s -> {
+                                    Document d = s.getVersion().getDocument();
+                                    return new LinkView(
+                                            link.targetType(),
+                                            link.targetId(),
+                                            null,
+                                            d.getCode(),
+                                            s.getArticleNo(),
+                                            d.getTitle() + " " + (s.getArticleNo() == null ? "" : s.getArticleNo()));
+                                })
+                                .orElse(new LinkView(link.targetType(), link.targetId(), null, null, null, null));
+                })
+                .toList();
+    }
+
     private final FaqRepository faqs;
     private final ProgramRepository programs;
     private final DocumentRepository documents;
