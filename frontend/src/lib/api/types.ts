@@ -8,3 +8,5 @@ export type ProgramDetail = Schemas["ProgramDetail"];
 export type FaqDetail = Schemas["FaqDetail"];
 export type ContactView = Schemas["ContactView"];
 export type BasisView = Schemas["BasisView"];
+export type NavigationResult = Schemas["NavigationResult"];
+export type LifeEventSummary = Schemas["LifeEventSummary"];
