@@ -213,6 +213,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 自分のパスワードを変える（今のパスワードが必要） */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -1129,6 +1146,10 @@ export interface components {
             /** Format: int32 */
             rank?: number;
         };
+        PasswordChangeRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -1446,12 +1467,22 @@ export interface components {
             changeNote: string;
             current: boolean;
         };
-        DepartmentContacts: {
+        DirectoryContact: {
+            code: string;
+            name: string;
+            description: string;
+            email: string;
+            phoneExt: string;
+            chatUrl: string;
+            officeHours: string;
+            primary: boolean;
+        };
+        DirectoryDepartment: {
             code: string;
             name: string;
             description: string;
             parentCode: string;
-            contacts: components["schemas"]["ContactResponse"][];
+            contacts: components["schemas"]["DirectoryContact"][];
         };
         CategoryNode: {
             slug: string;
@@ -1982,6 +2013,28 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ClickRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChangeRequest"];
             };
         };
         responses: {
@@ -2826,7 +2879,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["DepartmentContacts"][];
+                    "*/*": components["schemas"]["DirectoryDepartment"][];
                 };
             };
         };

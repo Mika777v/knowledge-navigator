@@ -23,5 +23,5 @@ export type ContentStatus = AdminFaq["status"];
 export type CategoryNode = Schemas["CategoryNode"];
 export type ProgramSummary = Schemas["ProgramSummary"];
 export type DocumentSummary = Schemas["DocumentSummary"];
-/** GET /api/v1/contacts（部署ごとの窓口）。画面で使う項目だけ */
-export type DepartmentContacts = { code: string; name: string; contacts: { code: string; name: string }[] };
+/** GET /api/v1/contacts（部署ごとの窓口） */
+export type DirectoryDepartment = Schemas["DirectoryDepartment"];
