@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BasisLink } from "@/components/basis-link";
 import { ContactCard } from "@/components/contact-card";
+import { Markdown } from "@/components/markdown";
 import { QueryState } from "@/components/query-state";
 import { apiFetch } from "@/lib/api/http";
 import type { FaqDetail } from "@/lib/api/types";
@@ -31,8 +32,7 @@ export function FaqView() {
         <p className="text-sm text-muted-foreground">よくある質問{data.faq.category && `・${data.faq.category.name}`}</p>
         <h1 className="text-2xl font-bold">{data.faq.question}</h1>
       </header>
-      {/* 回答は Markdown 形式のテキスト。HTML としては解釈せず、改行を保って表示する */}
-      <p className="leading-relaxed whitespace-pre-wrap">{data.answerMarkdown}</p>
+      <Markdown text={data.answerMarkdown} />
 
       {data.programs.length > 0 && (
         <section aria-labelledby="programs-heading">

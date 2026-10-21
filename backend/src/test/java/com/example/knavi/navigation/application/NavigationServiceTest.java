@@ -31,6 +31,13 @@ class NavigationServiceTest {
     }
 
     @Test
+    void snippetDropsMarkdownTableAndEmphasisSymbols() {
+        String content = "次の弔慰金を支給する。\n\n| 亡くなった方 | 金額 |\n|---|---|\n| **配偶者** | 50,000円 |";
+
+        assertThat(NavigationService.snippet(content, List.of("配偶者"))).isEqualTo("次の弔慰金を支給する。 亡くなった方 金額 配偶者 50,000円");
+    }
+
+    @Test
     void snippetStartsAtTheBeginningWhenNoTermIsFound() {
         assertThat(NavigationService.snippet("短い本文", List.of("結婚"))).isEqualTo("短い本文");
     }
