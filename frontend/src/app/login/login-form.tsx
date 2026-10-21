@@ -36,7 +36,8 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    // method="post": 画面のスクリプトが読み込まれる前に送信されても、パスワードが URL に入らないようにする
+    <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1 text-sm font-medium">
         メールアドレス
         <input

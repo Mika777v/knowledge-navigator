@@ -56,6 +56,30 @@ jobs:
           echo "$headers" | grep -qi '^x-content-type-options: nosniff'
           ! echo "$headers" | grep -qi '^x-powered-by'
           curl -fsS -b "$RUNNER_TEMP/cookies.txt" http://localhost:3000/ | grep -q '社内規程ナビ'
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: E2E tests (Playwright)
+        # ブラウザで画面を操作し、ログイン・検索・条文・フィードバック・管理画面の流れを確かめる
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          DEMO_USER_PASSWORD=$(grep '^DEMO_USER_PASSWORD=' ../.env | cut -d= -f2) pnpm e2e
+      - name: Upload E2E report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
       - name: Show logs on failure
         if: failure()
         run: docker compose logs
