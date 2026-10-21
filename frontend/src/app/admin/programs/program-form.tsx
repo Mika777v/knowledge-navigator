@@ -28,9 +28,14 @@ function ArticleSelect({
   });
   const articles = (data?.sections ?? []).filter((s) => s.articleNo);
   return (
-    <label className="flex w-56 flex-col gap-1">
-      <span className="sr-only">{label}</span>
-      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={!documentId} className={inputClass}>
+    <div className="flex w-56 flex-col gap-1">
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={!documentId}
+        className={inputClass}
+      >
         <option value="">文書全体</option>
         {/* 保存済みの条が公開版にない場合も、選択を失わないよう残す */}
         {value && !articles.some((s) => s.articleNo === value) && <option value={value}>{value}</option>}
@@ -41,7 +46,7 @@ function ArticleSelect({
           </option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }
 
@@ -149,9 +154,9 @@ export function ProgramForm({
           const doc = options.documents?.find((d) => d.code === b.documentCode);
           return (
             <div key={i} className="flex flex-wrap items-end gap-2">
-              <label className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="sr-only">根拠 {i + 1} の規程</span>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <select
+                  aria-label={`根拠 ${i + 1} の規程`}
                   value={b.documentCode}
                   onChange={(e) =>
                     set(
@@ -169,7 +174,7 @@ export function ProgramForm({
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
               <ArticleSelect
                 documentId={doc?.id}
                 value={b.articleNo}
@@ -210,9 +215,9 @@ export function ProgramForm({
         {values.contacts.length === 0 && <p className="text-muted-foreground">公開するには1件以上必要です。</p>}
         {values.contacts.map((c, i) => (
           <div key={i} className="flex flex-wrap items-end gap-2">
-            <label className="flex min-w-0 flex-1 flex-col gap-1">
-              <span className="sr-only">窓口 {i + 1}</span>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <select
+                aria-label={`窓口 ${i + 1}`}
                 value={c.contactCode}
                 onChange={(e) =>
                   set(
@@ -233,10 +238,10 @@ export function ProgramForm({
                   </optgroup>
                 ))}
               </select>
-            </label>
-            <label className="flex w-36 flex-col gap-1">
-              <span className="sr-only">窓口 {i + 1} の役割</span>
+            </div>
+            <div className="flex w-36 flex-col gap-1">
               <select
+                aria-label={`窓口 ${i + 1} の役割`}
                 value={c.role}
                 onChange={(e) =>
                   set(
@@ -252,7 +257,7 @@ export function ProgramForm({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             <button
               type="button"
               onClick={() =>

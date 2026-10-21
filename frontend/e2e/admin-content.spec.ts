@@ -31,6 +31,9 @@ test("コンテンツ担当者が制度の内容を直すと、制度の画面�
   await page.goto("/admin/programs");
   await page.getByRole("link", { name: "結婚祝金", exact: true }).click();
 
+  // 行ごとの選択欄は、選択肢の文字を含まない名前で読み上げられる
+  await expect(page.getByLabel("根拠 1 の規程", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("窓口 1", { exact: true })).toBeVisible();
   await page.getByLabel("内容（金額・日数など）").fill(benefit);
   await page.getByRole("button", { name: "保存", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("保存しました。");
