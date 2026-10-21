@@ -105,8 +105,10 @@ backend/src/main/java/com/example/knavi/
 | GET/POST/PUT | `/admin/documents`、`/admin/documents/{id}`（更新は `If-Match` 必須） | EDITOR（所管） |
 | GET/POST/PUT | `/admin/documents/{id}/versions`、`/versions/{versionId}`（本文は条単位に自動分割。公開済みの版は更新不可） | EDITOR（所管） |
 | POST | `/admin/documents/{id}/publish`（`{versionId}`）、`/admin/documents/{id}/archive`（`If-Match` 必須） | EDITOR（所管） |
-| CRUD | `/admin/programs`、`PUT /admin/programs/{id}/basis`、`PUT /admin/programs/{id}/contacts` | EDITOR（所管） |
-| CRUD | `/admin/faqs`、`/admin/life-events`、`/admin/navigation-keywords`、`/admin/synonyms` | EDITOR |
+| GET/POST/PUT | `/admin/programs`、`/admin/programs/{id}`、`PUT /{id}/basis`（条単位）、`PUT /{id}/contacts`、`POST /{id}/publish`・`/archive`（更新系は `If-Match` 必須） | EDITOR（所管） |
+| GET/POST/PUT | `/admin/faqs`、`/admin/faqs/{id}`、`POST /{id}/publish`・`/archive`（更新系は `If-Match` 必須） | EDITOR（所管） |
+| GET/POST/DELETE | `/admin/navigation-keywords`（`?targetType&targetId` または `?term` で逆引き） | EDITOR / ADMIN |
+| CRUD | `/admin/life-events`、`/admin/synonyms`（Phase3） | EDITOR |
 | CRUD | `/admin/departments`、`/admin/contacts`、`/admin/users`、`/admin/categories`、`/admin/tags` | ADMIN |
 | POST | `/admin/files`（multipart）→ `POST /admin/ingestion-jobs` | EDITOR（Phase2） |
 | GET | `/admin/ingestion-jobs/{id}` | EDITOR（Phase2） |
