@@ -22,6 +22,18 @@ jobs:
             < infra/docker/postgres/test/compose-check.sql
       - name: Check backend health
         run: curl -fsS http://localhost:8080/actuator/health | tee /dev/stderr | grep -q '"status":"UP"'
+      - name: Load seed data
+        run: make seed
+      - name: Log in as a demo user through the BFF
+        run: |
+          jar=$(mktemp)
+          curl -fsS -c "$jar" -b "$jar" http://localhost:3000/api/v1/auth/csrf > /dev/null
+          token=$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$jar")
+          password=$(grep '^DEMO_USER_PASSWORD=' .env | cut -d= -f2)
+          curl -fsS -c "$jar" -b "$jar" -H "X-XSRF-TOKEN: $token" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"sato@example.com\",\"password\":\"$password\"}" \
+            http://localhost:3000/api/v1/auth/login > /dev/null
+          curl -fsS -b "$jar" http://localhost:3000/api/v1/me | tee /dev/stderr | grep -q '"email":"sato@example.com"'
       - name: Check frontend and BFF
         run: |
           curl -fsS http://localhost:3000/api/health | tee /dev/stderr | grep -q '"backend":"UP"'

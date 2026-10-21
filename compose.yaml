@@ -34,6 +34,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # make seed でデモユーザーに設定するパスワード
+      KNAVI_SEED_DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-}
       TZ: Asia/Tokyo
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"

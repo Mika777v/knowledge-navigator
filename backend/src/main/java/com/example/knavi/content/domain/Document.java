@@ -10,13 +10,17 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.domain.Persistable;
 
 /**
  * 文書（集約ルート）。版（{@link DocumentVersion}）を持ち、公開中の版は最大1つ。
@@ -31,7 +35,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  */
 @Entity
 @Table(name = "documents")
-public class Document {
+public class Document implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -86,6 +90,10 @@ public class Document {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    /** ID をアプリで採番するため、新規かどうかを明示する（DocumentVersion と同じ理由） */
+    @Transient
+    private boolean isNew = true;
 
     protected Document() {}
 
@@ -151,6 +159,18 @@ public class Document {
         this.updatedBy = actor;
     }
 
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.isNew = false;
+    }
+
+    @Override
     public UUID getId() {
         return id;
     }

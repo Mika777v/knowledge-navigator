@@ -42,8 +42,9 @@ db-smoke: ## PostgreSQL イメージのスモークテストを実行する
 	infra/docker/postgres/test/run-smoke.sh
 
 .PHONY: seed
-seed: ## ダミーデータを投入する（#33 で実装）
-	@echo "未実装です（#33 で追加予定）" >&2; exit 1
+seed: .env ## ダミーデータ（data/seed）を投入する。何度実行してもよい（同じコードのデータは上書き）
+	$(COMPOSE) run --rm --no-TTY -v "$(CURDIR)/data/seed:/seed:ro" backend \
+	  --spring.main.web-application-type=none --knavi.seed.enabled=true --knavi.seed.path=/seed
 
 .PHONY: test
 test: .env ## テストを実行する（backend・frontend）

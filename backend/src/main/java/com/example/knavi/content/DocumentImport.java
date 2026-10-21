@@ -1,0 +1,32 @@
+package com.example.knavi.content;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * 文書を「公開済み」の状態で取り込む公開 API（ダミーデータ投入・データ移行用）。
+ *
+ * <p>管理画面の操作とは違い、利用者の権限チェックは行わない。呼び出し元（seed など）はシステム処理に限ること。
+ */
+public interface DocumentImport {
+
+    /**
+     * 文書がなければ作成し、属性を更新する。同じ版ラベルの版がなければ作成して公開版にする。
+     * 同じ版ラベルの版が既にあれば本文は変更しない（公開済みの版は不変のため）。
+     */
+    ImportResult importPublished(ImportedDocument document);
+
+    record ImportedDocument(
+            String code,
+            String title,
+            String summary,
+            String documentType,
+            String categorySlug,
+            UUID ownerDepartmentId,
+            String visibility,
+            String versionLabel,
+            LocalDate effectiveFrom,
+            String bodyMarkdown) {}
+
+    record ImportResult(UUID documentId, UUID currentVersionId, boolean versionCreated) {}
+}

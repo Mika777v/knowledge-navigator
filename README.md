@@ -17,6 +17,7 @@
 
 ```bash
 make up      # .env が無ければ .env.example から作成し、ビルドして起動
+make seed    # ダミーデータを投入（デモユーザーでログインできるようになる）
 make psql    # DB に接続
 make down    # 停止（データは残る）
 make clean   # 停止してデータも削除

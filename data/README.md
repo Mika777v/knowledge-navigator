@@ -7,12 +7,15 @@
 
 ```
 data/
-├── seed/                 # アプリに投入する初期データ（`make seed`、#33 で実装）
+├── seed/                 # アプリに投入する初期データ（`make seed`）
 │   ├── departments.yaml  # 部署（8部署 + 課3）
 │   ├── contacts.yaml     # 問い合わせ窓口（15）
 │   ├── users.yaml        # デモユーザー（全ロール）
 │   ├── categories.yaml   # カテゴリ（2階層）
-│   └── documents/        # 架空の社内規程（10本、Markdown + front matter）
+│   ├── documents/        # 架空の社内規程（10本、Markdown + front matter）
+│   ├── programs.yaml     # 制度（39件。根拠の条・窓口・キーワード）
+│   ├── life_events.yaml  # きっかけ（結婚・出産など8件）
+│   └── faqs.yaml         # よくある質問（50件。うち2件は管理職限定）
 └── eval/                 # 検索品質の評価用質問セット（#39）
 ```
 
@@ -30,7 +33,27 @@ data/
 | kato@example.com | 情報システム部 | CONTENT_EDITOR | 情シスのコンテンツ担当 |
 | watanabe@example.com | 情報システム部 | SYSTEM_ADMIN | システム管理者 |
 
-パスワードは seed に書かず、投入時に環境変数 `DEMO_USER_PASSWORD` の値を全員に設定する（ローカルの既定値は `.env.example` に記載予定、#33）。
+パスワードは seed に書かず、投入時に環境変数 `DEMO_USER_PASSWORD` の値を全員に設定する（ローカルの既定値は `.env.example`）。
+
+## 投入（make seed）
+
+```bash
+make up     # 先に DB と backend を起動
+make seed   # data/seed を投入（何度実行してもよい）
+```
+
+- コード（`code` / `slug` / `email`）で既存の行を特定して上書きする。文書は同じ版ラベルの版があれば本文を変更しない（公開済みの版は不変のため。内容を変えるときは `version_label` を上げる）
+- 規程は本番と同じ処理で条単位に分割される（backend の `DocumentImport`）
+- ナビゲーションキーワードは投入のたびに作り直す（制度名・きっかけ名・`keywords`・窓口の `topics`）
+- 総合窓口（窓口を導出できないときの案内先）は `HR-REP`
+
+## 制度・きっかけ・FAQ の書き方
+
+| ファイル | 主な項目 | ルール |
+|---|---|---|
+| `programs.yaml` | `basis`（文書と条）、`contacts`（窓口と役割 APPLY / INQUIRY / PAYMENT）、`keywords` | 窓口は1件以上必須。公開範囲は根拠文書より広くしない |
+| `life_events.yaml` | `programs`（PRIMARY = まず確認する制度 / RELATED = あわせて必要な手続き）、`keywords` | |
+| `faqs.yaml` | `links`（program か document + article）、`contact`、`visibility` | 窓口か関連制度のどちらかが必要 |
 
 ## ルール（`scripts/data/validate_seed.py` で検査）
 
@@ -39,6 +62,7 @@ data/
 - 窓口を持つ部署には代表窓口（`is_primary: true`）がちょうど1つあること（窓口を導出できないときのフォールバック先）
 - 全ロールのデモユーザーがいること、パスワードを書かないこと
 - 規程: front matter の必須項目と参照先、注記、条番号の連番、規程どうしの条文参照が実在する条を指すこと
+- 制度・きっかけ・FAQ: 参照先の文書・条・窓口・制度が存在すること、窓口の有無、公開範囲が根拠文書より広くないこと
 
 ```bash
 python3 scripts/data/validate_seed.py

@@ -1,0 +1,432 @@
+# よくある質問（すべて架空の会社のルールに基づく）
+# links: 関連する制度（program）・文書（document、article で条を指定可）
+# contact: 回答で解決しない場合の問い合わせ先
+
+# ---------- 結婚・慶弔 ----------
+- code: FAQ-001
+  question: 入籍前に結婚祝金を申請できますか？
+  answer: 申請は入籍後に行います。婚姻を証明する書類（戸籍謄本または婚姻届受理証明書の写し）が必要なためです。入籍日から6か月以内に申請してください。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links: [{ program: PRG-MARRIAGE-GIFT }, { document: REG-GA-001, article: 第5条 }]
+
+- code: FAQ-002
+  question: 結婚休暇は入籍日と挙式日のどちらから数えますか？
+  answer: どちらを起点にしても構いません。起点から1年以内に連続5日（休日を含まない）を取得できます。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-MARRIAGE-LEAVE }, { document: REG-HR-001, article: 第32条 }]
+
+- code: FAQ-003
+  question: 結婚して名字が変わりました。何をすればいいですか？
+  answer: 変更の日から14日以内に、人事システムの「身上異動届」で届け出てください。メールアドレスや社員証の表記変更は、届出の後にITヘルプデスク・総務部から案内があります。
+  category: hr
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-PERSONAL-INFO-CHANGE }, { document: REG-HR-001, article: 第10条 }]
+
+- code: FAQ-004
+  question: 社員同士で結婚する場合、結婚祝金は2人とももらえますか？
+  answer: はい。社員同士が婚姻したときは、それぞれに結婚祝金（各30,000円）を支給します。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links: [{ program: PRG-MARRIAGE-GIFT }, { document: REG-GA-001, article: 第5条 }]
+
+- code: FAQ-005
+  question: パートタイム社員でも結婚祝金はもらえますか？
+  answer: 勤続6か月以上であれば、結婚祝金の2分の1（15,000円）を支給します。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links: [{ program: PRG-MARRIAGE-GIFT }, { document: REG-GA-001, article: 第2条 }]
+
+- code: FAQ-006
+  question: 慶弔見舞金はいつ振り込まれますか？
+  answer: 申請を受け付けた月の翌月25日に、給与とは別に給与振込口座へ振り込みます。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links: [{ document: REG-GA-001, article: 第4条 }]
+
+- code: FAQ-007
+  question: 祖母が亡くなりました。休暇と弔慰金はどうなりますか？
+  answer: 忌引休暇は3日（死亡日から2週間以内）、弔慰金は10,000円です。休暇は勤怠システムで事後に申請しても構いません。弔慰金は社内ポータルの「慶弔申請」から申請してください。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links:
+    - { program: PRG-BEREAVEMENT-LEAVE }
+    - { program: PRG-CONDOLENCE }
+    - { document: REG-HR-001, article: 第32条 }
+    - { document: REG-GA-001, article: 第8条 }
+
+- code: FAQ-008
+  question: 台風で自宅が浸水しました。会社から支援はありますか？
+  answer: 床上浸水などの一部損壊で20,000円の災害見舞金があります。罹災証明書などを添えて「慶弔申請」から申請してください。
+  category: welfare-ceremony
+  owner_department: GA
+  contact: GA-GENERAL
+  links: [{ program: PRG-DISASTER-AID }, { document: REG-GA-001, article: 第12条 }]
+
+# ---------- 出産・育児 ----------
+- code: FAQ-009
+  question: 妻が出産します。私が取れる休みはありますか？
+  answer: 配偶者出産休暇（有給・2日）、産後パパ育休（子の出生後8週間以内に最大4週間）、育児休業（子が1歳まで）があります。産後パパ育休と育児休業は別々に取得できます。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links:
+    - { program: PRG-SPOUSE-BIRTH-LEAVE }
+    - { program: PRG-PATERNITY-LEAVE }
+    - { program: PRG-CHILDCARE-LEAVE }
+
+- code: FAQ-010
+  question: 育児休業はいつまでに申し出ればいいですか？
+  answer: 原則として休業開始予定日の1か月前までです。産後パパ育休は2週間前までです。迷ったら早めに人事部 労務グループに相談してください。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILDCARE-LEAVE }, { document: REG-HR-002, article: 第6条 }]
+
+- code: FAQ-011
+  question: 保育園に入れなかった場合、育児休業は延長できますか？
+  answer: できます。子が1歳6か月になるまで、さらに必要な場合は2歳になるまで延長できます。保育所に入れないことがわかる書類を用意してください。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILDCARE-LEAVE }, { document: REG-HR-002, article: 第5条 }]
+
+- code: FAQ-012
+  question: 契約社員でも育児休業を取れますか？
+  answer: 子が1歳6か月になるまでに労働契約が満了することが明らかでなければ取得できます。ただし、入社1年未満の方などは労使協定により対象外です。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILDCARE-LEAVE }, { document: REG-HR-002, article: 第4条 }]
+
+- code: FAQ-013
+  question: 育児休業中の給料や社会保険料はどうなりますか？
+  answer: 育児休業中は会社からの賃金は支払われません。社会保険料の免除と、雇用保険の育児休業給付金の手続きは人事部 労務グループが案内します。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILDCARE-LEAVE }, { document: REG-HR-002, article: 第8条 }]
+
+- code: FAQ-014
+  question: 子どもが熱を出しました。有給休暇以外で休めますか？
+  answer: 子の看護等休暇が使えます。小学校3年生修了までの子1人につき年5日（2人以上は10日）、有給で、時間単位でも取得できます。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILD-NURSING-LEAVE }, { document: REG-HR-002, article: 第12条 }]
+
+- code: FAQ-015
+  question: 子どもの入学式に行くのに子の看護等休暇は使えますか？
+  answer: 使えます。入園（入学）式・卒園式への参加、感染症による学級閉鎖への対応も対象です。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CHILD-NURSING-LEAVE }, { document: REG-HR-002, article: 第12条 }]
+
+- code: FAQ-016
+  question: 保育園のお迎えのために時短勤務はできますか？
+  answer: 3歳未満の子を育てている場合は、1日6時間の育児短時間勤務ができます。3歳から小学校就学前は、時差出勤かテレワーク（月10日以上）のどちらかを選べます。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links:
+    - { program: PRG-CHILDCARE-SHORT-HOURS }
+    - { program: PRG-FLEXIBLE-WORK-CHILDCARE }
+
+- code: FAQ-017
+  question: 子どもが小さいうちは残業を断れますか？
+  answer: 小学校就学前の子を育てている場合、請求により所定外労働（残業）が免除されます。時間外労働の上限（月24時間・年150時間）や深夜業の免除も請求できます。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-OVERTIME-EXEMPTION }, { document: REG-HR-002, article: 第14条 }]
+
+- code: FAQ-018
+  question: 育児休業から復職するとき、元の部署に戻れますか？
+  answer: 原則として休業前の職場・職務に復帰します。復職の1か月前を目安に、所属長と人事部 労務グループが面談を行います。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ document: REG-HR-002, article: 第23条 }]
+
+- code: FAQ-019
+  question: ベビーシッター代の補助はありますか？
+  answer: 会社が契約するベビーシッターサービスを利用した場合、1回2,000円（月10回まで）を補助します。利用月の翌月10日までに申請してください。
+  category: welfare
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CARE-SERVICE-AID }, { document: REG-HR-005, article: 第12条 }]
+
+# ---------- 介護 ----------
+- code: FAQ-020
+  question: 親の介護が必要になりました。まず何をすればいいですか？
+  answer: まず人事部 労務グループに相談してください。介護休業（通算93日・3回まで分割）、介護休暇（年5日・時間単位可）、残業の免除、短時間勤務などの制度を個別に案内します。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links:
+    - { program: PRG-CARE-LEAVE }
+    - { program: PRG-CARE-DAYS }
+    - { document: REG-HR-002, article: 第11条 }
+
+- code: FAQ-021
+  question: 介護休業と介護休暇の違いは何ですか？
+  answer: 介護休業はまとまった期間（対象家族1人につき通算93日）休む制度で、介護の体制を整えるときに使います。介護休暇は通院の付き添いなど短時間の用事に使う制度で、年5日まで時間単位で取得できます。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-CARE-LEAVE }, { program: PRG-CARE-DAYS }]
+
+- code: FAQ-022
+  question: 介護のために在宅勤務を増やせますか？
+  answer: 介護のために利用する在宅勤務には、週3日の上限が適用されません。所属長と相談してください。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-REMOTE-WORK }, { document: REG-HR-003, article: 第7条 }]
+
+# ---------- 休暇・勤務 ----------
+- code: FAQ-023
+  question: 有給休暇は何日ありますか？
+  answer: 入社6か月で10日付与され、その後1年ごとに増えて、6年6か月以上で年20日になります。使わなかった日数は翌年度に繰り越せます。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-ANNUAL-LEAVE }, { document: REG-HR-001, article: 第26条 }]
+
+- code: FAQ-024
+  question: 入社してすぐに有給休暇は使えますか？
+  answer: 年次有給休暇は入社6か月後に付与されるため、それまでは使えません。体調不良などで休む場合は所属長に相談してください。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-ANNUAL-LEAVE }, { document: REG-HR-001, article: 第25条 }]
+
+- code: FAQ-025
+  question: 有給休暇を1時間だけ取れますか？
+  answer: 1年に5日分までは時間単位で取得できます。勤怠システムで「時間単位年休」を申請してください。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-HOURLY-LEAVE }, { document: REG-HR-001, article: 第28条 }]
+
+- code: FAQ-026
+  question: 始業時刻を遅らせることはできますか？
+  answer: 所属長の承認を得れば、始業・終業時刻を1時間の範囲で繰り上げ・繰り下げできます（時差出勤）。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-TIME-SHIFT }, { document: REG-HR-001, article: 第17条 }]
+
+- code: FAQ-027
+  question: 副業をしてもいいですか？
+  answer: 事前に所属長を経て人事部に届け出れば可能です。労務の提供に支障がある場合や競業にあたる場合は制限されることがあります。
+  category: hr
+  owner_department: HR
+  contact: HR-REP
+  links: [{ document: REG-HR-001, article: 第13条 }]
+
+- code: FAQ-028
+  question: 退職するときはいつまでに伝えればいいですか？
+  answer: 引き継ぎのため、できるだけ退職日の1か月前までに所属長に申し出てください。退職日までにPC・社員証などの返却が必要です。
+  category: hr
+  owner_department: HR
+  contact: HR-HIRE
+  links: [{ program: PRG-RESIGNATION }, { document: REG-HR-001, article: 第39条 }]
+
+# ---------- 在宅勤務 ----------
+- code: FAQ-029
+  question: 在宅勤務を始めるにはどうすればいいですか？
+  answer: 初めて利用するときは、人事システムの「在宅勤務利用申請」で所属長の承認を得てください。登録には通常3営業日かかります。登録後は、在宅勤務をする日ごとに前日までに勤怠システムで申請します。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-REMOTE-WORK }, { document: REG-HR-003, article: 第4条 }]
+
+- code: FAQ-030
+  question: 在宅勤務は週に何日までできますか？
+  answer: 週3日までです。育児・介護のために利用する場合は上限がありません。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-REMOTE-WORK }, { document: REG-HR-003, article: 第7条 }]
+
+- code: FAQ-031
+  question: カフェで在宅勤務をしてもいいですか？
+  answer: できません。喫茶店や公共交通機関など、第三者に画面をのぞき見される場所での勤務は禁止されています。自宅以外で勤務する場合は、あらかじめ所属長に場所を届け出てください。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ document: REG-HR-003, article: 第6条 }, { document: REG-IT-001, article: 第15条 }]
+
+- code: FAQ-032
+  question: 在宅勤務手当はいくらですか？
+  answer: 月額3,000円です。在宅勤務の登録をしていて、その月に1日以上在宅勤務をした場合に翌月の給与と合わせて支給されます。
+  category: hr-pay
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-REMOTE-ALLOWANCE }, { document: REG-HR-003, article: 第12条 }]
+
+- code: FAQ-033
+  question: 在宅勤務中に私用で少し抜けてもいいですか？
+  answer: 所属長に連絡したうえで、その時間を休憩として扱うか、時間単位の年次有給休暇を取得してください。
+  category: hr-work
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ document: REG-HR-003, article: 第9条 }, { program: PRG-HOURLY-LEAVE }]
+
+# ---------- 通勤・経費 ----------
+- code: FAQ-034
+  question: 通勤手当はどう申請しますか？
+  answer: 人事システムの「通勤経路申請」に、定期券の金額がわかる資料を添付して申請してください。入社・引越し・経路の変更があった日から14日以内に申請が必要です。
+  category: hr-pay
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-COMMUTE-ALLOWANCE }, { document: REG-HR-004, article: 第7条 }]
+
+- code: FAQ-035
+  question: 通勤手当の申請が遅れたら、さかのぼってもらえますか？
+  answer: さかのぼっての支給はありません。申請した月から新しい金額が適用されるため、変更があったら早めに申請してください。
+  category: hr-pay
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-COMMUTE-ALLOWANCE }, { document: REG-HR-004, article: 第7条 }]
+
+- code: FAQ-036
+  question: 在宅勤務が多い月の交通費はどうなりますか？
+  answer: 1か月の出社予定が10日以下の場合は、定期代の代わりに出社した日の往復運賃を実費で精算します。経費精算システムで月ごとに申請してください。
+  category: hr-pay
+  owner_department: HR
+  contact: FIN-EXPENSE
+  links: [{ program: PRG-COMMUTE-ACTUAL-COST }, { document: REG-HR-004, article: 第8条 }]
+
+- code: FAQ-037
+  question: 車で通勤してもいいですか？
+  answer: 所属長と人事部の許可を得た場合に限り認められます。任意保険（対人無制限）への加入が条件で、通勤手当は距離に応じた定額です。
+  category: hr-pay
+  owner_department: HR
+  contact: HR-LABOR
+  links: [{ program: PRG-COMMUTE-ALLOWANCE }, { document: REG-HR-004, article: 第5条 }]
+
+- code: FAQ-038
+  question: 出張の宿泊費の上限はいくらですか？
+  answer: 1泊あたり、東京23区・大阪市・名古屋市・福岡市は12,000円、その他の地域は10,000円が上限です。
+  category: finance
+  owner_department: FIN
+  contact: FIN-EXPENSE
+  links: [{ program: PRG-BUSINESS-TRIP }, { document: REG-FIN-001, article: 第7条 }]
+
+- code: FAQ-039
+  question: 出張の精算はいつまでにすればいいですか？
+  answer: 帰着した日から2週間以内に経費精算システムで精算してください。正当な理由なく3か月を過ぎた精算は受け付けられません。
+  category: finance
+  owner_department: FIN
+  contact: FIN-EXPENSE
+  links: [{ program: PRG-BUSINESS-TRIP }, { document: REG-FIN-001, article: 第12条 }]
+
+- code: FAQ-040
+  question: 交通系ICカードで払った交通費の領収書はどうすればいいですか？
+  answer: ICカードの利用履歴を領収書の代わりにできます。
+  category: finance
+  owner_department: FIN
+  contact: FIN-EXPENSE
+  links: [{ document: REG-FIN-001, article: 第13条 }]
+
+# ---------- IT・セキュリティ ----------
+- code: FAQ-041
+  question: PC が壊れました。どうすればいいですか？
+  answer: ITヘルプデスクに連絡してください。修理の間は代替機を貸与します（連絡した日の翌営業日までに用意）。自分で分解・修理はしないでください。
+  category: it
+  owner_department: IT
+  contact: IT-HELPDESK
+  links: [{ program: PRG-PC-REPAIR }, { document: REG-IT-002, article: 第8条 }]
+
+- code: FAQ-042
+  question: 会社のスマートフォンをなくしました。
+  answer: 夜間・休日でも直ちに情報セキュリティ窓口（24時間受付）に報告してください。盗難の場合は警察に届け出て、受理番号を伝えてください。報告したことで不利益な扱いは受けません。
+  category: it
+  owner_department: IT
+  contact: IT-SECURITY
+  links: [{ program: PRG-DEVICE-LOSS-REPORT }, { document: REG-IT-001, article: 第16条 }]
+
+- code: FAQ-043
+  question: パスワードを忘れました。
+  answer: ITヘルプデスクに連絡してください。アカウントがロックされた場合も同じです。
+  category: it
+  owner_department: IT
+  contact: IT-HELPDESK
+  links: [{ document: REG-IT-001, article: 第6条 }]
+
+- code: FAQ-044
+  question: 業務で ChatGPT などの生成AIを使ってもいいですか？
+  answer: 情報システム部が承認した生成AIサービスなら利用できます。承認されていないサービスに社外秘以上の情報や個人情報を入力してはいけません。出力は内容を確認してから使ってください。
+  category: it
+  owner_department: IT
+  contact: IT-SECURITY
+  links: [{ document: REG-IT-001, article: 第11条 }]
+
+- code: FAQ-045
+  question: 不審なメールが届きました。
+  answer: リンクや添付ファイルを開かずに、情報セキュリティ窓口に転送してください。開いてしまった場合も直ちに報告してください。
+  category: it
+  owner_department: IT
+  contact: IT-SECURITY
+  links: [{ document: REG-IT-001, article: 第9条 }, { document: REG-IT-001, article: 第16条 }]
+
+- code: FAQ-046
+  question: 私物のPCで仕事をしてもいいですか？
+  answer: できません。業務は会社が貸与したPCで行ってください。私物の端末で社内システムに接続することも禁止されています。
+  category: it
+  owner_department: IT
+  contact: IT-HELPDESK
+  links: [{ document: REG-HR-003, article: 第14条 }, { document: REG-IT-001, article: 第12条 }]
+
+# ---------- 健康・相談 ----------
+- code: FAQ-047
+  question: 最近眠れず、仕事がつらいです。誰に相談できますか？
+  answer: 健康管理室の産業医・保健師に相談できます。相談内容が本人の同意なく人事評価に使われることはありません。職場の人間関係が原因の場合は、ハラスメント相談窓口にも相談できます。
+  category: welfare
+  owner_department: HR
+  contact: HR-HEALTH
+  links: [{ program: PRG-HEALTH-CONSULTATION }, { program: PRG-HARASSMENT-CONSULTATION }]
+
+- code: FAQ-048
+  question: 上司の言動がパワハラではないかと感じています。
+  answer: コンプライアンス・ハラスメント相談窓口に相談してください。匿名でも相談でき、相談したことを理由に不利益な扱いを受けることはありません。見聞きした人も相談できます。
+  category: compliance
+  owner_department: LEGAL
+  contact: LEGAL-HOTLINE
+  links: [{ program: PRG-HARASSMENT-CONSULTATION }, { document: REG-LEGAL-001, article: 第8条 }]
+
+# ---------- 管理職向け ----------
+- code: FAQ-049
+  question: 部下から妊娠の報告を受けました。管理職として何をすればいいですか？
+  answer: 速やかに人事部 労務グループに連絡してください。会社は育児休業などの制度を本人に個別に知らせ、取得の意向を確認します。制度の利用を妨げる言動はハラスメントにあたるため注意してください。
+  category: hr-leave
+  owner_department: HR
+  contact: HR-LABOR
+  visibility: MANAGERS
+  links:
+    - { program: PRG-MANAGER-CHILDCARE-SUPPORT }
+    - { document: REG-HR-002, article: 第3条 }
+    - { document: REG-LEGAL-001, article: 第5条 }
+
+- code: FAQ-050
+  question: 部下からハラスメントの相談を受けたらどうすればいいですか？
+  answer: 相談者のプライバシーに配慮しながら、速やかにコンプライアンス・ハラスメント相談窓口に連絡してください。自分だけで解決しようとせず、事実の確認は窓口が行います。
+  category: compliance
+  owner_department: LEGAL
+  contact: LEGAL-HOTLINE
+  visibility: MANAGERS
+  links:
+    - { program: PRG-HARASSMENT-CONSULTATION }
+    - { document: REG-LEGAL-001, article: 第5条 }
+    - { document: REG-LEGAL-001, article: 第10条 }
