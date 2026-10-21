@@ -145,4 +145,11 @@ public class AccessPolicy {
             throw new AccessDeniedException("コンテンツ担当者だけが利用できます。");
         }
     }
+
+    /** 監査ログを見られるのは SYSTEM_ADMIN だけ */
+    public void checkIsSystemAdmin(AuthenticatedUser user) {
+        if (!SYSTEM_ADMIN.equals(user.role())) {
+            throw new AccessDeniedException("システム管理者だけが利用できます。");
+        }
+    }
 }
