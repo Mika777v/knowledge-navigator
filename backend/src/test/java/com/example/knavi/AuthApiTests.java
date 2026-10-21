@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ class AuthApiTests {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    EntityManager entityManager;
 
     @BeforeEach
     void setUp() {
@@ -147,6 +151,63 @@ class AuthApiTests {
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/v1/me").session(session)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void sessionIsDiscardedWhenTheRoleChanges() throws Exception {
+        var session = loggedIn();
+
+        updateSato("role = 'MANAGER'");
+
+        // 古いロールのまま使い続けられないよう、次のリクエストでセッションを破棄して再ログインを求める
+        mockMvc.perform(get("/api/v1/me").session(session))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.startsWith("アカウントの権限や所属が変わった")));
+        org.assertj.core.api.Assertions.assertThat(session.isInvalid()).isTrue();
+
+        // ログインし直せば、新しいロールで使える
+        var again = loggedIn();
+        mockMvc.perform(get("/api/v1/me").session(again))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("MANAGER"));
+    }
+
+    @Test
+    void sessionIsDiscardedWhenTheUserIsDeactivatedOrMoved() throws Exception {
+        var deactivated = loggedIn();
+        updateSato("is_active = false");
+        mockMvc.perform(get("/api/v1/me").session(deactivated)).andExpect(status().isUnauthorized());
+
+        updateSato("is_active = true");
+        var moved = loggedIn();
+        // 部署限定の文書の見え方が変わるため、異動（所属の変更）でも再ログインしてもらう
+        updateSato("department_id = NULL");
+        mockMvc.perform(get("/api/v1/me").session(moved)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void sessionSurvivesChangesThatDoNotAffectPermissions() throws Exception {
+        var session = loggedIn();
+
+        updateSato("display_name = '佐藤 太郎（営業）'");
+
+        mockMvc.perform(get("/api/v1/me").session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("佐藤 太郎（営業）"));
+    }
+
+    /** 管理画面などで更新された状態を作る（テストのトランザクション内の JPA のキャッシュも捨てる） */
+    private void updateSato(String assignment) {
+        jdbc.sql("UPDATE users SET " + assignment + " WHERE email = 'sato@example.com'")
+                .update();
+        entityManager.clear();
+    }
+
+    private MockHttpSession loggedIn() throws Exception {
+        var session = new MockHttpSession();
+        mockMvc.perform(login("sato@example.com", PASSWORD).with(csrf()).session(session))
+                .andExpect(status().isOk());
+        return session;
     }
 
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder login(
