@@ -86,7 +86,8 @@ flowchart LR
 
 - **検索**: 質問の整理（口語の除去・語の抽出）→ キーワード辞書（最長一致）→ pg_bigm の全文検索 → スコアの統合 → 窓口の導出（必ず1件以上）。詳しくは [ARCHITECTURE.md §4](docs/ARCHITECTURE.md)
 - **認可**: `AccessPolicy` に集約し、すべての読み取りを SQL の WHERE 句で絞り込む（プレフィルタ）
-- **検索ログ**: ユーザー ID は HMAC で仮名化。分析では2人以上が検索した質問だけを集計する
+- **ログイン**: セッション Cookie + CSRF トークン。同じアカウントで続けて失敗すると一時的にロックする
+- **検索ログ**: ユーザー ID は HMAC で仮名化。分析では2人以上が検索した質問だけを集計し、保存期間（既定180日）を過ぎたら自動で削除する
 
 ## 品質
 
@@ -121,10 +122,11 @@ flowchart LR
 - [ロードマップ](docs/ROADMAP.md) / [タスク分解](docs/TASKS.md)
 - [GitHub 運用ルール](docs/GITHUB_WORKFLOW.md) / [リポジトリ初期設定の手順](docs/REPOSITORY_SETUP.md)
 - [ダミーデータ](data/README.md) / [評価用質問](data/eval/README.md)
+- [変更履歴](CHANGELOG.md)
 
 ## ステータス
 
-MVP（v0.1.0）を実装中です。検索・閲覧・辞書・分析・監査ログまで動きます。残りは制度・FAQ・文書の編集画面などです。今後の計画は [ROADMAP](docs/ROADMAP.md) を参照してください。
+MVP（v0.1.0）を実装中です。検索・閲覧・辞書・分析・監査ログ・FAQ の編集まで動きます。残りは制度・文書・きっかけの編集画面などです（[変更履歴](CHANGELOG.md)）。今後の計画は [ROADMAP](docs/ROADMAP.md) を参照してください。
 
 ## ライセンス
 
