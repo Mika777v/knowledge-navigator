@@ -56,6 +56,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/life-events/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** きっかけの詳細 */
+        get: operations["get_1"];
+        /** きっかけを更新する（紐づける制度もまとめて置き換える。If-Match 必須） */
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/faqs/{id}": {
         parameters: {
             query?: never;
@@ -64,9 +82,9 @@ export interface paths {
             cookie?: never;
         };
         /** FAQ の詳細 */
-        get: operations["get_1"];
+        get: operations["get_2"];
         /** FAQ を更新する */
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -82,9 +100,9 @@ export interface paths {
             cookie?: never;
         };
         /** 文書の詳細 */
-        get: operations["get_2"];
+        get: operations["get_3"];
         /** 文書の属性を更新する */
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -231,6 +249,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/life-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** きっかけの一覧（紐づく制度つき。下書きの制度も含む） */
+        get: operations["list_2"];
+        put?: never;
+        /** きっかけを作成する */
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/faqs": {
         parameters: {
             query?: never;
@@ -239,10 +275,10 @@ export interface paths {
             cookie?: never;
         };
         /** 自部署が所管する FAQ の一覧 */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         /** FAQ を作成する（下書き） */
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -291,10 +327,10 @@ export interface paths {
             cookie?: never;
         };
         /** 自部署が所管する文書の一覧 */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /** 文書を作成する（下書き） */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -770,6 +806,38 @@ export interface components {
         ReplaceBasisRequest: {
             basis: components["schemas"]["BasisRequest"][];
         };
+        LifeEventRequest: {
+            name: string;
+            icon?: string;
+            description?: string;
+            /** Format: int32 */
+            sortOrder?: number;
+            programs: components["schemas"]["ProgramLinkRequest"][];
+        };
+        ProgramLinkRequest: {
+            programCode: string;
+            /** @enum {string} */
+            relation: "PRIMARY" | "RELATED";
+        };
+        LifeEventView: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            icon: string;
+            description: string;
+            /** Format: int32 */
+            sortOrder: number;
+            programs: components["schemas"]["LinkedProgram"][];
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        LinkedProgram: {
+            code: string;
+            name: string;
+            /** @enum {string} */
+            relation: "PRIMARY" | "RELATED";
+        };
         FaqContentRequest: {
             question: string;
             answerMarkdown: string;
@@ -928,6 +996,10 @@ export interface components {
             targetLabel: string;
             /** Format: float */
             weight: number;
+        };
+        CreateLifeEventRequest: {
+            code: string;
+            content: components["schemas"]["LifeEventRequest"];
         };
         CreateFaqRequest: {
             code: string;
@@ -1402,6 +1474,56 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LifeEventView"];
+                };
+            };
+        };
+    };
+    update_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LifeEventRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LifeEventView"];
+                };
+            };
+        };
+    };
+    get_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
                 id: string;
             };
             cookie?: never;
@@ -1419,7 +1541,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: {
@@ -1447,7 +1569,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1469,7 +1591,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: {
@@ -1774,12 +1896,56 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["FaqResponse"][];
+                    "*/*": components["schemas"]["LifeEventView"][];
                 };
             };
         };
     };
     create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLifeEventRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LifeEventView"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FaqResponse"][];
+                };
+            };
+        };
+    };
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1851,7 +2017,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1871,7 +2037,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;

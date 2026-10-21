@@ -10,6 +10,8 @@ type MenuItem = { href: string; label: string; roles: Me["role"][] };
 
 /** 管理メニュー。各画面の API と同じロールにだけ表示する */
 const MENU: MenuItem[] = [
+  // きっかけは部署をまたぐため、どの部署のコンテンツ担当者でも編集できる
+  { href: "/admin/life-events", label: "きっかけ", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/dictionary", label: "キーワード辞書", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
   // FAQ の編集は所管部署のコンテンツ担当者だけ（システム管理者は職務分離のため編集できない）
   { href: "/admin/faqs", label: "FAQ", roles: ["CONTENT_EDITOR"] },
