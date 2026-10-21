@@ -19,6 +19,11 @@ repositories {
     mavenCentral()
 }
 
+// Spring Boot の BOM のバージョンを上書きする（理由は libs.versions.toml）
+extra["tomcat.version"] = libs.versions.tomcat.get()
+extra["jackson-bom.version"] = libs.versions.jackson.get()
+extra["jackson-2-bom.version"] = libs.versions.jackson2.get()
+
 dependencyManagement {
     imports {
         mavenBom(libs.spring.modulith.bom.get().toString())
