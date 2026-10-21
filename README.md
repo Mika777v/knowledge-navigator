@@ -101,7 +101,7 @@ flowchart LR
 | ゼロヒット率 | 2% |
 
 - backend: JUnit + Testcontainers（実際の PostgreSQL + pg_bigm）、Spring Modulith のモジュール境界テスト、権限マトリクステスト
-- frontend: Vitest + Testing Library
+- frontend: Vitest + Testing Library、E2E は Playwright（`make up` した環境をブラウザで操作し、CI でも実行）
 - セキュリティ: CSRF 対策、CSP などのセキュリティヘッダー、Markdown は HTML を描画しない、監査ログは追記専用（DB のトリガーで更新・削除を拒否）
 
 ## 技術スタック
