@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "api:types": "openapi-typescript ${OPENAPI_URL:-http://localhost:8080/v3/api-docs} -o src/lib/api/schema.d.ts"
+    "api:types": "openapi-typescript ${OPENAPI_URL:-http://localhost:8080/v3/api-docs} --properties-required-by-default -o src/lib/api/schema.d.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",
