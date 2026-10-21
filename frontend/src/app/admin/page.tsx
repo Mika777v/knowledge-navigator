@@ -9,6 +9,14 @@ export default function AdminHomePage() {
       <h1 className="text-2xl font-bold">管理</h1>
       <ul className="flex flex-col gap-2">
         <li>
+          <Link href="/admin/life-events" className="font-medium underline">
+            きっかけ
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            結婚・出産・引越しなど、社員の状況と、そのときに使える制度の組み合わせを編集します（コンテンツ担当者だけ）。
+          </p>
+        </li>
+        <li>
           <Link href="/admin/dictionary" className="font-medium underline">
             キーワード辞書
           </Link>
