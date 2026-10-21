@@ -333,6 +333,7 @@ class EmbeddingModel(Protocol):
 |---|---|
 | 認証 | MVP: Spring Security フォームログイン + BCrypt、デモユーザー。将来: OIDC（Keycloak を compose で提供 → 実務では Entra ID） |
 | セッション | HttpOnly/Secure/SameSite=Lax Cookie、CSRFトークン、アイドル30分 |
+| ログイン試行 | 同じメールアドレスで15分以内に5回失敗したら15分ロック（429 + `Retry-After`）。存在しないアカウントも同じく数え、応答からアカウントの有無を分からなくする。送信元 IP では数えない（BFF 経由のため）。状態は backend のメモリ（複数台にするときは共有ストアへ）。`knavi.auth.login.*` で変更可 |
 | 認可 | `AccessPolicy` に集約。URLベース（ロール）+ データベース（所管部署・公開範囲）の二層 |
 | 検索時認可 | **プレフィルタ**（SQL WHERE）。件数・スニペット・サジェスト・類似検索・RAG文脈すべて同じスコープを使用 |
 | 入力 | Bean Validation、Markdown は sanitize（DOMPurify / OWASP HTML Sanitizer）してから描画 |
