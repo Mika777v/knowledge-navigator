@@ -1,8 +1,10 @@
 package com.example.knavi.organization.api;
 
 import com.example.knavi.organization.application.LoginThrottle;
+import com.example.knavi.organization.application.PasswordChangeService;
 import com.example.knavi.organization.infrastructure.KnaviUserDetails;
 import com.example.knavi.organization.infrastructure.UserRepository;
+import com.example.knavi.shared.web.ApiErrors;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "auth", description = "ログイン・ログアウト・ログイン中のユーザー")
@@ -39,16 +42,19 @@ class AuthController {
     private final SecurityContextRepository securityContextRepository;
     private final UserRepository users;
     private final LoginThrottle loginThrottle;
+    private final PasswordChangeService passwordChange;
 
     AuthController(
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository,
             UserRepository users,
-            LoginThrottle loginThrottle) {
+            LoginThrottle loginThrottle,
+            PasswordChangeService passwordChange) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.users = users;
         this.loginThrottle = loginThrottle;
+        this.passwordChange = passwordChange;
     }
 
     @Operation(summary = "CSRF トークンを発行する（XSRF-TOKEN Cookie を設定する）。ログイン前に1回呼ぶ")
@@ -99,6 +105,27 @@ class AuthController {
         return users.findWithDepartmentById(principal.id())
                 .map(MeResponse::from)
                 .orElseThrow();
+    }
+
+    @Operation(summary = "自分のパスワードを変える（今のパスワードが必要）")
+    @PostMapping("/me/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void changePassword(
+            @AuthenticationPrincipal KnaviUserDetails principal,
+            @Valid @RequestBody PasswordChangeRequest body,
+            HttpServletRequest request) {
+        // 今のパスワードの総当たりを防ぐため、ログインと同じ回数制限をかける
+        loginThrottle.lockedFor(principal.email()).ifPresent(remaining -> {
+            throw new LoginLockedException(remaining);
+        });
+        if (!passwordChange.change(principal.id(), body.currentPassword(), body.newPassword())) {
+            loginThrottle.recordFailure(principal.email());
+            // 401 にすると画面がログイン画面へ移動してしまうため、入力の誤りとして 400 を返す
+            throw ApiErrors.badRequest("今のパスワードが正しくありません。");
+        }
+        loginThrottle.recordSuccess(principal.email());
+        // パスワードを変えたら、念のためセッション ID も変える
+        request.changeSessionId();
     }
 
     static final class LoginLockedException extends RuntimeException {

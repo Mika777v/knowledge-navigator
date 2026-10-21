@@ -42,6 +42,9 @@ function SignedInHeader() {
               </span>
             </span>
           )}
+          <Link href="/account" className="whitespace-nowrap underline">
+            アカウント
+          </Link>
           {canUseAdmin(me) && (
             <Link href="/admin" className="whitespace-nowrap underline">
               管理
