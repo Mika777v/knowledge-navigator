@@ -34,16 +34,40 @@ public class NavigationQueries {
     /**
      * 質問に含まれる辞書の語をすべて返す（辞書の件数は数百件の想定のため、全件と照合する）。
      *
+     * <p>言い方の活用のちがい（「眠れない」と「眠れなくて」、「出勤時間をずらす」と「出勤時間を遅くしたい」）も拾えるよう、
+     * 語がそのまま含まれないときは語幹でも照合する。語幹は次のどちらか（形態素解析は Phase3 で導入する）。
+     *
+     * <ul>
+     *   <li>「名詞＋を/が/に/は＋ひらがな」なら、助詞の前まで（出勤時間をずらす → 出勤時間）
+     *   <li>それ以外は、末尾の活用語尾（ない・たい・た・る など）を除いたもの（眠れない → 眠れ）
+     * </ul>
+     *
+     * <p>語幹は2文字以上で漢字・カタカナ・英数字を含むものだけを使い、一致の強さは {@code stemWeight} を掛けて弱める。
+     *
      * @param normalizedQuery 正規化した質問
+     * @param stemWeight 語幹で一致したときに掛ける重み（0〜1）
      */
-    public List<KeywordMatch> keywordsIn(String normalizedQuery) {
+    public List<KeywordMatch> keywordsIn(String normalizedQuery, double stemWeight) {
         return jdbc.sql("""
-                        SELECT normalized_term, target_type, target_id, weight FROM navigation_keywords
-                        WHERE char_length(normalized_term) >= 2 AND strpos(:q, normalized_term) > 0
+                        WITH k AS (
+                          SELECT normalized_term, target_type, target_id, weight,
+                            CASE WHEN normalized_term ~ '[をがには][ぁ-ゖ]+$'
+                                 THEN regexp_replace(normalized_term, '[をがには][ぁ-ゖ]+$', '')
+                                 ELSE regexp_replace(normalized_term, '(ない|たい|った|して|した|する|ます|る|た|て|す)$', '')
+                            END AS stem
+                          FROM navigation_keywords WHERE char_length(normalized_term) >= 2
+                        )
+                        SELECT normalized_term AS matched, target_type, target_id, weight FROM k
+                        WHERE strpos(:q, normalized_term) > 0
+                        UNION ALL
+                        SELECT stem, target_type, target_id, weight * :stem_weight FROM k
+                        WHERE strpos(:q, normalized_term) = 0 AND stem <> normalized_term
+                          AND char_length(stem) >= 2 AND stem ~ '[^ぁ-ゖ]' AND strpos(:q, stem) > 0
                         """)
                 .param("q", normalizedQuery)
+                .param("stem_weight", stemWeight)
                 .query((rs, i) -> new KeywordMatch(
-                        rs.getString("normalized_term"),
+                        rs.getString("matched"),
                         rs.getString("target_type"),
                         rs.getObject("target_id", UUID.class),
                         rs.getDouble("weight")))
