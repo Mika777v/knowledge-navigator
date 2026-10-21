@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LifeEventLinks } from "@/components/life-event-links";
 import { SearchForm } from "@/components/search-form";
 
@@ -21,6 +22,19 @@ export default function HomePage() {
           きっかけから探す
         </h2>
         <LifeEventLinks />
+      </section>
+
+      <section aria-labelledby="contacts-heading" className="flex flex-col gap-1">
+        <h2 id="contacts-heading" className="text-lg font-semibold">
+          問い合わせ先
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          探しても見つからないときは、
+          <Link href="/contacts" className="underline">
+            部署ごとの問い合わせ先の一覧
+          </Link>
+          から窓口を探せます。
+        </p>
       </section>
 
       <footer className="mt-auto text-sm text-muted-foreground">
