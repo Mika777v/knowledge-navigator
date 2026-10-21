@@ -223,12 +223,11 @@ class SeedLoader {
         for (var p : rows) {
             String code = str(p, "code");
             String visibility = str(p, "visibility");
+            // 管理 API（Program.update）と同じく制度の説明だけから作る。keywords は navigation_keywords で照合する
             String searchText = TextNormalizer.normalize(String.join(
                     " ",
-                    Stream.concat(
-                                    Stream.of("name", "name_kana", "summary", "eligibility", "benefit", "how_to_apply")
-                                            .map(k -> str(p, k)),
-                                    strings(p.get("keywords")).stream())
+                    Stream.of("name", "name_kana", "summary", "eligibility", "benefit", "how_to_apply")
+                            .map(k -> str(p, k))
                             .filter(Objects::nonNull)
                             .toList()));
             UUID id = jdbc.sql("""

@@ -9,5 +9,14 @@ public enum Visibility {
     /** access_rules で許可された部署・ロール・ユーザー */
     RESTRICTED,
     /** 明示的に許可されたユーザーのみ。検索・Embedding の対象外 */
-    CONFIDENTIAL
+    CONFIDENTIAL;
+
+    /**
+     * この公開範囲が other より広い（より多くの人に見える）か。
+     *
+     * <p>制度・FAQ の公開範囲は、根拠文書より広くしてはいけない（根拠経由で見えてはいけない文書が漏れるため）。
+     */
+    public boolean isWiderThan(Visibility other) {
+        return ordinal() < other.ordinal();
+    }
 }

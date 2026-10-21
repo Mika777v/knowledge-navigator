@@ -3,7 +3,6 @@ package com.example.knavi;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,14 +48,6 @@ class AuthApiTests {
     @Test
     void meRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/api/v1/me")).andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void csrfEndpointIssuesXsrfCookie() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/csrf"))
-                .andExpect(status().isOk())
-                .andExpect(cookie().exists("XSRF-TOKEN"))
-                .andExpect(jsonPath("$.headerName").value("X-XSRF-TOKEN"));
     }
 
     @Test

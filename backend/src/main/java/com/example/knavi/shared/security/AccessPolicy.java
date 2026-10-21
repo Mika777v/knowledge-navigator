@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class AccessPolicy {
 
     static final String CONTENT_EDITOR = "CONTENT_EDITOR";
+    static final String SYSTEM_ADMIN = "SYSTEM_ADMIN";
 
     /** コンテンツを編集できるのは、所管部署に所属する CONTENT_EDITOR だけ（SYSTEM_ADMIN は職務分離のため不可） */
     public boolean canEditContent(AuthenticatedUser user, UUID ownerDepartmentId) {
@@ -24,6 +25,13 @@ public class AccessPolicy {
     public void checkCanEditContent(AuthenticatedUser user, UUID ownerDepartmentId) {
         if (!canEditContent(user, ownerDepartmentId)) {
             throw new AccessDeniedException("所管部署のコンテンツ担当者だけが編集できます。");
+        }
+    }
+
+    /** ナビゲーション辞書（キーワード・類義語）を管理できるのは CONTENT_EDITOR と SYSTEM_ADMIN */
+    public void checkCanManageDictionary(AuthenticatedUser user) {
+        if (!CONTENT_EDITOR.equals(user.role()) && !SYSTEM_ADMIN.equals(user.role())) {
+            throw new AccessDeniedException("辞書を管理できるのはコンテンツ担当者とシステム管理者だけです。");
         }
     }
 

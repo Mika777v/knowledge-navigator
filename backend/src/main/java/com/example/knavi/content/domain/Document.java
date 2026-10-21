@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
@@ -164,6 +165,8 @@ public class Document implements Persistable<UUID> {
         return isNew;
     }
 
+    // persist() の時点で新規でなくなる（INSERT は flush まで遅れるため、PostPersist だけでは delete() などが新規と誤判定する）
+    @PrePersist
     @PostLoad
     @PostPersist
     void markNotNew() {
