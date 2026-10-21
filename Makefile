@@ -53,5 +53,6 @@ test: .env ## テストを実行する（backend・frontend）
 	cd frontend && pnpm install --frozen-lockfile && pnpm test
 
 .PHONY: eval
-eval: ## 検索品質の評価を実行する（#39 で実装）
-	@echo "未実装です（#39 で追加予定）" >&2; exit 1
+eval: .env ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
+	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
+	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080}
