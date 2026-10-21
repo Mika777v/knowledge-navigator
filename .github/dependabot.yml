@@ -55,7 +55,7 @@ updates:
       next-react:
         patterns: ["next", "eslint-config-next", "react", "react-dom", "@types/react*"]
       test:
-        patterns: ["vitest", "@vitest/*", "@testing-library/*", "jsdom", "@vitejs/*"]
+        patterns: ["vitest", "@vitest/*", "@testing-library/*", "jsdom", "@vitejs/*", "@playwright/*"]
 
   - package-ecosystem: docker
     directory: /frontend
