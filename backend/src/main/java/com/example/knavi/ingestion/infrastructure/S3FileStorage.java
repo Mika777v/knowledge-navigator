@@ -1,0 +1,79 @@
+package com.example.knavi.ingestion.infrastructure;
+
+import com.example.knavi.ingestion.application.FileStorage;
+import java.net.URI;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+
+/** S3 互換ストレージ（ローカル・CI は SeaweedFS、本番は S3 など）に原本を置く。ADR-0010 */
+@Component
+@EnableConfigurationProperties(StorageProperties.class)
+class S3FileStorage implements FileStorage {
+
+    private static final Logger log = LoggerFactory.getLogger(S3FileStorage.class);
+
+    private final StorageProperties properties;
+    private final S3Client s3;
+
+    S3FileStorage(StorageProperties properties) {
+        this.properties = properties;
+        // 接続は最初の読み書きのときに行う（ストレージを使わない処理・テストは起動を待たない）
+        this.s3 = S3Client.builder()
+                .endpointOverride(URI.create(properties.endpoint()))
+                .region(Region.of(properties.region()))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(properties.accessKey(), properties.secretKey())))
+                .forcePathStyle(properties.pathStyle())
+                // SDK 2.30 以降の既定（チェックサムを毎回付ける新しい形式）は、S3 互換の製品が受け付けないことがある。
+                // 必要な API のときだけ付ける従来の動きにする
+                .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
+                .httpClient(UrlConnectionHttpClient.create())
+                .build();
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    void createBucketIfConfigured() {
+        if (!properties.createBucket()) {
+            return;
+        }
+        try {
+            s3.headBucket(b -> b.bucket(properties.bucket()));
+        } catch (NoSuchBucketException e) {
+            s3.createBucket(b -> b.bucket(properties.bucket()));
+            log.info("バケット {} を作りました", properties.bucket());
+        }
+    }
+
+    @Override
+    public void put(String key, byte[] content, String contentType) {
+        s3.putObject(
+                b -> b.bucket(properties.bucket()).key(key).contentType(contentType), RequestBody.fromBytes(content));
+    }
+
+    @Override
+    public Optional<byte[]> get(String key) {
+        try {
+            return Optional.of(
+                    s3.getObjectAsBytes(b -> b.bucket(properties.bucket()).key(key))
+                            .asByteArray());
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        }
+    }
+}

@@ -4,6 +4,8 @@ spring-boot = "4.1.1"
 spring-dependency-management = "1.1.7"
 spring-modulith = "2.1.1"
 springdoc = "3.1.1"
+# 原本ファイルの保存（S3 互換ストレージ。ADR-0010）
+aws-sdk = "2.55.11"
 spotless = "8.10.4"
 palantir-java-format = "2.102.0"
 # Spring Boot が管理するバージョンを、脆弱性の修正版に上げる（Trivy で検出。Spring Boot の次のパッチで追いついたら消す）
@@ -14,6 +16,9 @@ jackson2 = "2.21.7"
 [libraries]
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
 springdoc-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
+aws-sdk-s3 = { module = "software.amazon.awssdk:s3" }
+aws-sdk-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

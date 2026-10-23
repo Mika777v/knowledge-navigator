@@ -66,6 +66,7 @@ http://localhost:3000 を開き、下のデモユーザーでログインしま�
 | frontend | http://localhost:3000 |
 | backend | http://localhost:8080/actuator/health 、API 仕様 http://localhost:8080/swagger-ui.html |
 | PostgreSQL | localhost:5432（pg_bigm / pgvector 入り） |
+| ストレージ（S3 互換・SeaweedFS） | localhost:8333（アップロードした PDF の原本） |
 
 ## 構成
 

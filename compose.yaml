@@ -27,6 +27,26 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  storage:
+    # 原本ファイル（PDF）の置き場所。S3 互換の SeaweedFS（ADR-0010）
+    image: chrislusf/seaweedfs:4.48
+    command: ["server", "-s3", "-dir=/data", "-ip.bind=0.0.0.0", "-volume.max=0"]
+    environment:
+      # S3 API の認証情報（.env の STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY。古い .env でも動くよう既定値を持つ）
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:-knavi}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:-knavi_local_only}
+    ports:
+      - "127.0.0.1:${STORAGE_PORT:-8333}:8333"
+    volumes:
+      - storage:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
   backend:
     build: ./backend
     image: knowledge-navigator/backend:local
@@ -38,11 +58,17 @@ services:
       KNAVI_SEED_DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-}
       # 検索ログのユーザー ID を仮名化する鍵（未設定ならローカル用の既定値）
       KNAVI_USER_HASH_SECRET: ${KNAVI_USER_HASH_SECRET:-local-dev-only-change-me}
+      KNAVI_STORAGE_ENDPOINT: http://storage:8333
+      KNAVI_STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:-knavi}
+      KNAVI_STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:-knavi_local_only}
+      KNAVI_STORAGE_CREATE_BUCKET: "true"
       TZ: Asia/Tokyo
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     depends_on:
       postgres:
+        condition: service_healthy
+      storage:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
@@ -74,3 +100,4 @@ services:
 
 volumes:
   pgdata:
+  storage:
