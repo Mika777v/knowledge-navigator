@@ -6,6 +6,7 @@ type Schemas = components["schemas"];
 export type DocumentDetail = Schemas["DocumentDetail"];
 export type ProgramDetail = Schemas["ProgramDetail"];
 export type FaqDetail = Schemas["FaqDetail"];
+export type FaqSummary = Schemas["FaqSummary"];
 export type ContactView = Schemas["ContactView"];
 export type BasisView = Schemas["BasisView"];
 export type NavigationResult = Schemas["NavigationResult"];

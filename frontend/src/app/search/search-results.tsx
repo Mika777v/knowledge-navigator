@@ -193,6 +193,9 @@ function Results({ result }: { result: NavigationResult }) {
                 </li>
               ))}
             </ul>
+            <Link href="/faqs" className="self-start text-sm underline">
+              よくある質問をすべて見る
+            </Link>
           </section>
         )}
       </div>
