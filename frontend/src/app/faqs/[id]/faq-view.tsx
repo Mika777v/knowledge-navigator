@@ -29,7 +29,12 @@ export function FaqView() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">よくある質問{data.faq.category && `・${data.faq.category.name}`}</p>
+        <p className="text-sm text-muted-foreground">
+          <Link href="/faqs" className="underline">
+            よくある質問
+          </Link>
+          {data.faq.category && `・${data.faq.category.name}`}
+        </p>
         <h1 className="text-2xl font-bold">{data.faq.question}</h1>
       </header>
       <Markdown text={data.answerMarkdown} />
