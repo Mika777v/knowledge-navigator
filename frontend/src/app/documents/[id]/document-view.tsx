@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { TagLinks } from "@/components/tag-links";
 import { useParams, useSearchParams } from "next/navigation";
 import { ContactCard } from "@/components/contact-card";
 import { Markdown } from "@/components/markdown";
@@ -55,6 +56,7 @@ export function DocumentView() {
             </p>
           )}
           {document.summary && <p className="text-muted-foreground">{document.summary}</p>}
+          <TagLinks tags={document.tags} />
         </header>
 
         {sections.length > 0 && (

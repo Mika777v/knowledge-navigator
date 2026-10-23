@@ -19,6 +19,7 @@ const doc = (over: Partial<AdminDocument> = {}): AdminDocument => ({
   status: "PUBLISHED",
   currentVersionId: "v1",
   reviewDueOn: null as never,
+  tags: ["お金"],
   rowVersion: 4,
   ...over,
 });
@@ -62,6 +63,12 @@ function stubApi(handle: (call: Call) => Response | undefined) {
       const res = handle(call);
       if (res) return res;
       if (call.url === "/api/v1/categories") return Response.json([{ slug: "welfare", name: "福利厚生", children: [] }]);
+      if (call.url === "/api/v1/tags")
+        return Response.json([
+          { name: "正社員", type: "TARGET", documentCount: 2 },
+          { name: "お金", type: "TOPIC", documentCount: 3 },
+          { name: "家族", type: "TOPIC", documentCount: 1 },
+        ]);
       if (call.url === "/api/v1/admin/documents/d1" && call.method === "GET") return Response.json(doc());
       throw new Error(`unexpected ${call.method} ${call.url}`);
     }),
@@ -99,6 +106,26 @@ describe("EditDocument", () => {
     const put = calls.find((c) => c.method === "PUT");
     expect(put?.ifMatch).toBe('"4"');
     expect(put?.body).toMatchObject({ title: "慶弔見舞金規程（改）", documentType: "REGULATION", categorySlug: "welfare" });
+  });
+
+  it("タグは、使われているタグを押すか新しい名前を入れて付け外しし、属性と一緒に保存する", async () => {
+    const calls = stubApi(({ url, method }) => {
+      if (url.endsWith("/versions") && method === "GET") return Response.json([summary({})]);
+      if (url.endsWith("/versions/v1")) return Response.json(version());
+      if (url === "/api/v1/admin/documents/d1" && method === "PUT") return Response.json(doc({ rowVersion: 5 }));
+    });
+    renderWithQuery(<EditDocument />);
+
+    expect(await screen.findByRole("button", { name: "お金" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "お金" }));
+    fireEvent.click(screen.getByRole("button", { name: "家族" }));
+    fireEvent.change(screen.getByLabelText("新しいタグ"), { target: { value: "  慶弔 " } });
+    fireEvent.click(screen.getByRole("button", { name: "タグを追加" }));
+    expect(screen.getByRole("button", { name: "慶弔" })).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "文書の情報を保存" }));
+
+    expect(await screen.findByText("文書の情報を保存しました。")).toBeInTheDocument();
+    expect(calls.find((c) => c.method === "PUT")?.body).toMatchObject({ tags: ["家族", "慶弔"] });
   });
 
   it("新しい版は、最新の版の本文を初期値にして下書きで作る", async () => {

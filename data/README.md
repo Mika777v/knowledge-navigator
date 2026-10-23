@@ -12,6 +12,7 @@ data/
 │   ├── contacts.yaml     # 問い合わせ窓口（15）
 │   ├── users.yaml        # デモユーザー（全ロール）
 │   ├── categories.yaml   # カテゴリ（2階層）
+│   ├── tags.yaml         # 規程のタグの語彙（対象者・話題）。規程の front matter の tags で使う
 │   ├── documents/        # 架空の社内規程（10本、Markdown + front matter）
 │   ├── programs.yaml     # 制度（39件。根拠の条・窓口・キーワード）
 │   ├── life_events.yaml  # きっかけ（結婚・出産など8件）
@@ -55,6 +56,7 @@ make seed   # data/seed を投入（何度実行してもよい）
 | `programs.yaml` | `basis`（文書と条）、`contacts`（窓口と役割 APPLY / INQUIRY / PAYMENT）、`keywords` | 窓口は1件以上必須。公開範囲は根拠文書より広くしない |
 | `life_events.yaml` | `programs`（PRIMARY = まず確認する制度 / RELATED = あわせて必要な手続き）、`keywords` | |
 | `faqs.yaml` | `links`（program か document + article）、`contact`、`visibility` | 窓口か関連制度のどちらかが必要 |
+| `documents/*.md` の `tags` | `tags.yaml` にある名前（対象者 TARGET・話題 TOPIC） | 10個まで。社員が規程の一覧で絞り込むときに使う |
 
 ## ルール（`scripts/data/validate_seed.py` で検査）
 

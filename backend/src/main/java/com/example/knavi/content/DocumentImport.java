@@ -1,6 +1,7 @@
 package com.example.knavi.content;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -15,6 +16,9 @@ public interface DocumentImport {
      * 同じ版ラベルの版が既にあれば本文は変更しない（公開済みの版は不変のため）。
      */
     ImportResult importPublished(ImportedDocument document);
+
+    /** 文書（コードで指定）のタグを置き換える。無いタグは自由タグとして作る */
+    void replaceTags(String documentCode, List<String> tagNames);
 
     record ImportedDocument(
             String code,

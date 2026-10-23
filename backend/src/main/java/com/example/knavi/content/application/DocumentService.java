@@ -15,6 +15,8 @@ import com.example.knavi.shared.security.AccessPolicy;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import com.example.knavi.shared.text.TextNormalizer;
 import com.example.knavi.shared.web.ApiErrors;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,8 @@ public class DocumentService {
     private final AccessPolicy accessPolicy;
     private final AuditLog auditLog;
     private final Clock clock;
+    private final DocumentTags tags;
+    private final EntityManager entityManager;
     private final MarkdownSectionSplitter splitter = new MarkdownSectionSplitter();
 
     DocumentService(
@@ -43,7 +47,9 @@ public class DocumentService {
             DepartmentDirectory departments,
             AccessPolicy accessPolicy,
             AuditLog auditLog,
-            Clock clock) {
+            Clock clock,
+            DocumentTags tags,
+            EntityManager entityManager) {
         this.documents = documents;
         this.versions = versions;
         this.categories = categories;
@@ -51,6 +57,8 @@ public class DocumentService {
         this.accessPolicy = accessPolicy;
         this.auditLog = auditLog;
         this.clock = clock;
+        this.tags = tags;
+        this.entityManager = entityManager;
     }
 
     @Transactional(readOnly = true)
@@ -113,12 +121,20 @@ public class DocumentService {
                 command.visibility(),
                 command.reviewDueOn(),
                 user.id());
+        if (command.tags() != null && tags.replace(documentId, command.tags())) {
+            // タグだけを変えたときも版を上げる（ほかの人の同時の変更を楽観ロックで検出するため）。
+            // 応答の ETag に新しい版を返せるよう、コミットを待たずにその場で上げる
+            entityManager.lock(document, LockModeType.PESSIMISTIC_FORCE_INCREMENT);
+        }
         documents.flush();
         audit(
                 user,
                 "DOCUMENT_UPDATED",
                 document,
-                Map.of("title", document.getTitle(), "visibility", document.getVisibility()));
+                Map.of(
+                        "title", document.getTitle(),
+                        "visibility", document.getVisibility(),
+                        "tags", tags.namesOf(documentId)));
         return document;
     }
 

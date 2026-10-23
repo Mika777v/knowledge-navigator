@@ -11,6 +11,8 @@ import com.example.knavi.content.application.ContentViews.LifeEventSummary;
 import com.example.knavi.content.application.ContentViews.ProgramDetail;
 import com.example.knavi.content.application.ContentViews.ProgramSummary;
 import com.example.knavi.content.application.ContentViews.SectionDetail;
+import com.example.knavi.content.application.DocumentTags;
+import com.example.knavi.content.application.DocumentTags.TagCount;
 import com.example.knavi.shared.security.AccessScope;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,16 +36,26 @@ import org.springframework.web.bind.annotation.RestController;
 class ContentController {
 
     private final ContentReadService service;
+    private final DocumentTags tags;
 
-    ContentController(ContentReadService service) {
+    ContentController(ContentReadService service, DocumentTags tags) {
         this.service = service;
+        this.tags = tags;
     }
 
     @Operation(summary = "文書の一覧（カテゴリで絞り込み可。親カテゴリを指定すると子カテゴリも含む）")
     @GetMapping("/documents")
     List<DocumentSummary> documents(
-            @RequestParam(required = false) String category, @AuthenticationPrincipal AuthenticatedUser user) {
-        return service.listDocuments(AccessScope.of(user), category);
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String tag,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return service.listDocuments(AccessScope.of(user), category, tag);
+    }
+
+    @Operation(summary = "タグの一覧と、閲覧できる文書の件数（件数が0のタグは出さない）")
+    @GetMapping("/tags")
+    List<TagCount> tags(@AuthenticationPrincipal AuthenticatedUser user) {
+        return tags.visibleTags(AccessScope.of(user));
     }
 
     @Operation(summary = "文書の詳細（条文・版の一覧・この文書を根拠にする制度と窓口）。version で過去の版を表示できる")

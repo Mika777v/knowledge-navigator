@@ -24,6 +24,7 @@ function detail(shown: typeof current | typeof past) {
       ownerDepartment: { code: "GA", name: "総務部" },
       versionLabel: "v2.1",
       effectiveFrom: "2026-04-01",
+      tags: ["正社員", "お金"],
     },
     currentVersionId: "v2",
     version: shown,
@@ -68,6 +69,8 @@ describe("DocumentView", () => {
     expect(screen.getByRole("link", { name: "第5条（結婚祝金）" })).toHaveAttribute("href", "#section-s5");
     expect(screen.getByRole("link", { name: "結婚祝金" })).toHaveAttribute("href", "/programs/p1");
     expect(screen.getByText("総務部 庶務グループ")).toBeInTheDocument();
+    // タグから、同じタグの規程の一覧へ移動できる
+    expect(screen.getByRole("link", { name: "お金" })).toHaveAttribute("href", `/documents?tag=${encodeURIComponent("お金")}`);
     expect(screen.queryByRole("note")).toBeNull();
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/documents/doc-1");
   });

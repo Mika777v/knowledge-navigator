@@ -10,6 +10,7 @@ import com.example.knavi.content.infrastructure.DocumentRepository;
 import com.example.knavi.content.infrastructure.DocumentVersionRepository;
 import com.example.knavi.shared.security.Visibility;
 import java.time.Clock;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,17 +22,28 @@ class DocumentImporter implements DocumentImport {
     private final DocumentVersionRepository versions;
     private final CategoryRepository categories;
     private final Clock clock;
+    private final DocumentTags tags;
     private final MarkdownSectionSplitter splitter = new MarkdownSectionSplitter();
 
     DocumentImporter(
             DocumentRepository documents,
             DocumentVersionRepository versions,
             CategoryRepository categories,
-            Clock clock) {
+            Clock clock,
+            DocumentTags tags) {
         this.documents = documents;
         this.versions = versions;
         this.categories = categories;
         this.clock = clock;
+        this.tags = tags;
+    }
+
+    @Override
+    public void replaceTags(String documentCode, List<String> tagNames) {
+        Document document = documents
+                .findByCode(documentCode)
+                .orElseThrow(() -> new IllegalArgumentException("document not found: " + documentCode));
+        tags.replace(document.getId(), tagNames);
     }
 
     @Override

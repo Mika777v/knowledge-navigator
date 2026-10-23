@@ -511,6 +511,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** タグの一覧と、閲覧できる文書の件数（件数が0のタグは出さない） */
+        get: operations["tags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sections/{id}": {
         parameters: {
             query?: never;
@@ -1034,6 +1051,7 @@ export interface components {
             visibility: "INTERNAL" | "MANAGERS" | "RESTRICTED" | "CONFIDENTIAL";
             /** Format: date */
             reviewDueOn?: string;
+            tags?: string[];
         };
         DocumentResponse: {
             /** Format: uuid */
@@ -1053,6 +1071,7 @@ export interface components {
             currentVersionId: string;
             /** Format: date */
             reviewDueOn: string;
+            tags: string[];
             /** Format: int32 */
             rowVersion: number;
         };
@@ -1244,6 +1263,12 @@ export interface components {
             code: string;
             content: components["schemas"]["OrgContactRequest"];
         };
+        TagCount: {
+            name: string;
+            type: string;
+            /** Format: int32 */
+            documentCount: number;
+        };
         CategoryRef: {
             slug: string;
             name: string;
@@ -1264,6 +1289,7 @@ export interface components {
             versionLabel: string;
             /** Format: date */
             effectiveFrom: string;
+            tags: string[];
         };
         SectionDetail: {
             section: components["schemas"]["SectionView"];
@@ -2623,6 +2649,26 @@ export interface operations {
             };
         };
     };
+    tags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TagCount"][];
+                };
+            };
+        };
+    };
     section: {
         parameters: {
             query?: never;
@@ -2822,6 +2868,7 @@ export interface operations {
         parameters: {
             query?: {
                 category?: string;
+                tag?: string;
             };
             header?: never;
             path?: never;

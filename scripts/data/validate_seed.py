@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 ROLES = {"EMPLOYEE", "MANAGER", "CONTENT_EDITOR", "SYSTEM_ADMIN"}
+TAG_TYPES = {"TARGET", "TOPIC", "FREE"}
 VISIBILITIES = {"INTERNAL", "MANAGERS", "RESTRICTED", "CONFIDENTIAL"}
 DOCUMENT_TYPES = {"REGULATION", "PROCEDURE", "MANUAL", "RULE", "ORG_CHART"}
 DOCUMENT_FIELDS = (
@@ -53,7 +54,7 @@ def parse_document(path: Path) -> tuple[dict, str]:
 
 
 def validate_documents(
-    seed_dir: Path, dept_codes: set[str], category_slugs: set[str], errors: list[str]
+    seed_dir: Path, dept_codes: set[str], category_slugs: set[str], tag_names: set[str], errors: list[str]
 ) -> dict[str, tuple[dict, str, set[int]]]:
     docs: dict[str, tuple[dict, str, set[int]]] = {}
     for path in sorted((seed_dir / "documents").glob("*.md")):
@@ -79,6 +80,15 @@ def validate_documents(
             errors.append(f"{label}: visibility が不正です: {meta.get('visibility')}")
         if meta.get("document_type") not in DOCUMENT_TYPES:
             errors.append(f"{label}: document_type が不正です: {meta.get('document_type')}")
+        doc_tags = meta.get("tags") or []
+        if not isinstance(doc_tags, list):
+            errors.append(f"{label}: tags は配列で書いてください")
+            doc_tags = []
+        for tag in doc_tags:
+            if tag not in tag_names:
+                errors.append(f"{label}: タグ {tag} が tags.yaml にありません")
+        if len(doc_tags) > 10:
+            errors.append(f"{label}: タグは10個までです")
         if DISCLAIMER not in body.split("##", 1)[0]:
             errors.append(f"{label}: 冒頭に架空データである旨の注記がありません")
 
@@ -268,6 +278,7 @@ def validate(seed_dir: Path) -> list[str]:
     contacts = load(seed_dir, "contacts.yaml")
     users = load(seed_dir, "users.yaml")
     categories = load(seed_dir, "categories.yaml")
+    tags = load(seed_dir, "tags.yaml")
 
     # ---------- departments ----------
     check_unique(departments, "code", "departments", errors)
@@ -290,6 +301,15 @@ def validate(seed_dir: Path) -> list[str]:
             errors.append(f"categories[{c.get('slug')}]: name がありません")
         if c.get("parent") and c["parent"] not in category_slugs:
             errors.append(f"categories[{c['slug']}]: 親カテゴリ {c['parent']} が存在しません")
+
+    # ---------- tags ----------
+    check_unique(tags, "name", "tags", errors)
+    tag_names = {t["name"] for t in tags}
+    for t in tags:
+        if t.get("type") not in TAG_TYPES:
+            errors.append(f"tags[{t.get('name')}]: type が不正です: {t.get('type')}")
+        if len(str(t.get("name", ""))) > 50:
+            errors.append(f"tags[{t.get('name')}]: 名前は50文字以内にしてください")
 
     # ---------- contacts ----------
     check_unique(contacts, "code", "contacts", errors)
@@ -338,7 +358,7 @@ def validate(seed_dir: Path) -> list[str]:
         errors.append(f"users: ロール {role} のデモユーザーがいません")
 
     # ---------- documents ----------
-    docs = validate_documents(seed_dir, dept_codes, category_slugs, errors)
+    docs = validate_documents(seed_dir, dept_codes, category_slugs, tag_names, errors)
 
     # ---------- programs / life_events / faqs ----------
     contact_codes = {c["code"] for c in contacts if c.get("code")}

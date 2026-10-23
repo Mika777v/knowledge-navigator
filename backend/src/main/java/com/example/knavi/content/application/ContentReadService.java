@@ -50,8 +50,10 @@ public class ContentReadService {
 
     private static final String DOCUMENT_COLUMNS = """
             d.id, d.code, d.title, d.summary, d.document_type, c.slug AS category_slug, c.name AS category_name,
-            dep.code AS dept_code, dep.name AS dept_name, v.version_label, v.effective_from
-            """;
+            dep.code AS dept_code, dep.name AS dept_name, v.version_label, v.effective_from,
+            """
+            + "ARRAY(SELECT t.name FROM document_tags dt JOIN tags t ON t.id = dt.tag_id WHERE dt.document_id = d.id"
+            + " ORDER BY " + DocumentTags.ORDER + ") AS tags ";
     private static final String DOCUMENT_FROM = """
             FROM documents d
             JOIN categories c ON c.id = d.category_id
@@ -71,13 +73,16 @@ public class ContentReadService {
 
     // ------------------------------------------------------------------ 文書・条文
 
-    public List<DocumentSummary> listDocuments(AccessScope scope, String categorySlug) {
+    public List<DocumentSummary> listDocuments(AccessScope scope, String categorySlug, String tag) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.VIEW);
         return jdbc.sql("SELECT " + DOCUMENT_COLUMNS + DOCUMENT_FROM + " WHERE " + visible.sql()
                         + " AND (CAST(:category AS text) IS NULL OR c.slug = :category OR c.parent_id = (SELECT id FROM categories WHERE slug = :category))"
+                        + " AND (CAST(:tag AS text) IS NULL OR EXISTS (SELECT 1 FROM document_tags dt JOIN tags t ON t.id = dt.tag_id"
+                        + " WHERE dt.document_id = d.id AND t.name = :tag))"
                         + " ORDER BY d.code")
                 .params(visible.params())
                 .param("category", categorySlug)
+                .param("tag", tag)
                 .query(ContentReadService::documentSummary)
                 .list();
     }
@@ -430,7 +435,8 @@ public class ContentReadService {
                 new CategoryRef(rs.getString("category_slug"), rs.getString("category_name")),
                 new DepartmentRef(rs.getString("dept_code"), rs.getString("dept_name")),
                 rs.getString("version_label"),
-                rs.getObject("effective_from", LocalDate.class));
+                rs.getObject("effective_from", LocalDate.class),
+                List.of((String[]) rs.getArray("tags").getArray()));
     }
 
     private static SectionView sectionView(ResultSet rs, int i) throws SQLException {
