@@ -16,6 +16,11 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  servlet:
+    multipart:
+      # アップロードの上限（knavi.storage.max-upload-bytes と合わせる）。超えると 413
+      max-file-size: 20MB
+      max-request-size: 21MB
 
 server:
   shutdown: graceful
@@ -46,6 +51,18 @@ springdoc:
   paths-to-match: /api/**
 
 knavi:
+  storage:
+    # 原本ファイルの置き場所（S3 互換。ローカルは compose の SeaweedFS。ADR-0010）
+    endpoint: ${KNAVI_STORAGE_ENDPOINT:http://localhost:8333}
+    region: ${KNAVI_STORAGE_REGION:us-east-1}
+    bucket: ${KNAVI_STORAGE_BUCKET:knavi-files}
+    access-key: ${KNAVI_STORAGE_ACCESS_KEY:knavi}
+    secret-key: ${KNAVI_STORAGE_SECRET_KEY:knavi_local_only}
+    # SeaweedFS・MinIO などは path-style（http://host/bucket/key）で呼ぶ
+    path-style: true
+    # 起動時にバケットが無ければ作る（ローカル・CI 用。本番はインフラ側で作る）
+    create-bucket: ${KNAVI_STORAGE_CREATE_BUCKET:false}
+    max-upload-bytes: 20971520
   seed:
     # make seed で true にする（通常の起動では投入しない）
     enabled: false

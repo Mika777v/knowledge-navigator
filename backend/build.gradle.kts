@@ -27,6 +27,7 @@ extra["jackson-2-bom.version"] = libs.versions.jackson2.get()
 dependencyManagement {
     imports {
         mavenBom(libs.spring.modulith.bom.get().toString())
+        mavenBom(libs.aws.sdk.bom.get().toString())
     }
 }
 
@@ -40,6 +41,13 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.modulith:spring-modulith-starter-core")
     implementation(libs.springdoc.webmvc.ui)
+    // S3 クライアント。HTTP は JDK の URLConnection を使い、Netty・Apache HttpClient は入れない
+    implementation(libs.aws.sdk.s3) {
+        exclude(group = "software.amazon.awssdk", module = "netty-nio-client")
+        exclude(group = "software.amazon.awssdk", module = "apache-client")
+        exclude(group = "software.amazon.awssdk", module = "apache5-client")
+    }
+    implementation(libs.aws.sdk.url.connection.client)
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
