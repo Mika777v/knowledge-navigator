@@ -52,6 +52,10 @@ test: .env ## テストを実行する（backend・frontend）
 	cd backend && ./gradlew test
 	cd frontend && pnpm install --frozen-lockfile && pnpm test
 
+.PHONY: pdfs
+pdfs: ## ダミー規程の PDF（data/pdf）を作り直す（reportlab と IPA ゴシックが必要）
+	python3 scripts/data/generate_pdfs.py
+
 .PHONY: eval
 eval: .env ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
