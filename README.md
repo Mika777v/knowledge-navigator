@@ -127,7 +127,7 @@ flowchart LR
 
 ## ステータス
 
-MVP（v0.1.0）の機能がそろいました。検索・閲覧・問い合わせ先の一覧、規程・制度・FAQ・きっかけ・辞書の管理、組織とユーザーの管理、検索の分析・監査ログまで動きます（[変更履歴](CHANGELOG.md)）。次は PDF の取り込み・意味検索・根拠付きの回答です（[ROADMAP](docs/ROADMAP.md)）。
+[v0.1.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.1.0)（MVP）をリリースしました。検索・閲覧・問い合わせ先の一覧、規程・制度・FAQ・きっかけ・辞書の管理、組織とユーザーの管理、検索の分析・監査ログまで動きます（[変更履歴](CHANGELOG.md)）。次は PDF の取り込み・意味検索・根拠付きの回答です（[ROADMAP](docs/ROADMAP.md)）。
 
 ## ライセンス
 

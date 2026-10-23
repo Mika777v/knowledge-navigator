@@ -3,7 +3,9 @@
 このプロジェクトの主な変更を記録します。形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従います。
 括弧内はプルリクエストの番号です。
 
-## [Unreleased] — v0.1.0（MVP）に向けて
+## [Unreleased]
+
+## [0.1.0] — 2026-10-23（MVP）
 
 「何を調べればいいかわからない」社員が、自然言語の質問から、使える制度・根拠の規程・FAQ・問い合わせ先までたどり着ける最初の版です。
 
@@ -57,5 +59,5 @@
 - OpenAPI の型名（クラス名で決まる）が別の API と重なり、画面の型が壊れていた問題（#97・#101）
 - 依存ライブラリの既知の脆弱性（Tomcat の CRITICAL 3件・Jackson の HIGH 10件）を修正版に更新（#105）
 
-### リリース
-- タグ `v0.1.0` と GitHub Release は、この内容の確認後に作成する
+[Unreleased]: https://github.com/Mika777v/knowledge-navigator/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.1.0
