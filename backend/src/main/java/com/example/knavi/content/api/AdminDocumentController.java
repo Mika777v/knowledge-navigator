@@ -10,6 +10,7 @@ import com.example.knavi.content.api.DocumentDtos.VersionResponse;
 import com.example.knavi.content.api.DocumentDtos.VersionSummaryResponse;
 import com.example.knavi.content.application.DocumentCommands;
 import com.example.knavi.content.application.DocumentService;
+import com.example.knavi.content.application.DocumentTags;
 import com.example.knavi.content.domain.Document;
 import com.example.knavi.organization.DepartmentDirectory;
 import com.example.knavi.shared.security.AuthenticatedUser;
@@ -48,10 +49,12 @@ class AdminDocumentController {
 
     private final DocumentService service;
     private final DepartmentDirectory departments;
+    private final DocumentTags tags;
 
-    AdminDocumentController(DocumentService service, DepartmentDirectory departments) {
+    AdminDocumentController(DocumentService service, DepartmentDirectory departments, DocumentTags tags) {
         this.service = service;
         this.departments = departments;
+        this.tags = tags;
     }
 
     @Operation(summary = "自部署が所管する文書の一覧")
@@ -100,7 +103,8 @@ class AdminDocumentController {
                         body.documentType(),
                         body.categorySlug(),
                         body.visibility(),
-                        body.reviewDueOn()),
+                        body.reviewDueOn(),
+                        body.tags()),
                 user);
         return withETag(ResponseEntity.ok(), document);
     }
@@ -177,6 +181,8 @@ class AdminDocumentController {
 
     private DocumentResponse toResponse(Document document) {
         return DocumentResponse.of(
-                document, departments.findById(document.getOwnerDepartmentId()).orElse(null));
+                document,
+                departments.findById(document.getOwnerDepartmentId()).orElse(null),
+                tags.namesOf(document.getId()));
     }
 }

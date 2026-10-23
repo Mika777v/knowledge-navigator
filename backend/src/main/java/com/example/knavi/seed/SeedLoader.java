@@ -65,6 +65,7 @@ class SeedLoader {
         int contacts = loadContacts(list(dir, "contacts.yaml"));
         int categories = loadCategories(list(dir, "categories.yaml"));
         int users = loadUsers(list(dir, "users.yaml"), passwordEncoder.encode(demoUserPassword));
+        loadTags(list(dir, "tags.yaml"));
         int documents = loadDocuments(dir.resolve("documents"));
         List<Map<String, Object>> programs = list(dir, "programs.yaml");
         loadPrograms(programs);
@@ -166,6 +167,19 @@ class SeedLoader {
         return rows.size();
     }
 
+    /** タグの語彙（種類つき）。文書の front matter の tags はこの名前を使う */
+    private void loadTags(List<Map<String, Object>> rows) {
+        for (var t : rows) {
+            jdbc.sql("""
+                            INSERT INTO tags (name, tag_type) VALUES (:name, :type)
+                            ON CONFLICT (name) DO UPDATE SET tag_type = EXCLUDED.tag_type
+                            """)
+                    .param("name", str(t, "name"))
+                    .param("type", str(t, "type"))
+                    .update();
+        }
+    }
+
     private int loadUsers(List<Map<String, Object>> rows, String passwordHash) {
         for (var u : rows) {
             jdbc.sql("""
@@ -216,6 +230,7 @@ class SeedLoader {
                     date(meta.get("effective_from")),
                     // 本文には front matter（文書の属性）を含めない。管理画面で新しい版を作るときの初期値になるため
                     withoutFrontMatter(markdown)));
+            documentImport.replaceTags(str(meta, "code"), strings(meta.get("tags")));
         }
         return files.size();
     }

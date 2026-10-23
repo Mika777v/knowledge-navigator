@@ -13,7 +13,7 @@ import {
   documentPath,
   errorMessage,
   toFormValues,
-  toRequest,
+  toUpdateRequest,
 } from "../document-api";
 import { DocumentForm } from "../document-form";
 import { VersionsPanel } from "./versions-panel";
@@ -48,7 +48,7 @@ function DocumentEditor({ document: loaded }: { document: AdminDocument }) {
       apiFetch<AdminDocument>(documentPath(document.id), {
         method: "PUT",
         headers: ifMatch(document.rowVersion),
-        json: toRequest(values),
+        json: toUpdateRequest(values),
       }),
     onSuccess: (updated) => onChanged(updated, "文書の情報を保存しました。"),
   });
@@ -84,7 +84,7 @@ function DocumentEditor({ document: loaded }: { document: AdminDocument }) {
           )}
         </div>
         <p className="text-sm text-muted-foreground">所管部署: {document.ownerDepartment?.name}</p>
-        <DocumentForm values={values} onChange={setValues} />
+        <DocumentForm values={values} onChange={setValues} withTags />
         {message && (
           <p role="status" className="text-sm">
             {message}

@@ -2,7 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api/http";
-import type { CategoryNode, Visibility } from "@/lib/api/types";
+import { useState } from "react";
+import type { CategoryNode, TagCount, Visibility } from "@/lib/api/types";
 import { VISIBILITY_LABELS } from "@/lib/content-labels";
 import { DOCUMENT_TYPE_LABELS, type DocumentFormValues, type DocumentType } from "./document-api";
 
@@ -12,9 +13,12 @@ const inputClass = "rounded-md border border-border bg-background px-3 py-2";
 export function DocumentForm({
   values,
   onChange,
+  withTags = false,
 }: {
   values: DocumentFormValues;
   onChange: (values: DocumentFormValues) => void;
+  /** タグの入力欄を出す（タグは作成後に付ける） */
+  withTags?: boolean;
 }) {
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -120,6 +124,73 @@ export function DocumentForm({
           />
         </div>
       </div>
+      {withTags && <TagPicker tags={values.tags} onChange={(tags) => set("tags", tags)} />}
     </div>
+  );
+}
+
+const TAG_TYPE_LABELS: Record<string, string> = { TARGET: "対象者", TOPIC: "話題", FREE: "その他" };
+
+/** 文書のタグ。使われているタグから選ぶか、新しい名前を入れて追加する */
+function TagPicker({ tags, onChange }: { tags: string[]; onChange: (tags: string[]) => void }) {
+  const { data: known } = useQuery({
+    queryKey: ["tags"],
+    queryFn: () => apiFetch<TagCount[]>("/api/v1/tags"),
+  });
+  const [draft, setDraft] = useState("");
+  const toggle = (name: string) => onChange(tags.includes(name) ? tags.filter((t) => t !== name) : [...tags, name]);
+  const add = () => {
+    const name = draft.trim();
+    if (name && !tags.includes(name)) onChange([...tags, name]);
+    setDraft("");
+  };
+  const groups = Object.entries(TAG_TYPE_LABELS)
+    .map(([type, label]) => ({ label, names: (known ?? []).filter((t) => t.type === type).map((t) => t.name) }))
+    .filter((g) => g.names.length > 0);
+  const others = tags.filter((t) => !known?.some((k) => k.name === t));
+
+  return (
+    <fieldset className="flex flex-col gap-2 rounded-md border border-border p-3">
+      <legend className="px-1 font-medium">タグ（10個まで）</legend>
+      <p className="text-xs text-muted-foreground">社員が規程の一覧で絞り込むときに使います。</p>
+      {[...groups, ...(others.length ? [{ label: "新しいタグ", names: others }] : [])].map((g) => (
+        <div key={g.label} className="flex flex-wrap items-center gap-2">
+          <span className="w-16 text-xs text-muted-foreground">{g.label}</span>
+          {g.names.map((name) => (
+            <button
+              key={name}
+              type="button"
+              aria-pressed={tags.includes(name)}
+              onClick={() => toggle(name)}
+              className="rounded-full border border-border px-3 py-0.5 aria-pressed:bg-foreground aria-pressed:text-background"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      ))}
+      <div className="flex gap-2">
+        <label htmlFor="document-new-tag" className="sr-only">
+          新しいタグ
+        </label>
+        <input
+          id="document-new-tag"
+          value={draft}
+          maxLength={50}
+          placeholder="新しいタグの名前"
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          className={`${inputClass} flex-1`}
+        />
+        <button type="button" onClick={add} disabled={!draft.trim()} className="rounded-md border border-border px-3">
+          タグを追加
+        </button>
+      </div>
+    </fieldset>
   );
 }

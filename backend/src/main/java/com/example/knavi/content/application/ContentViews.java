@@ -22,7 +22,8 @@ public final class ContentViews {
             CategoryRef category,
             DepartmentRef ownerDepartment,
             String versionLabel,
-            LocalDate effectiveFrom) {}
+            LocalDate effectiveFrom,
+            List<String> tags) {}
 
     public record SectionView(UUID id, int ordinal, String path, String articleNo, String heading, String content) {}
 

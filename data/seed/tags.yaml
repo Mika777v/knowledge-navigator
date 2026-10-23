@@ -1,0 +1,15 @@
+# 規程のタグの語彙。規程の front matter の tags はここにある名前を使う（validate_seed.py で検査）
+# type: TARGET（対象者）/ TOPIC（話題）。画面ではこの順に並べる
+- { name: 全社員, type: TARGET }
+- { name: 正社員, type: TARGET }
+- { name: 契約社員, type: TARGET }
+- { name: パートタイム社員, type: TARGET }
+- { name: 管理職, type: TARGET }
+- { name: お金, type: TOPIC }
+- { name: 休暇・休業, type: TOPIC }
+- { name: 働き方, type: TOPIC }
+- { name: 家族, type: TOPIC }
+- { name: 健康, type: TOPIC }
+- { name: 申請・手続き, type: TOPIC }
+- { name: 情報セキュリティ, type: TOPIC }
+- { name: 職場の相談, type: TOPIC }

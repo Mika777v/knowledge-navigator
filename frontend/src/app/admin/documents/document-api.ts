@@ -26,6 +26,8 @@ export type DocumentFormValues = {
   categorySlug: string;
   visibility: AdminDocument["visibility"];
   reviewDueOn: string;
+  /** タグの名前（編集のときだけ使う。作成時は付けない） */
+  tags: string[];
 };
 
 export const EMPTY_DOCUMENT: DocumentFormValues = {
@@ -35,6 +37,7 @@ export const EMPTY_DOCUMENT: DocumentFormValues = {
   categorySlug: "",
   visibility: "INTERNAL",
   reviewDueOn: "",
+  tags: [],
 };
 
 export function toFormValues(d: AdminDocument): DocumentFormValues {
@@ -45,6 +48,7 @@ export function toFormValues(d: AdminDocument): DocumentFormValues {
     categorySlug: d.category?.slug ?? "",
     visibility: d.visibility,
     reviewDueOn: d.reviewDueOn ?? "",
+    tags: d.tags ?? [],
   };
 }
 
@@ -57,6 +61,11 @@ export function toRequest(v: DocumentFormValues) {
     visibility: v.visibility,
     reviewDueOn: v.reviewDueOn || undefined,
   };
+}
+
+/** 属性の更新（PUT）。タグもあわせて置き換える */
+export function toUpdateRequest(v: DocumentFormValues) {
+  return { ...toRequest(v), tags: v.tags };
 }
 
 export function documentPath(id: string) {

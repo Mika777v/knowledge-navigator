@@ -24,6 +24,18 @@ export default function HomePage() {
         <LifeEventLinks />
       </section>
 
+      <section aria-labelledby="documents-heading" className="flex flex-col gap-1">
+        <h2 id="documents-heading" className="text-lg font-semibold">
+          規程を読む
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          <Link href="/documents" className="underline">
+            規程の一覧
+          </Link>
+          から、対象者（正社員・契約社員など）や話題（お金・休暇など）で絞り込んで探せます。
+        </p>
+      </section>
+
       <section aria-labelledby="contacts-heading" className="flex flex-col gap-1">
         <h2 id="contacts-heading" className="text-lg font-semibold">
           問い合わせ先

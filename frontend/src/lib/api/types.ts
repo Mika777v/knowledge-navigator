@@ -23,5 +23,7 @@ export type ContentStatus = AdminFaq["status"];
 export type CategoryNode = Schemas["CategoryNode"];
 export type ProgramSummary = Schemas["ProgramSummary"];
 export type DocumentSummary = Schemas["DocumentSummary"];
+/** GET /api/v1/tags（閲覧できる文書の件数つき） */
+export type TagCount = Schemas["TagCount"];
 /** GET /api/v1/contacts（部署ごとの窓口） */
 export type DirectoryDepartment = Schemas["DirectoryDepartment"];

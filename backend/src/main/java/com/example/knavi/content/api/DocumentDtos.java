@@ -33,13 +33,15 @@ final class DocumentDtos {
             @NotNull Visibility visibility,
             LocalDate reviewDueOn) {}
 
+    /** @param tags 付けるタグの名前（省略すると変えない。空の配列ですべて外す） */
     record UpdateDocumentRequest(
             @NotBlank @Size(max = 200) String title,
             String summary,
             @NotNull DocumentType documentType,
             @NotBlank String categorySlug,
             @NotNull Visibility visibility,
-            LocalDate reviewDueOn) {}
+            LocalDate reviewDueOn,
+            @Size(max = 10) List<String> tags) {}
 
     record CreateVersionRequest(
             @NotBlank @Size(max = 20) String versionLabel,
@@ -72,9 +74,10 @@ final class DocumentDtos {
             ContentStatus status,
             UUID currentVersionId,
             LocalDate reviewDueOn,
+            List<String> tags,
             int rowVersion) {
 
-        static DocumentResponse of(Document d, DepartmentRef owner) {
+        static DocumentResponse of(Document d, DepartmentRef owner, List<String> tags) {
             return new DocumentResponse(
                     d.getId(),
                     d.getCode(),
@@ -88,6 +91,7 @@ final class DocumentDtos {
                     d.getStatus(),
                     d.getCurrentVersionId(),
                     d.getReviewDueOn(),
+                    tags,
                     d.getRowVersion());
         }
     }
