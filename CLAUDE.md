@@ -19,6 +19,14 @@
 7. PR の本文は `.github/pull_request_template.md` の見出しに沿って書く。タイトルは Conventional Commits（`pr-title.yml` の type・scope だけを使う。`e2e` などは scope にない）
 8. `gh pr create` はこの環境では使えないため、`gh api repos/Mika777v/knowledge-navigator/pulls` で作る
 
+## Issue の使い方
+
+- **何を作るかは設計書（下の表）で決める。** Issue は進み具合の記録として使う
+- Epic（`[Epic] E11 PDF取込・全文検索` など。番号は `docs/TASKS.md` の E01〜E16）に作業を結び付ける
+  - PR の本文に、対応する Task の Issue があれば `Closes #番号`、無ければ Epic を `Part of #番号` と書く
+  - Task を終えたら、Epic 本文のチェックリストにチェックを付け、PR 番号を書き添える
+- マージ済みなのに開いたままの Issue を見つけたら、対応した PR をコメントに書いて閉じる（閉じる前にオーナーに確認する）
+
 ## 設計するときに見るもの
 
 | 何を決めるか | 見るもの |
