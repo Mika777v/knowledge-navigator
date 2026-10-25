@@ -116,7 +116,7 @@ flowchart LR
 | frontend | Next.js 16（App Router）/ React 19 / Tailwind CSS 4 / TanStack Query / openapi-typescript |
 | backend | Spring Boot 4 / Java 21 / Spring Modulith / Spring Security / Flyway |
 | DB | PostgreSQL 17 + pg_bigm（日本語の部分一致検索）+ pgvector（Phase4 の意味検索用） |
-| CI | GitHub Actions（変更に応じて backend・frontend・DB・compose・データ・検索品質を実行） |
+| CI | GitHub Actions（変更に応じて backend・frontend・DB・compose・データ・検索品質を実行。リリースのタグでイメージを ghcr.io に公開） |
 | 今後 | FastAPI（PDF 取り込み）/ Ollama・Azure OpenAI・OpenAI（意味検索・根拠付き回答） |
 
 ## ドキュメント
