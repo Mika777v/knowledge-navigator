@@ -2,6 +2,8 @@ package com.example.knavi.ingestion.api;
 
 import com.example.knavi.ingestion.application.FileUploadService;
 import com.example.knavi.ingestion.application.FileUploadService.StoredFileView;
+import com.example.knavi.ingestion.application.PdfParseService;
+import com.example.knavi.ingestion.domain.RegulationPdfParser.ParsedRegulation;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,9 +30,17 @@ import org.springframework.web.multipart.MultipartFile;
 class AdminFileController {
 
     private final FileUploadService files;
+    private final PdfParseService parser;
 
-    AdminFileController(FileUploadService files) {
+    AdminFileController(FileUploadService files, PdfParseService parser) {
         this.files = files;
+        this.parser = parser;
+    }
+
+    @Operation(summary = "PDF を規程として解析した結果（版の本文にする Markdown と、条ごとのページ範囲）。保存はしない")
+    @GetMapping("/{id}/parsed")
+    ParsedRegulation parsed(@PathVariable UUID id, @AuthenticationPrincipal AuthenticatedUser user) {
+        return parser.parse(id, user);
     }
 
     @Operation(summary = "PDF をアップロードする（同じ内容のファイルが既にあれば、それを返す）")

@@ -161,6 +161,41 @@ class AdminFileApiTests {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void parsesAnUploadedRegulationPdfIntoArticlesWithPages() throws Exception {
+        byte[] pdf;
+        try (var files = java.nio.file.Files.list(java.nio.file.Path.of("..", "data", "pdf"))) {
+            pdf = java.nio.file.Files.readAllBytes(
+                    files.filter(p -> p.getFileName().toString().startsWith("REG-GA-001_"))
+                            .findFirst()
+                            .orElseThrow());
+        }
+        String id = JsonPath.read(
+                upload("ga.pdf", pdf, editor).andReturn().getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(get("/api/v1/admin/files/" + id + "/parsed").with(user(editor)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("慶弔見舞金規程"))
+                .andExpect(jsonPath("$.pageCount").value(3))
+                .andExpect(jsonPath("$.markdown").value(org.hamcrest.Matchers.containsString("### 第5条（結婚祝金）")))
+                .andExpect(
+                        jsonPath("$.sections[?(@.articleNo == '第15条')].pageTo").value(3));
+    }
+
+    @Test
+    void unparsablePdfsAreRejectedWithAReason() throws Exception {
+        String id = JsonPath.read(
+                upload("broken.pdf", pdf("壊れたファイル"), editor)
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString(),
+                "$.id");
+
+        mockMvc.perform(get("/api/v1/admin/files/" + id + "/parsed").with(user(editor)))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("壊れている可能性")));
+    }
+
     private ResultActions upload(String name, byte[] content, KnaviUserDetails as) throws Exception {
         return mockMvc.perform(multipart("/api/v1/admin/files")
                 .file(new MockMultipartFile("file", name, "application/pdf", content))
