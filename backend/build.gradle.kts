@@ -48,6 +48,7 @@ dependencies {
         exclude(group = "software.amazon.awssdk", module = "apache5-client")
     }
     implementation(libs.aws.sdk.url.connection.client)
+    implementation(libs.pdfbox)
     runtimeOnly("org.postgresql:postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
