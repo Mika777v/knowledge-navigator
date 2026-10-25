@@ -56,6 +56,8 @@ public class Section {
         this.articleNo = draft.articleNo();
         this.heading = draft.heading();
         this.content = draft.content();
+        this.pageFrom = draft.pageFrom();
+        this.pageTo = draft.pageTo();
         this.searchText = searchText;
     }
 

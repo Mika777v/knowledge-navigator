@@ -123,6 +123,16 @@ public class FileUploadService {
         return storage.get(key).orElseThrow(() -> ApiErrors.notFound("ファイルの中身が見つかりません。"));
     }
 
+    /** 取り込みジョブ（システム処理）から使う。権限は受付時に確かめている */
+    byte[] contentForJob(UUID id) {
+        String key = jdbc.sql("SELECT storage_key FROM stored_files WHERE id = :id")
+                .param("id", id)
+                .query(String.class)
+                .optional()
+                .orElseThrow(() -> ApiErrors.notFound("ファイルが見つかりません。"));
+        return storage.get(key).orElseThrow(() -> ApiErrors.notFound("ファイルの中身が見つかりません。"));
+    }
+
     private StoredFileView find(String condition, Object value) {
         return jdbc.sql("SELECT id, original_name, mime_type, size_bytes, sha256, created_at FROM stored_files WHERE "
                         + condition)

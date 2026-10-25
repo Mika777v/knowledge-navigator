@@ -23,6 +23,15 @@ public class PdfParseService {
         this.reader = reader;
     }
 
+    /**
+     * 取り込みジョブ（システム処理）から使う。
+     *
+     * @throws PdfExtractionException 解析できない PDF（理由は利用者に見せる文）
+     */
+    ParsedRegulation parseForJob(UUID fileId) {
+        return parser.parse(reader.read(files.contentForJob(fileId)));
+    }
+
     /** @throws ErrorResponseException 解析できない PDF は 422（理由つき） */
     public ParsedRegulation parse(UUID fileId, AuthenticatedUser user) {
         byte[] content = files.content(fileId, user);

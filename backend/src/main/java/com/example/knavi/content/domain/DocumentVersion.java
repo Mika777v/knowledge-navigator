@@ -114,6 +114,12 @@ public class DocumentVersion implements Persistable<UUID> {
         }
     }
 
+    /** 原本（PDF）から作った版として、原本のファイルを結び付ける */
+    public void attachSourceFile(UUID fileId) {
+        ensureEditable();
+        this.sourceFileId = fileId;
+    }
+
     public void clearSections() {
         ensureEditable();
         sections.clear();
