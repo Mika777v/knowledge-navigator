@@ -20,6 +20,14 @@ public interface DocumentImport {
     /** 文書（コードで指定）のタグを置き換える。無いタグは自由タグとして作る */
     void replaceTags(String documentCode, List<String> tagNames);
 
+    /**
+     * 文書（コードで指定）の公開中の版に、同じ内容の原本（PDF）と、条ごとの原本のページを結び付ける。
+     * 公開済みの版は不変だが、本文は変えずに原本の情報だけを足すデータ投入用の操作（ダミーデータの規程と PDF は同じ内容）。
+     *
+     * @return 結び付けた条・見出しの数
+     */
+    int attachSourceToCurrentVersion(String documentCode, UUID sourceFileId, List<DocumentPdfImport.PageRange> pages);
+
     record ImportedDocument(
             String code,
             String title,

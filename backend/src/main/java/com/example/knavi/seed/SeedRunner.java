@@ -24,11 +24,17 @@ class SeedRunner implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
 
     private final SeedLoader loader;
+    private final SeedSourcePdfs sourcePdfs;
     private final SeedProperties properties;
     private final ConfigurableApplicationContext context;
 
-    SeedRunner(SeedLoader loader, SeedProperties properties, ConfigurableApplicationContext context) {
+    SeedRunner(
+            SeedLoader loader,
+            SeedSourcePdfs sourcePdfs,
+            SeedProperties properties,
+            ConfigurableApplicationContext context) {
         this.loader = loader;
+        this.sourcePdfs = sourcePdfs;
         this.properties = properties;
         this.context = context;
     }
@@ -42,6 +48,10 @@ class SeedRunner implements ApplicationRunner {
         Path path = Path.of(properties.path() == null ? "../data/seed" : properties.path());
         SeedLoader.Summary summary = loader.load(path, properties.demoUserPassword());
         log.info("seed completed: {}", summary);
+        if (properties.pdfPath() != null && !properties.pdfPath().isBlank()) {
+            int attached = sourcePdfs.attach(Path.of(properties.pdfPath()));
+            log.info("source PDFs attached: {} documents", attached);
+        }
 
         // Web サーバーなしで起動した場合（make seed）は、投入が終わったらプロセスを終了する
         if (!(context instanceof WebServerApplicationContext)) {

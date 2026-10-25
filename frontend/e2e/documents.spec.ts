@@ -15,6 +15,9 @@ test("社員がホームから規程の一覧を開き、タグで絞り込め�
   // 規程の詳細のタグからも、同じタグの一覧へ移動できる
   await page.getByRole("link", { name: "通勤手当規程" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "通勤手当規程" })).toBeVisible();
+  // make seed で原本（data/pdf）を結び付けているので、原本と条ごとのページを開ける
+  await expect(page.getByRole("link", { name: "原本（PDF）を開く" })).toHaveAttribute("href", /\/source$/);
+  await expect(page.getByRole("link", { name: /^第1条（目的）を原本の1ページで開く$/ })).toHaveAttribute("href", /#page=1$/);
   await page.getByRole("list", { name: "タグ", exact: true }).getByRole("link", { name: "全社員" }).click();
   await expect(page.getByText("「全社員」のタグが付いた規程を表示しています。")).toBeVisible();
 });
