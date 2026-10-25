@@ -70,6 +70,8 @@ tasks.test {
     // テスト用 DB イメージ（infra/docker/postgres）。`make up` か CI でビルドしたものを使う
     systemProperty("knavi.test.postgres-image",
         System.getenv("KNAVI_TEST_POSTGRES_IMAGE") ?: "knowledge-navigator/postgres:local")
+    // 取り込みジョブの定期実行を止める（テストは IngestionWorker.runOnce() を直接呼んで、処理の順番を決める）
+    systemProperty("knavi.ingestion.worker.enabled", "false")
     finalizedBy(tasks.jacocoTestReport)
 }
 
