@@ -35,6 +35,12 @@ export function DocumentView() {
   }
 
   const { document, sections } = data;
+  // PDF から取り込んだ版だけ、原本へのリンクを出す（ブラウザの PDF ビューアで開き、#page= でそのページへ移動する）
+  const sourceUrl = data.version.hasSourceFile
+    ? `/api/v1/documents/${encodeURIComponent(document.id)}/source${
+        data.version.current ? "" : `?version=${encodeURIComponent(data.version.id)}`
+      }`
+    : null;
   return (
     <main className="mx-auto grid w-full max-w-5xl gap-8 px-4 py-8 lg:grid-cols-[1fr_18rem]">
       <article className="flex min-w-0 flex-col gap-6">
@@ -57,6 +63,16 @@ export function DocumentView() {
           )}
           {document.summary && <p className="text-muted-foreground">{document.summary}</p>}
           <TagLinks tags={document.tags} />
+          {sourceUrl && (
+            <p className="text-sm">
+              <a className="underline" href={sourceUrl} target="_blank" rel="noopener">
+                原本（PDF）を開く
+              </a>
+              <span className="ml-1 text-muted-foreground">
+                この版は PDF から取り込みました。条ごとのページから、原本の該当ページを開けます。
+              </span>
+            </p>
+          )}
         </header>
 
         {sections.length > 0 && (
@@ -77,7 +93,20 @@ export function DocumentView() {
         <div className="flex flex-col gap-6">
           {sections.map((s) => (
             <section key={s.id} id={sectionAnchor(s.id)} className="scroll-mt-4">
-              <h2 className="mb-1 font-semibold">{articleTitle(s.articleNo, s.heading)}</h2>
+              <div className="mb-1 flex flex-wrap items-baseline gap-x-2">
+                <h2 className="font-semibold">{articleTitle(s.articleNo, s.heading)}</h2>
+                {sourceUrl && s.pageFrom != null && (
+                  <a
+                    className="text-xs text-muted-foreground underline"
+                    href={`${sourceUrl}#page=${s.pageFrom}`}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={`${articleTitle(s.articleNo, s.heading)}を原本の${s.pageFrom}ページで開く`}
+                  >
+                    {pageLabel(s.pageFrom, s.pageTo)}
+                  </a>
+                )}
+              </div>
               <Markdown text={s.content} terms={terms} />
             </section>
           ))}
@@ -146,4 +175,9 @@ export function DocumentView() {
       </aside>
     </main>
   );
+}
+
+/** 原本のページの表示（p.3、またがるときは p.3–4） */
+function pageLabel(from: number, to: number | null | undefined): string {
+  return to != null && to !== from ? `p.${from}–${to}` : `p.${from}`;
 }

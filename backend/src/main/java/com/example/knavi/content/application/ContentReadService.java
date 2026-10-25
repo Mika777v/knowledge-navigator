@@ -104,7 +104,8 @@ public class ContentReadService {
         UUID currentVersionId = row.getValue();
 
         List<VersionView> versions = jdbc.sql("""
-                        SELECT id, version_label, effective_from, change_note FROM document_versions
+                        SELECT id, version_label, effective_from, change_note, source_file_id IS NOT NULL AS has_source
+                        FROM document_versions
                         WHERE document_id = :id AND published_at IS NOT NULL ORDER BY effective_from DESC, published_at DESC
                         """)
                 .param("id", id)
@@ -115,7 +116,8 @@ public class ContentReadService {
                             rs.getString("version_label"),
                             rs.getObject("effective_from", LocalDate.class),
                             rs.getString("change_note"),
-                            vid.equals(currentVersionId));
+                            vid.equals(currentVersionId),
+                            rs.getBoolean("has_source"));
                 })
                 .list();
         UUID shownId = versionId == null ? currentVersionId : versionId;
@@ -126,7 +128,7 @@ public class ContentReadService {
                 .orElseThrow(() -> ApiErrors.notFound("文書の版が見つかりません。"));
 
         var sections = jdbc.sql("""
-                        SELECT id, ordinal, path, article_no, heading, content FROM sections
+                        SELECT id, ordinal, path, article_no, heading, content, page_from, page_to FROM sections
                         WHERE document_version_id = :version ORDER BY ordinal
                         """)
                 .param("version", shown.id())
@@ -186,7 +188,8 @@ public class ContentReadService {
     public SectionDetail getSection(AccessScope scope, UUID sectionId) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.VIEW);
         return jdbc.sql(
-                        "SELECT s.id AS s_id, s.ordinal, s.path, s.article_no, s.heading, s.content, sv.version_label AS s_version, "
+                        "SELECT s.id AS s_id, s.ordinal, s.path, s.article_no, s.heading, s.content, s.page_from, s.page_to,"
+                                + " sv.version_label AS s_version, "
                                 + "(sv.id = d.current_version_id) AS is_current, " + DOCUMENT_COLUMNS
                                 + " FROM sections s JOIN document_versions sv ON sv.id = s.document_version_id "
                                 + "JOIN documents d ON d.id = sv.document_id "
@@ -202,7 +205,9 @@ public class ContentReadService {
                                 rs.getString("path"),
                                 rs.getString("article_no"),
                                 rs.getString("heading"),
-                                rs.getString("content")),
+                                rs.getString("content"),
+                                rs.getObject("page_from", Integer.class),
+                                rs.getObject("page_to", Integer.class)),
                         documentSummary(rs, i),
                         rs.getString("s_version"),
                         rs.getBoolean("is_current")))
@@ -446,7 +451,9 @@ public class ContentReadService {
                 rs.getString("path"),
                 rs.getString("article_no"),
                 rs.getString("heading"),
-                rs.getString("content"));
+                rs.getString("content"),
+                rs.getObject("page_from", Integer.class),
+                rs.getObject("page_to", Integer.class));
     }
 
     private static ProgramSummary programSummary(ResultSet rs, int i) throws SQLException {

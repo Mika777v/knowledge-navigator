@@ -9,10 +9,17 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => search,
 }));
 
-const current = { id: "v2", versionLabel: "v2.1", effectiveFrom: "2026-04-01", changeNote: "金額を改定", current: true };
-const past = { id: "v1", versionLabel: "v2.0", effectiveFrom: "2024-04-01", changeNote: null, current: false };
+const current = {
+  id: "v2",
+  versionLabel: "v2.1",
+  effectiveFrom: "2026-04-01",
+  changeNote: "金額を改定",
+  current: true,
+  hasSourceFile: false,
+};
+const past = { id: "v1", versionLabel: "v2.0", effectiveFrom: "2024-04-01", changeNote: null, current: false, hasSourceFile: false };
 
-function detail(shown: typeof current | typeof past) {
+function detail(shown: typeof current | typeof past, pages: { pageFrom: number | null; pageTo: number | null } = { pageFrom: null, pageTo: null }) {
   return {
     document: {
       id: "doc-1",
@@ -30,7 +37,15 @@ function detail(shown: typeof current | typeof past) {
     version: shown,
     versions: [current, past],
     sections: [
-      { id: "s5", ordinal: 5, path: null, articleNo: "第5条", heading: "結婚祝金", content: "社員が婚姻したときは結婚祝金を支給する。" },
+      {
+        id: "s5",
+        ordinal: 5,
+        path: null,
+        articleNo: "第5条",
+        heading: "結婚祝金",
+        content: "社員が婚姻したときは結婚祝金を支給する。",
+        ...pages,
+      },
     ],
     programs: [{ id: "p1", code: "PRG-MARRIAGE-GIFT", name: "結婚祝金", summary: "", articleNos: ["第5条"] }],
     contacts: [
@@ -73,6 +88,33 @@ describe("DocumentView", () => {
     expect(screen.getByRole("link", { name: "お金" })).toHaveAttribute("href", `/documents?tag=${encodeURIComponent("お金")}`);
     expect(screen.queryByRole("note")).toBeNull();
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/documents/doc-1");
+    // Markdown で書いた版には、原本へのリンクを出さない
+    expect(screen.queryByRole("link", { name: "原本（PDF）を開く" })).toBeNull();
+  });
+
+  it("PDF から取り込んだ版では、原本と条ごとのページを開ける", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(detail({ ...current, hasSourceFile: true }, { pageFrom: 1, pageTo: 2 })));
+    renderWithQuery(<DocumentView />);
+
+    expect(await screen.findByRole("link", { name: "原本（PDF）を開く" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/doc-1/source",
+    );
+    const page = screen.getByRole("link", { name: "第5条（結婚祝金）を原本の1ページで開く" });
+    expect(page).toHaveTextContent("p.1–2");
+    expect(page).toHaveAttribute("href", "/api/v1/documents/doc-1/source#page=1");
+  });
+
+  it("過去の版の原本は、その版を指定して開く", async () => {
+    search = new URLSearchParams("version=v1");
+    fetchMock.mockResolvedValueOnce(Response.json(detail({ ...past, hasSourceFile: true }, { pageFrom: 3, pageTo: 3 })));
+    renderWithQuery(<DocumentView />);
+
+    expect(await screen.findByRole("link", { name: "原本（PDF）を開く" })).toHaveAttribute(
+      "href",
+      "/api/v1/documents/doc-1/source?version=v1",
+    );
+    expect(screen.getByRole("link", { name: "第5条（結婚祝金）を原本の3ページで開く" })).toHaveTextContent("p.3");
   });
 
   it("過去の版では注意書きと最新版へのリンクを出す", async () => {
