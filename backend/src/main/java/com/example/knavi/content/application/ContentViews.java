@@ -25,7 +25,19 @@ public final class ContentViews {
             LocalDate effectiveFrom,
             List<String> tags) {}
 
-    public record SectionView(UUID id, int ordinal, String path, String articleNo, String heading, String content) {}
+    /**
+     * @param pageFrom 原本（PDF）でのページの始まり（PDF から取り込んだ版だけ。それ以外は null）
+     * @param pageTo 原本（PDF）でのページの終わり
+     */
+    public record SectionView(
+            UUID id,
+            int ordinal,
+            String path,
+            String articleNo,
+            String heading,
+            String content,
+            Integer pageFrom,
+            Integer pageTo) {}
 
     /**
      * 文書の詳細。
@@ -44,8 +56,14 @@ public final class ContentViews {
             List<DocumentProgram> programs,
             List<ContactView> contacts) {}
 
+    /** @param hasSourceFile 原本（PDF）がある（PDF から取り込んだ版） */
     public record VersionView(
-            UUID id, String versionLabel, LocalDate effectiveFrom, String changeNote, boolean current) {}
+            UUID id,
+            String versionLabel,
+            LocalDate effectiveFrom,
+            String changeNote,
+            boolean current,
+            boolean hasSourceFile) {}
 
     /** @param articleNos 根拠になっている条（文書全体が根拠なら空） */
     public record DocumentProgram(UUID id, String code, String name, String summary, List<String> articleNos) {}

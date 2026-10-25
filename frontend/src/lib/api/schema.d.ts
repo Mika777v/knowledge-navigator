@@ -353,6 +353,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** PDF をアップロードする（同じ内容のファイルが既にあれば、それを返す） */
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/faqs": {
         parameters: {
             query?: never;
@@ -715,6 +732,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/documents/{documentId}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文書の原本（PDF）。version で過去の版の原本も開ける。原本の無い版・見えない文書は 404 */
+        get: operations["source"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contacts": {
         parameters: {
             query?: never;
@@ -775,6 +809,57 @@ export interface paths {
         };
         /** 案内先の候補（種類ごと。閲覧できるものだけ） */
         get: operations["targets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/files/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ファイルの情報 */
+        get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/files/{id}/parsed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** PDF を規程として解析した結果（版の本文にする Markdown と、条ごとのページ範囲）。保存はしない */
+        get: operations["parsed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/files/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** ファイルの中身（PDF） */
+        get: operations["content"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1226,6 +1311,18 @@ export interface components {
             code: string;
             content: components["schemas"]["LifeEventRequest"];
         };
+        StoredFileView: {
+            /** Format: uuid */
+            id: string;
+            originalName: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            sha256: string;
+            /** Format: date-time */
+            createdAt: string;
+            duplicate: boolean;
+        };
         CreateFaqRequest: {
             code: string;
             ownerDepartmentCode: string;
@@ -1306,6 +1403,10 @@ export interface components {
             articleNo: string;
             heading: string;
             content: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
         };
         ProgramSummary: {
             /** Format: uuid */
@@ -1492,6 +1593,7 @@ export interface components {
             effectiveFrom: string;
             changeNote: string;
             current: boolean;
+            hasSourceFile: boolean;
         };
         DirectoryContact: {
             code: string;
@@ -1525,6 +1627,21 @@ export interface components {
             id: string;
             code: string;
             label: string;
+        };
+        ParsedRegulation: {
+            title: string;
+            /** Format: int32 */
+            pageCount: number;
+            markdown: string;
+            sections: components["schemas"]["ParsedSection"][];
+        };
+        ParsedSection: {
+            heading: string;
+            articleNo: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
         };
         VersionSummaryResponse: {
             /** Format: uuid */
@@ -2325,6 +2442,33 @@ export interface operations {
             };
         };
     };
+    upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoredFileView"];
+                };
+            };
+        };
+    };
     list_3: {
         parameters: {
             query?: never;
@@ -2911,6 +3055,30 @@ export interface operations {
             };
         };
     };
+    source: {
+        parameters: {
+            query?: {
+                version?: string;
+            };
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     contacts_1: {
         parameters: {
             query?: never;
@@ -2993,6 +3161,72 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Target"][];
+                };
+            };
+        };
+    };
+    get_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoredFileView"];
+                };
+            };
+        };
+    };
+    parsed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParsedRegulation"];
+                };
+            };
+        };
+    };
+    content: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };
