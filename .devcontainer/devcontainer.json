@@ -1,0 +1,33 @@
+{
+  // GitHub Codespaces（と VS Code の Dev Containers）で開いたときの環境。手順は docs/LOCAL_SETUP.md
+  "name": "社内規程ナビ",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  // make up で backend・frontend をビルドするため、4コア・メモリ 16GB 以上で作る
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb",
+    "storage": "32gb"
+  },
+  "features": {
+    // make up・make seed（compose）に使う
+    "ghcr.io/devcontainers/features/docker-in-docker:3": {},
+    // make test・make eval に使う（make up だけなら無くても動く）
+    "ghcr.io/devcontainers/features/java:1": { "version": "21" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
+  },
+  // pnpm は frontend/package.json の packageManager の版を corepack で使う。評価バッチ用に PyYAML を入れる
+  "postCreateCommand": "sudo corepack enable && pip install --user pyyaml",
+  "forwardPorts": [3000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "画面（ここを開く）", "onAutoForward": "notify" },
+    "8080": { "label": "backend（API の仕様は /swagger-ui.html）", "onAutoForward": "silent" },
+    "5432": { "label": "PostgreSQL", "onAutoForward": "ignore" },
+    "8333": { "label": "ストレージ", "onAutoForward": "ignore" }
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["docs/LOCAL_SETUP.md"]
+    }
+  }
+}

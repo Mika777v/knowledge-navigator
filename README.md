@@ -35,6 +35,8 @@
 
 ## ローカルで動かす
 
+GitHub Codespaces でもそのまま動きます。準備・確認の順番・困ったときの対処は [動かして確かめる手順](docs/LOCAL_SETUP.md) を参照してください。
+
 必要なもの: Docker（Compose v2）、make。`make test` には Java 21 と Node.js 22 + pnpm、`make eval` には Python 3 と PyYAML も必要です。
 
 ```bash
