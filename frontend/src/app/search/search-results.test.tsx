@@ -37,8 +37,11 @@ const result = {
       title: "慶弔見舞金規程",
       versionLabel: "v2.1",
       effectiveFrom: "2026-04-01",
-      sections: [{ id: "s5", articleNo: "第5条", heading: "結婚祝金", snippet: "社員が結婚したときは…" }],
+      sections: [
+        { id: "s5", articleNo: "第5条", heading: "結婚祝金", snippet: "社員が結婚したときは…", pageFrom: null, pageTo: null },
+      ],
       score: 6.75,
+      hasSourceFile: false,
     },
   ],
   faqs: [{ id: "f1", code: "FAQ-001", question: "入籍前に申請できますか？", score: 4 }],
@@ -88,6 +91,27 @@ describe("SearchResults", () => {
     expect(screen.getByRole("link", { name: "入籍前に申請できますか？" })).toHaveAttribute("href", "/faqs/f1");
     expect(screen.getByRole("link", { name: "氏名・住所・扶養の変更届" })).toBeInTheDocument();
     expect(screen.queryByRole("status")).toBeNull();
+    // 原本の無い規程には、ページを出さない
+    expect(screen.queryByRole("link", { name: /原本の\d+ページで開く/ })).toBeNull();
+  });
+
+  it("原本のある規程の条には、原本のページへのリンクを出す", async () => {
+    const withSource = {
+      ...result,
+      documents: [
+        {
+          ...result.documents[0],
+          hasSourceFile: true,
+          sections: [{ ...result.documents[0].sections[0], pageFrom: 1, pageTo: 2 }],
+        },
+      ],
+    };
+    fetchMock.mockResolvedValueOnce(Response.json(withSource));
+    renderWithQuery(<SearchResults />);
+
+    const page = await screen.findByRole("link", { name: "第5条（結婚祝金）を原本の1ページで開く" });
+    expect(page).toHaveTextContent("p.1–2");
+    expect(page).toHaveAttribute("href", "/api/v1/documents/d1/source#page=1");
   });
 
   it("結果のクリックを検索ログに記録する", async () => {

@@ -151,14 +151,17 @@ public class NavigationQueries {
 
     // ------------------------------------------------------------------ 文書・条文
 
-    public record DocumentRow(UUID id, String code, String title, String versionLabel, LocalDate effectiveFrom) {}
+    /** @param hasSourceFile 公開中の版に原本（PDF）がある */
+    public record DocumentRow(
+            UUID id, String code, String title, String versionLabel, LocalDate effectiveFrom, boolean hasSourceFile) {}
 
     public List<DocumentRow> documents(Collection<UUID> ids, AccessScope scope) {
         if (ids.isEmpty()) {
             return List.of();
         }
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.SEARCH);
-        return jdbc.sql("SELECT d.id, d.code, d.title, v.version_label, v.effective_from FROM documents d"
+        return jdbc.sql("SELECT d.id, d.code, d.title, v.version_label, v.effective_from,"
+                        + " v.source_file_id IS NOT NULL AS has_source FROM documents d"
                         + " JOIN document_versions v ON v.id = d.current_version_id WHERE d.id IN (:ids) AND "
                         + visible.sql())
                 .params(visible.params())
@@ -168,11 +171,20 @@ public class NavigationQueries {
                         rs.getString("code"),
                         rs.getString("title"),
                         rs.getString("version_label"),
-                        rs.getObject("effective_from", LocalDate.class)))
+                        rs.getObject("effective_from", LocalDate.class),
+                        rs.getBoolean("has_source")))
                 .list();
     }
 
-    public record SectionRow(UUID id, UUID documentId, int ordinal, String articleNo, String heading, String content) {}
+    public record SectionRow(
+            UUID id,
+            UUID documentId,
+            int ordinal,
+            String articleNo,
+            String heading,
+            String content,
+            Integer pageFrom,
+            Integer pageTo) {}
 
     /** 条文の本文。文書の閲覧可否は呼び出し側で {@link #documents} により確認済みであること */
     public List<SectionRow> sections(Collection<UUID> ids) {
@@ -180,7 +192,8 @@ public class NavigationQueries {
             return List.of();
         }
         return jdbc.sql("""
-                        SELECT s.id, v.document_id, s.ordinal, s.article_no, s.heading, s.content FROM sections s
+                        SELECT s.id, v.document_id, s.ordinal, s.article_no, s.heading, s.content, s.page_from, s.page_to
+                        FROM sections s
                         JOIN document_versions v ON v.id = s.document_version_id WHERE s.id IN (:ids)
                         """)
                 .param("ids", ids)
@@ -190,7 +203,9 @@ public class NavigationQueries {
                         rs.getInt("ordinal"),
                         rs.getString("article_no"),
                         rs.getString("heading"),
-                        rs.getString("content")))
+                        rs.getString("content"),
+                        rs.getObject("page_from", Integer.class),
+                        rs.getObject("page_to", Integer.class)))
                 .list();
     }
 

@@ -56,9 +56,12 @@ public record NavigationResult(
             String versionLabel,
             LocalDate effectiveFrom,
             List<SectionRef> sections,
-            double score) {}
+            double score,
+            boolean hasSourceFile) {}
 
-    public record SectionRef(UUID id, String articleNo, String heading, String snippet) {}
+    /** @param pageFrom 原本（PDF）でのページ（原本のある版だけ。それ以外は null） */
+    public record SectionRef(
+            UUID id, String articleNo, String heading, String snippet, Integer pageFrom, Integer pageTo) {}
 
     public record FaqHit(UUID id, String code, String question, double score) {}
 

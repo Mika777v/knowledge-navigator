@@ -297,10 +297,16 @@ public class NavigationService {
                                 .filter(java.util.Objects::nonNull)
                                 // 公開中の版の条だけを出す（根拠が旧版の条を指している場合は除く）
                                 .filter(s -> s.documentId().equals(d.id()))
-                                .map(s ->
-                                        new SectionRef(s.id(), s.articleNo(), s.heading(), snippet(s.content(), terms)))
+                                .map(s -> new SectionRef(
+                                        s.id(),
+                                        s.articleNo(),
+                                        s.heading(),
+                                        snippet(s.content(), terms),
+                                        s.pageFrom(),
+                                        s.pageTo()))
                                 .toList(),
-                        round(documents.score(d.id()))))
+                        round(documents.score(d.id())),
+                        d.hasSourceFile()))
                 .toList();
     }
 
