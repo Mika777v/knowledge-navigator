@@ -1570,6 +1570,7 @@ export interface components {
             sections: components["schemas"]["SectionRef"][];
             /** Format: double */
             score: number;
+            hasSourceFile: boolean;
         };
         FaqHit: {
             /** Format: uuid */
@@ -1625,6 +1626,10 @@ export interface components {
             articleNo: string;
             heading: string;
             snippet: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
         };
         LifeEventDetail: {
             lifeEvent: components["schemas"]["LifeEventSummary"];

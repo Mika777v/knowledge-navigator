@@ -23,6 +23,10 @@ test("質問から制度・規程・窓口を案内し、条文へ移動でき�
   await expect(programs.getByRole("link", { name: "結婚祝金" })).toBeVisible();
   await expect(programs.getByRole("link", { name: "結婚休暇" })).toBeVisible();
   await expect(page.getByRole("region", { name: "問い合わせ先" }).getByText("総務部 庶務グループ")).toBeVisible();
+  // make seed で原本（data/pdf）を結び付けているので、検索結果から原本のページも開ける
+  await expect(
+    page.getByRole("region", { name: "根拠となる規程" }).getByRole("link", { name: "第5条（結婚祝金）を原本の1ページで開く" }),
+  ).toHaveAttribute("href", /\/source#page=1$/);
 
   // 規程の条へ移動すると、その条までスクロールし、検索語が強調されている
   await page.getByRole("link", { name: "第5条（結婚祝金）" }).first().click();

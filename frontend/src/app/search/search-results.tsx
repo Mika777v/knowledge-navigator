@@ -167,6 +167,18 @@ function Results({ result }: { result: NavigationResult }) {
                         >
                           {articleTitle(s.articleNo, s.heading) || "条文"}
                         </Link>
+                        {d.hasSourceFile && s.pageFrom != null && (
+                          <a
+                            href={`/api/v1/documents/${encodeURIComponent(d.id)}/source#page=${s.pageFrom}`}
+                            target="_blank"
+                            rel="noopener"
+                            aria-label={`${articleTitle(s.articleNo, s.heading)}を原本の${s.pageFrom}ページで開く`}
+                            className="ml-2 text-xs text-muted-foreground underline"
+                          >
+                            p.{s.pageFrom}
+                            {s.pageTo != null && s.pageTo !== s.pageFrom ? `–${s.pageTo}` : ""}
+                          </a>
+                        )}
                         <p className="text-muted-foreground">
                           <Highlight text={s.snippet} terms={terms} />
                         </p>

@@ -77,6 +77,34 @@ class NavigationApiWithSeedTests {
     }
 
     @Test
+    void sectionsOfRegulationsWithAnOriginalShowTheirPages() throws Exception {
+        // PDF の原本が付いた公開中の版の状態を作る（原本の結び付けは SeedSourcePdfsTests で確かめる）
+        UUID file = jdbc.sql("""
+                        INSERT INTO stored_files (storage_key, original_name, mime_type, size_bytes, sha256)
+                        VALUES ('files/00/ga.pdf', '慶弔見舞金規程.pdf', 'application/pdf', 10, repeat('1', 64)) RETURNING id
+                        """).query(UUID.class).single();
+        jdbc.sql("""
+                        UPDATE document_versions SET source_file_id = :f
+                        WHERE id = (SELECT current_version_id FROM documents WHERE code = 'REG-GA-001')
+                        """).param("f", file).update();
+        jdbc.sql("""
+                        UPDATE sections SET page_from = 1, page_to = 2 WHERE article_no = '第5条'
+                        AND document_version_id = (SELECT current_version_id FROM documents WHERE code = 'REG-GA-001')
+                        """).update();
+
+        String body = navigate("結婚祝金", sato);
+
+        assertThat(JsonPath.<List<Boolean>>read(body, "$.documents[?(@.code == 'REG-GA-001')].hasSourceFile"))
+                .containsExactly(true);
+        assertThat(JsonPath.<List<Integer>>read(
+                        body, "$.documents[?(@.code == 'REG-GA-001')].sections[?(@.articleNo == '第5条')].pageFrom"))
+                .containsExactly(1);
+        // 原本の無い規程は、ページを出さない
+        assertThat(JsonPath.<List<Boolean>>read(body, "$.documents[?(@.code != 'REG-GA-001')].hasSourceFile"))
+                .doesNotContain(true);
+    }
+
+    @Test
     void keywordsMatchDifferentInflectionsByStem() throws Exception {
         // 辞書の「眠れない」に対して「眠れなくて」、「出勤時間をずらす」に対して「出勤時間を遅くしたい」
         String sleep = navigate("眠れなくて仕事がつらい", sato);
