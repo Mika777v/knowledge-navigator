@@ -7,6 +7,13 @@ export type AdminDocument = Schemas["DocumentResponse"];
 export type VersionSummary = Schemas["VersionSummaryResponse"];
 export type VersionDetail = Schemas["VersionResponse"];
 export type DocumentType = AdminDocument["documentType"];
+export type StoredFile = Schemas["StoredFileView"];
+export type IngestionJob = Schemas["IngestionJobView"];
+
+/** 原本（PDF）を管理画面から開く URL（page を付けるとそのページを開く） */
+export function adminFileUrl(fileId: string, page?: number | null): string {
+  return `/api/v1/admin/files/${encodeURIComponent(fileId)}/content${page ? `#page=${page}` : ""}`;
+}
 
 export const adminDocumentsKey = ["admin", "documents"] as const;
 

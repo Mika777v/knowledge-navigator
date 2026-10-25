@@ -176,6 +176,11 @@ public class DocumentVersion implements Persistable<UUID> {
         return createdAt;
     }
 
+    /** 原本（PDF）。PDF から取り込んだ版だけ。Markdown で書いた版は null */
+    public UUID getSourceFileId() {
+        return sourceFileId;
+    }
+
     public List<Section> getSections() {
         return Collections.unmodifiableList(sections);
     }

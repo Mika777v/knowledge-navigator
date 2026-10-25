@@ -1,6 +1,7 @@
 package com.example.knavi.content.application;
 
 import com.example.knavi.audit.AuditLog;
+import com.example.knavi.content.DocumentPdfImport;
 import com.example.knavi.content.domain.Category;
 import com.example.knavi.content.domain.ContentRuleViolation;
 import com.example.knavi.content.domain.Document;
@@ -159,11 +160,21 @@ public class DocumentService {
         DocumentVersion version = findVersion(documentId, versionId);
         try {
             version.updateAttributes(command.effectiveFrom(), command.changeNote());
+            // PDF から取り込んだ版は、本文を直しても同じ条（条でなければ同じ見出し）の原本のページを引き継ぐ
+            List<DocumentPdfImport.PageRange> pages = version.getSections().stream()
+                    .filter(s -> s.getPageFrom() != null && s.getPageTo() != null)
+                    .map(s -> new DocumentPdfImport.PageRange(
+                            s.getArticleNo() != null ? s.getArticleNo() : s.getHeading(),
+                            s.getPageFrom(),
+                            s.getPageTo()))
+                    .toList();
             // 既存セクションの削除を先に反映しないと (version, ordinal) の一意制約に触れる
             version.clearSections();
             versions.flush();
             version.replaceBody(
-                    command.bodyMarkdown(), splitter.split(command.bodyMarkdown()), d -> searchText(document, d));
+                    command.bodyMarkdown(),
+                    PdfDraftVersions.withPages(splitter.split(command.bodyMarkdown()), pages),
+                    d -> searchText(document, d));
         } catch (ContentRuleViolation e) {
             throw ApiErrors.conflict(e.getMessage());
         }

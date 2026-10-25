@@ -1,7 +1,7 @@
 package com.example.knavi.ingestion.api;
 
 import com.example.knavi.ingestion.application.IngestionJobService;
-import com.example.knavi.ingestion.application.IngestionJobService.JobView;
+import com.example.knavi.ingestion.application.IngestionJobService.IngestionJobView;
 import com.example.knavi.ingestion.application.IngestionJobService.Submit;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,11 +43,11 @@ class AdminIngestionController {
 
     @Operation(summary = "PDF の取り込みを依頼する（非同期。状況は返したジョブで確かめる）")
     @PostMapping("/documents/{documentId}/ingestion-jobs")
-    ResponseEntity<JobView> submit(
+    ResponseEntity<IngestionJobView> submit(
             @PathVariable UUID documentId,
             @Valid @RequestBody IngestionRequest body,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        JobView job = jobs.submit(
+        IngestionJobView job = jobs.submit(
                 documentId,
                 new Submit(body.fileId(), body.versionLabel(), body.effectiveFrom(), body.changeNote()),
                 user);
@@ -58,13 +58,13 @@ class AdminIngestionController {
 
     @Operation(summary = "文書の取り込みの履歴（新しい順に20件）")
     @GetMapping("/documents/{documentId}/ingestion-jobs")
-    List<JobView> list(@PathVariable UUID documentId, @AuthenticationPrincipal AuthenticatedUser user) {
+    List<IngestionJobView> list(@PathVariable UUID documentId, @AuthenticationPrincipal AuthenticatedUser user) {
         return jobs.listForDocument(documentId, user);
     }
 
     @Operation(summary = "取り込みの状況")
     @GetMapping("/ingestion-jobs/{id}")
-    JobView get(@PathVariable UUID id, @AuthenticationPrincipal AuthenticatedUser user) {
+    IngestionJobView get(@PathVariable UUID id, @AuthenticationPrincipal AuthenticatedUser user) {
         return jobs.get(id, user);
     }
 }

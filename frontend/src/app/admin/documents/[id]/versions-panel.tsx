@@ -5,9 +5,11 @@ import { useState } from "react";
 import { Markdown } from "@/components/markdown";
 import { apiFetch } from "@/lib/api/http";
 import { articleTitle } from "@/lib/content";
+import { PdfImport } from "./pdf-import";
 import {
   type AdminDocument,
   adminDocumentsKey,
+  adminFileUrl,
   documentPath,
   errorMessage,
   publishVersion,
@@ -41,6 +43,7 @@ export function VersionsPanel({
   });
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const shown = selected ?? versions?.find((v) => !v.publishedAt)?.id ?? versions?.[0]?.id ?? null;
   const reloadVersions = () => queryClient.invalidateQueries({ queryKey: versionsKey });
 
@@ -50,12 +53,44 @@ export function VersionsPanel({
         <h2 id="versions-heading" className="text-lg font-semibold">
           版（本文）
         </h2>
-        <button type="button" onClick={() => setCreating(true)} className="rounded-md border border-border px-3 py-1 text-sm">
-          新しい版を作る
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setImporting(false);
+              setCreating(true);
+            }}
+            className="rounded-md border border-border px-3 py-1 text-sm"
+          >
+            新しい版を作る
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCreating(false);
+              setImporting(true);
+            }}
+            className="rounded-md border border-border px-3 py-1 text-sm"
+          >
+            PDF から版を取り込む
+          </button>
+        </div>
       </div>
+      {importing && (
+        <PdfImport
+          document={document}
+          onCancel={() => setImporting(false)}
+          onImported={async (versionId) => {
+            await reloadVersions();
+            setImporting(false);
+            setSelected(versionId);
+          }}
+        />
+      )}
       {versions && versions.length === 0 && !creating && (
-        <p className="text-sm">まだ版がありません。「新しい版を作る」から本文を登録してください。</p>
+        <p className="text-sm">
+          まだ版がありません。「新しい版を作る」から本文を登録するか、「PDF から版を取り込む」で規程の PDF を取り込んでください。
+        </p>
       )}
       {versions && versions.length > 0 && (
         <table className="w-full border-collapse text-left text-sm">
@@ -391,13 +426,35 @@ function VersionFields({
           {version.changeNote && `／改定内容: ${version.changeNote}`}
         </p>
       )}
+      {version.sourceFileId && (
+        <p>
+          この版は PDF から取り込みました。{" "}
+          <a className="underline" href={adminFileUrl(version.sourceFileId)} target="_blank" rel="noopener">
+            原本（PDF）を開く
+          </a>
+          {draft && "。条の分かれ方と原本のページを確かめ、必要なら本文を直してから公開してください。"}
+        </p>
+      )}
       <BodyField value={body} onChange={setBody} readOnly={!draft} />
 
-      <details className="rounded-md border border-border p-3" open={!draft}>
+      <details className="rounded-md border border-border p-3" open={!draft || !!version.sourceFileId}>
         <summary className="cursor-pointer font-medium">条・見出しの分かれ方（{version.sections.length}）</summary>
         <ol className="mt-2 grid gap-1 sm:grid-cols-2">
           {version.sections.map((s) => (
-            <li key={s.id}>{articleTitle(s.articleNo, s.heading) || "（見出しなし）"}</li>
+            <li key={s.id}>
+              {articleTitle(s.articleNo, s.heading) || "（見出しなし）"}
+              {version.sourceFileId && s.pageFrom != null && (
+                <a
+                  className="ml-2 text-xs text-muted-foreground underline"
+                  href={adminFileUrl(version.sourceFileId, s.pageFrom)}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  p.{s.pageFrom}
+                  {s.pageTo != null && s.pageTo !== s.pageFrom ? `–${s.pageTo}` : ""}
+                </a>
+              )}
+            </li>
           ))}
         </ol>
       </details>
