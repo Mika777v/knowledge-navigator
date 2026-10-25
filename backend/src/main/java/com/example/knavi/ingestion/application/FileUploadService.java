@@ -66,6 +66,25 @@ public class FileUploadService {
     @Transactional
     public StoredFileView upload(String originalName, byte[] content, AuthenticatedUser user) {
         accessPolicy.checkIsContentEditor(user);
+        StoredFileView stored = store(originalName, content, user.id());
+        if (!stored.duplicate()) {
+            auditLog.record(
+                    user.id(),
+                    "FILE_UPLOADED",
+                    "FILE",
+                    stored.id(),
+                    Map.of("sha256", stored.sha256(), "sizeBytes", content.length));
+        }
+        return stored;
+    }
+
+    /** データ投入（システム処理）から使う。アップロードした人は記録しない */
+    @Transactional
+    UUID storeForSystem(String originalName, byte[] content) {
+        return store(originalName, content, null).id();
+    }
+
+    private StoredFileView store(String originalName, byte[] content, UUID uploadedBy) {
         if (content.length == 0) {
             throw ApiErrors.badRequest("ファイルが空です。");
         }
@@ -96,9 +115,8 @@ public class FileUploadService {
                 .param("mime", PDF)
                 .param("size", (long) content.length)
                 .param("sha256", sha256)
-                .param("user", user.id())
+                .param("user", uploadedBy)
                 .update();
-        auditLog.record(user.id(), "FILE_UPLOADED", "FILE", id, Map.of("sha256", sha256, "sizeBytes", content.length));
         return find("id = :v", id);
     }
 

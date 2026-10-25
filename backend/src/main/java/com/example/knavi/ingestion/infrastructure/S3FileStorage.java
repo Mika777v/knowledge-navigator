@@ -55,15 +55,32 @@ class S3FileStorage implements FileStorage {
         try {
             s3.headBucket(b -> b.bucket(properties.bucket()));
         } catch (NoSuchBucketException e) {
-            s3.createBucket(b -> b.bucket(properties.bucket()));
-            log.info("バケット {} を作りました", properties.bucket());
+            createBucket();
         }
     }
 
     @Override
     public void put(String key, byte[] content, String contentType) {
+        try {
+            putObject(key, content, contentType);
+        } catch (NoSuchBucketException e) {
+            // 起動の完了前（make seed のデータ投入中など）は、まだバケットを作っていないことがある
+            if (!properties.createBucket()) {
+                throw e;
+            }
+            createBucket();
+            putObject(key, content, contentType);
+        }
+    }
+
+    private void putObject(String key, byte[] content, String contentType) {
         s3.putObject(
                 b -> b.bucket(properties.bucket()).key(key).contentType(contentType), RequestBody.fromBytes(content));
+    }
+
+    private void createBucket() {
+        s3.createBucket(b -> b.bucket(properties.bucket()));
+        log.info("バケット {} を作りました", properties.bucket());
     }
 
     @Override

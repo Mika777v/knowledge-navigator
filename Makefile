@@ -43,8 +43,9 @@ db-smoke: ## PostgreSQL イメージのスモークテストを実行する
 
 .PHONY: seed
 seed: .env ## ダミーデータ（data/seed）を投入する。何度実行してもよい（同じコードのデータは上書き）
-	$(COMPOSE) run --rm --no-TTY -v "$(CURDIR)/data/seed:/seed:ro" backend \
-	  --spring.main.web-application-type=none --knavi.seed.enabled=true --knavi.seed.path=/seed
+	$(COMPOSE) run --rm --no-TTY -v "$(CURDIR)/data/seed:/seed:ro" -v "$(CURDIR)/data/pdf:/pdf:ro" backend \
+	  --spring.main.web-application-type=none --knavi.seed.enabled=true --knavi.seed.path=/seed \
+	  --knavi.seed.pdf-path=/pdf
 
 .PHONY: test
 test: .env ## テストを実行する（backend・frontend）
