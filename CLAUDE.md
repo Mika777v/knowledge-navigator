@@ -11,7 +11,7 @@
 ## PR の進め方（オーナーと決めたルール）
 
 1. **止めずに PR を作り続ける。** 1件ずつ承認を待たない
-2. **マージは自動マージに任せる。** PR を作ったら自動マージを予約する（`gh api -X PUT repos/Mika777v/knowledge-navigator/pulls/<番号>/ccr/auto_merge`）。CI（`ci-ok` と `conventional-commits`）が通ると GitHub がスカッシュマージする。CI が落ちたら直して push し直す
+2. **マージは自動マージに任せる。** PR を作ったら自動マージを予約する（`gh api -X PUT repos/Mika777v/knowledge-navigator/pulls/<番号>/ccr/auto_merge -f merge_method=squash`。このリポジトリはスカッシュマージだけを許可している）。CI（`ci-ok` と `conventional-commits`）が通ると GitHub がスカッシュマージする。CI が落ちたら直して push し直す
 3. **次のものは自動マージを予約せず、マージ前にオーナーに確認する。**
    - タグ・GitHub Release
    - DB のマイグレーション（`backend/src/main/resources/db/migration` の追加・変更）
