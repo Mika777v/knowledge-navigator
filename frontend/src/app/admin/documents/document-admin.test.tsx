@@ -32,6 +32,7 @@ const summary = (over: Partial<VersionSummary>): VersionSummary => ({
   publishedAt: "2026-03-01T00:00:00Z",
   current: true,
   sectionCount: 12,
+  sourceFileId: null as never,
   ...over,
 });
 
@@ -42,7 +43,19 @@ const version = (over: Partial<VersionDetail> = {}): VersionDetail => ({
   changeNote: null as never,
   publishedAt: "2026-03-01T00:00:00Z",
   bodyMarkdown: "### 第5条（結婚祝金）\n\n30,000円を支給する。",
-  sections: [{ id: "s5", ordinal: 5, path: null as never, articleNo: "第5条", heading: "結婚祝金", content: "30,000円" }],
+  sections: [
+    {
+      id: "s5",
+      ordinal: 5,
+      path: null as never,
+      articleNo: "第5条",
+      heading: "結婚祝金",
+      content: "30,000円",
+      pageFrom: null as never,
+      pageTo: null as never,
+    },
+  ],
+  sourceFileId: null as never,
   ...over,
 });
 
@@ -57,7 +70,8 @@ function stubApi(handle: (call: Call) => Response | undefined) {
         url: String(input),
         method: init?.method ?? "GET",
         ifMatch: new Headers(init?.headers).get("If-Match"),
-        body: init?.body ? JSON.parse(String(init.body)) : undefined,
+        // アップロード（FormData）はそのまま、JSON は読み取って記録する
+        body: typeof init?.body === "string" ? JSON.parse(init.body) : init?.body,
       };
       calls.push(call);
       const res = handle(call);
@@ -182,5 +196,97 @@ describe("EditDocument", () => {
     expect(publish?.body).toEqual({ versionId: "v2" });
     // 公開の前に本文を保存している
     expect(calls.filter((c) => c.method === "PUT").length).toBe(2);
+  });
+});
+
+describe("PDF からの取り込み", () => {
+  beforeEach(() => {
+    document.cookie = "XSRF-TOKEN=t; path=/";
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  const job = (status: string, over: object = {}) => ({
+    id: "j1",
+    documentId: "d1",
+    fileId: "f1",
+    fileName: "慶弔見舞金規程.pdf",
+    versionLabel: "v3.0",
+    effectiveFrom: "2026-10-01",
+    changeNote: null,
+    status,
+    attempts: 1,
+    errorMessage: null,
+    resultVersionId: null,
+    createdAt: "2026-10-25T00:00:00Z",
+    startedAt: null,
+    finishedAt: null,
+    ...over,
+  });
+
+  async function startImport() {
+    fireEvent.click(await screen.findByRole("button", { name: "PDF から版を取り込む" }));
+    const pdf = new File(["%PDF-1.4"], "慶弔見舞金規程.pdf", { type: "application/pdf" });
+    fireEvent.change(screen.getByLabelText("PDF ファイル（20MB まで）"), { target: { files: [pdf] } });
+    fireEvent.change(screen.getByLabelText("版ラベル"), { target: { value: " v3.0 " } });
+    fireEvent.change(screen.getByLabelText("施行日"), { target: { value: "2026-10-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "取り込む" }));
+  }
+
+  it("アップロードして取り込みを頼み、終わったらできた版を開く", async () => {
+    let polls = 0;
+    const calls = stubApi(({ url, method }) => {
+      if (url.endsWith("/versions") && method === "GET")
+        return Response.json(polls >= 2 ? [summary({ id: "v3", versionLabel: "v3.0", publishedAt: null as never, current: false, sourceFileId: "f1" }), summary({})] : [summary({})]);
+      if (url.endsWith("/versions/v1")) return Response.json(version());
+      if (url.endsWith("/versions/v3"))
+        return Response.json(
+          version({
+            id: "v3",
+            versionLabel: "v3.0",
+            publishedAt: null as never,
+            sourceFileId: "f1",
+            sections: [{ ...version().sections[0], pageFrom: 2, pageTo: 3 }],
+          }),
+        );
+      if (url === "/api/v1/admin/files" && method === "POST") return Response.json({ id: "f1" }, { status: 201 });
+      if (url === "/api/v1/admin/documents/d1/ingestion-jobs" && method === "POST") return Response.json(job("QUEUED"), { status: 202 });
+      if (url === "/api/v1/admin/ingestion-jobs/j1") {
+        polls++;
+        return Response.json(polls < 2 ? job("RUNNING") : job("SUCCEEDED", { resultVersionId: "v3" }));
+      }
+    });
+    renderWithQuery(<EditDocument />);
+
+    await startImport();
+
+    expect(await screen.findByText(/PDF を読み取っています/)).toBeInTheDocument();
+    expect(calls.find((c) => c.url === "/api/v1/admin/documents/d1/ingestion-jobs")?.body).toEqual({
+      fileId: "f1",
+      versionLabel: "v3.0",
+      effectiveFrom: "2026-10-01",
+    });
+    // 終わったら、できた下書きの版を開き、原本と条ごとのページを確かめられる
+    expect(await screen.findByText("v3.0", { selector: "h3" }, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "原本（PDF）を開く" })).toHaveAttribute("href", "/api/v1/admin/files/f1/content");
+    expect(screen.getByRole("link", { name: "p.2–3" })).toHaveAttribute("href", "/api/v1/admin/files/f1/content#page=2");
+  });
+
+  it("取り込めなかったら、理由を出して取り込み直せる", async () => {
+    stubApi(({ url, method }) => {
+      if (url.endsWith("/versions") && method === "GET") return Response.json([summary({})]);
+      if (url.endsWith("/versions/v1")) return Response.json(version());
+      if (url === "/api/v1/admin/files" && method === "POST") return Response.json({ id: "f1" }, { status: 201 });
+      if (url === "/api/v1/admin/documents/d1/ingestion-jobs" && method === "POST") return Response.json(job("QUEUED"), { status: 202 });
+      if (url === "/api/v1/admin/ingestion-jobs/j1")
+        return Response.json(job("FAILED", { errorMessage: "PDF から文字を取り出せませんでした。画像だけの PDF（スキャンしたもの）は取り込めません。" }));
+    });
+    renderWithQuery(<EditDocument />);
+
+    await startImport();
+
+    expect(await screen.findByText(/取り込めませんでした。/)).toBeInTheDocument();
+    expect(screen.getByText(/スキャンしたもの/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "別の PDF・版ラベルで取り込み直す" }));
+    expect(screen.getByLabelText("PDF ファイル（20MB まで）")).toBeInTheDocument();
   });
 });

@@ -172,6 +172,45 @@ class AdminDocumentApiTests {
     }
 
     @Test
+    void editingAPdfVersionKeepsTheOriginalPagesOfTheSameArticles() throws Exception {
+        String id = createDocument("REG-GA-001");
+        String v1 = versionId(createVersion(id, "v1.0", "### 第1条（目的）\n\n目的。\n\n### 第2条（対象者）\n\n全社員。\n"));
+        // PDF から取り込んだ版の状態を作る（取り込みジョブは IngestionJobTests で確かめる）。先に JPA の変更を書き込む
+        entityManager.flush();
+        UUID file = jdbc.sql("""
+                        INSERT INTO stored_files (storage_key, original_name, mime_type, size_bytes, sha256)
+                        VALUES ('files/00/test.pdf', '規程.pdf', 'application/pdf', 10, repeat('0', 64)) RETURNING id
+                        """).query(UUID.class).single();
+        jdbc.sql("UPDATE document_versions SET source_file_id = :f WHERE id = :v::uuid")
+                .param("f", file)
+                .param("v", v1)
+                .update();
+        jdbc.sql(
+                        "UPDATE sections SET page_from = ordinal + 1, page_to = ordinal + 2 WHERE document_version_id = :v::uuid")
+                .param("v", v1)
+                .update();
+        entityManager.clear();
+
+        // 第1条の文を直し、第3条を足す。第1条・第2条のページはそのまま、第3条は原本に無いのでページなし
+        perform(
+                        put(BASE + "/" + id + "/versions/" + v1),
+                        gaEditor,
+                        Map.of(
+                                "effectiveFrom",
+                                "2026-04-01",
+                                "bodyMarkdown",
+                                "### 第1条（目的）\n\n目的を直した。\n\n### 第2条（対象者）\n\n全社員。\n\n### 第3条（追加）\n\n追加。\n"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sourceFileId").value(file.toString()))
+                .andExpect(jsonPath("$.sections[0].pageFrom").value(1))
+                .andExpect(jsonPath("$.sections[0].pageTo").value(2))
+                .andExpect(jsonPath("$.sections[1].pageFrom").value(2))
+                .andExpect(jsonPath("$.sections[2].pageFrom").doesNotExist());
+        mockMvc.perform(get(BASE + "/" + id + "/versions").with(user(gaEditor)))
+                .andExpect(jsonPath("$[0].sourceFileId").value(file.toString()));
+    }
+
+    @Test
     void cannotPublishVersionOfAnotherDocument() throws Exception {
         String a = createDocument("REG-GA-001");
         String b = createDocument("REG-GA-002");

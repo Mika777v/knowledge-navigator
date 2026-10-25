@@ -47,7 +47,7 @@ public class IngestionJobService {
      * @param errorMessage 失敗・再試行の理由（利用者に見せる文）
      * @param resultVersionId 成功したときに作った下書きの版
      */
-    public record JobView(
+    public record IngestionJobView(
             UUID id,
             UUID documentId,
             UUID fileId,
@@ -65,7 +65,7 @@ public class IngestionJobService {
 
     public record Submit(UUID fileId, String versionLabel, LocalDate effectiveFrom, String changeNote) {}
 
-    public JobView submit(UUID documentId, Submit in, AuthenticatedUser user) {
+    public IngestionJobView submit(UUID documentId, Submit in, AuthenticatedUser user) {
         accessPolicy.checkIsContentEditor(user);
         documents.checkCanEdit(documentId, user);
         boolean fileExists = jdbc.sql("SELECT EXISTS (SELECT 1 FROM stored_files WHERE id = :id)")
@@ -108,16 +108,16 @@ public class IngestionJobService {
     }
 
     @Transactional(readOnly = true)
-    public JobView get(UUID jobId, AuthenticatedUser user) {
+    public IngestionJobView get(UUID jobId, AuthenticatedUser user) {
         accessPolicy.checkIsContentEditor(user);
-        JobView job = find(jobId);
+        IngestionJobView job = find(jobId);
         documents.checkCanEdit(job.documentId(), user);
         return job;
     }
 
     /** 文書の取り込みの履歴（新しい順） */
     @Transactional(readOnly = true)
-    public List<JobView> listForDocument(UUID documentId, AuthenticatedUser user) {
+    public List<IngestionJobView> listForDocument(UUID documentId, AuthenticatedUser user) {
         accessPolicy.checkIsContentEditor(user);
         documents.checkCanEdit(documentId, user);
         return jdbc.sql("SELECT " + JOB_COLUMNS
@@ -128,7 +128,7 @@ public class IngestionJobService {
                 .list();
     }
 
-    private JobView find(UUID jobId) {
+    private IngestionJobView find(UUID jobId) {
         return jdbc.sql("SELECT " + JOB_COLUMNS
                         + " FROM ingestion_jobs j JOIN stored_files f ON f.id = j.file_id WHERE j.id = :id")
                 .param("id", jobId)
@@ -137,8 +137,8 @@ public class IngestionJobService {
                 .orElseThrow(() -> ApiErrors.notFound("取り込みが見つかりません。"));
     }
 
-    static JobView jobView(ResultSet rs, int i) throws SQLException {
-        return new JobView(
+    static IngestionJobView jobView(ResultSet rs, int i) throws SQLException {
+        return new IngestionJobView(
                 rs.getObject("id", UUID.class),
                 rs.getObject("document_id", UUID.class),
                 rs.getObject("file_id", UUID.class),

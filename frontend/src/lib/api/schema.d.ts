@@ -492,6 +492,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/documents/{documentId}/ingestion-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 文書の取り込みの履歴（新しい順に20件） */
+        get: operations["list_5"];
+        put?: never;
+        /** PDF の取り込みを依頼する（非同期。状況は返したジョブで確かめる） */
+        post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/departments": {
         parameters: {
             query?: never;
@@ -817,6 +835,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/ingestion-jobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 取り込みの状況 */
+        get: operations["get_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/files/{id}": {
         parameters: {
             query?: never;
@@ -825,7 +860,7 @@ export interface paths {
             cookie?: never;
         };
         /** ファイルの情報 */
-        get: operations["get_4"];
+        get: operations["get_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1175,6 +1210,10 @@ export interface components {
             articleNo: string;
             heading: string;
             content: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
         };
         VersionResponse: {
             /** Format: uuid */
@@ -1187,6 +1226,8 @@ export interface components {
             publishedAt: string;
             bodyMarkdown: string;
             sections: components["schemas"]["SectionResponse"][];
+            /** Format: uuid */
+            sourceFileId: string;
         };
         OrgDepartmentRequest: {
             name: string;
@@ -1351,6 +1392,39 @@ export interface components {
         PublishRequest: {
             /** Format: uuid */
             versionId: string;
+        };
+        IngestionRequest: {
+            /** Format: uuid */
+            fileId: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            changeNote?: string;
+        };
+        IngestionJobView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            documentId: string;
+            /** Format: uuid */
+            fileId: string;
+            fileName: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            changeNote: string;
+            status: string;
+            /** Format: int32 */
+            attempts: number;
+            errorMessage: string;
+            /** Format: uuid */
+            resultVersionId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt: string;
         };
         CreateOrgDepartmentRequest: {
             code: string;
@@ -1655,6 +1729,8 @@ export interface components {
             current: boolean;
             /** Format: int32 */
             sectionCount: number;
+            /** Format: uuid */
+            sourceFileId: string;
         };
         Actor: {
             /** Format: uuid */
@@ -2705,6 +2781,54 @@ export interface operations {
             };
         };
     };
+    list_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IngestionJobView"][];
+                };
+            };
+        };
+    };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IngestionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IngestionJobView"];
+                };
+            };
+        };
+    };
     departments: {
         parameters: {
             query?: never;
@@ -3166,6 +3290,28 @@ export interface operations {
         };
     };
     get_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IngestionJobView"];
+                };
+            };
+        };
+    };
+    get_5: {
         parameters: {
             query?: never;
             header?: never;

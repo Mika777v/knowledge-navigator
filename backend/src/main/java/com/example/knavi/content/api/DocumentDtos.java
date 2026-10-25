@@ -103,7 +103,8 @@ final class DocumentDtos {
             String changeNote,
             Instant publishedAt,
             boolean current,
-            int sectionCount) {
+            int sectionCount,
+            UUID sourceFileId) {
 
         static VersionSummaryResponse of(DocumentVersion v, UUID currentVersionId) {
             return new VersionSummaryResponse(
@@ -113,14 +114,31 @@ final class DocumentDtos {
                     v.getChangeNote(),
                     v.getPublishedAt(),
                     v.getId().equals(currentVersionId),
-                    v.getSections().size());
+                    v.getSections().size(),
+                    v.getSourceFileId());
         }
     }
 
-    record SectionResponse(UUID id, int ordinal, String path, String articleNo, String heading, String content) {
+    /** @param pageFrom 原本（PDF）でのページ（PDF から取り込んだ版だけ） */
+    record SectionResponse(
+            UUID id,
+            int ordinal,
+            String path,
+            String articleNo,
+            String heading,
+            String content,
+            Integer pageFrom,
+            Integer pageTo) {
         static SectionResponse of(Section s) {
             return new SectionResponse(
-                    s.getId(), s.getOrdinal(), s.getPath(), s.getArticleNo(), s.getHeading(), s.getContent());
+                    s.getId(),
+                    s.getOrdinal(),
+                    s.getPath(),
+                    s.getArticleNo(),
+                    s.getHeading(),
+                    s.getContent(),
+                    s.getPageFrom(),
+                    s.getPageTo());
         }
     }
 
@@ -131,7 +149,8 @@ final class DocumentDtos {
             String changeNote,
             Instant publishedAt,
             String bodyMarkdown,
-            List<SectionResponse> sections) {
+            List<SectionResponse> sections,
+            UUID sourceFileId) {
 
         static VersionResponse of(DocumentVersion v) {
             return new VersionResponse(
@@ -141,7 +160,8 @@ final class DocumentDtos {
                     v.getChangeNote(),
                     v.getPublishedAt(),
                     v.getBodyMarkdown(),
-                    v.getSections().stream().map(SectionResponse::of).toList());
+                    v.getSections().stream().map(SectionResponse::of).toList(),
+                    v.getSourceFileId());
         }
     }
 }
