@@ -26,3 +26,13 @@ test("コンテンツ担当者が類義語を登録すると、その言葉で�
   await terms.locator("xpath=ancestor::li[1]").getByRole("button", { name: "削除" }).click();
   await expect(terms).toHaveCount(0);
 });
+
+test("何も見つからなかった質問から、類義語・FAQ の入力に進める", async ({ page }) => {
+  await login(page, "ito@example.com");
+
+  await page.goto("/admin/synonyms?term=" + encodeURIComponent("社食"));
+  await expect(page.getByLabel("同じ意味の言葉（「、」で区切る）").first()).toHaveValue("社食");
+
+  await page.goto("/admin/faqs/new?question=" + encodeURIComponent("社員食堂のメニュー"));
+  await expect(page.getByLabel("質問")).toHaveValue("社員食堂のメニュー");
+});
