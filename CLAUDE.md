@@ -24,6 +24,9 @@
 7. **タグ・GitHub Release は、作る前に必ず確認する。** この開発環境からはタグの push と Release の作成ができないため、オーナーが GitHub の画面で作る（手順と本文を用意して渡す）
 8. PR の本文は `.github/pull_request_template.md` の見出しに沿って書く。タイトルは Conventional Commits（`pr-title.yml` の type・scope だけを使う。`e2e` などは scope にない）
 9. `gh pr create` はこの環境では使えないため、`gh api repos/Mika777v/knowledge-navigator/pulls` で作る
+10. **force push（ブランチの強制上書き）はしない。** 許可していない。push 済みのブランチの履歴は書き換えない（rebase・amend・`reset` してからの push をしない）
+    - マージ済みの PR を直す・続きをするときは、最新の main から**新しいブランチを切って**別の PR にする（ブランチ名は `docs/...`・`feat/...`・`fix/...` など）
+    - まだマージされていない PR を直すときは、同じブランチに新しいコミットを足して push する。main の変更を取り込むときは rebase ではなく merge する
 
 ## Issue の使い方
 
