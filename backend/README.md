@@ -42,4 +42,5 @@ make up
 
 - テスト用 DB イメージは `make up` でビルドされる。別のイメージを使う場合は `KNAVI_TEST_POSTGRES_IMAGE` を指定する。
 - 接続先は環境変数 `DB_URL` / `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` / `POSTGRES_PORT` で変更できる（既定値は `.env.example` と同じ）。
+- 形態素解析の辞書（SudachiDict core、約 200MB。ADR-0011）は、`./gradlew test` / `bootRun` の前に Gradle が自動で取り寄せる（`~/.gradle/caches/knavi-sudachi/`。初回だけ約 77MB をダウンロードし、SHA-256 を確かめる）。jar を直接起動するときは `KNAVI_SUDACHI_DICTIONARY` に辞書のファイルかフォルダを指定する。指定がなければ、表記ゆれの吸収なしで検索する。
 - モジュール構成図は `./gradlew test` 後に `build/spring-modulith-docs/` に出力される。

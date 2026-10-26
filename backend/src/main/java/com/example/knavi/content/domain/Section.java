@@ -1,6 +1,7 @@
 package com.example.knavi.content.domain;
 
 import com.example.knavi.shared.id.Ids;
+import com.example.knavi.shared.text.JapaneseNormalizer;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -46,6 +47,10 @@ public class Section {
     @Column(name = "search_text", nullable = false)
     private String searchText;
 
+    /** 表記ゆれを吸収する検索列（search_text の正規化形。ADR-0011。辞書がなければ空） */
+    @Column(name = "search_norm", nullable = false)
+    private String searchNorm;
+
     protected Section() {}
 
     Section(DocumentVersion version, SectionDraft draft, String searchText) {
@@ -59,6 +64,7 @@ public class Section {
         this.pageFrom = draft.pageFrom();
         this.pageTo = draft.pageTo();
         this.searchText = searchText;
+        this.searchNorm = JapaneseNormalizer.normalize(searchText);
     }
 
     public UUID getId() {

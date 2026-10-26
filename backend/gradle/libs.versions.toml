@@ -8,6 +8,8 @@ springdoc = "3.1.1"
 aws-sdk = "2.55.11"
 # PDF からの文字の抽出（ADR-0010）
 pdfbox = "3.0.8"
+# 形態素解析・表記ゆれの正規化（ADR-0011）。辞書（SudachiDict）は build.gradle.kts の sudachiDictionary で取り寄せる
+sudachi = "0.8.2"
 spotless = "8.10.4"
 palantir-java-format = "2.102.0"
 # Spring Boot が管理するバージョンを、脆弱性の修正版に上げる（Trivy で検出。Spring Boot の次のパッチで追いついたら消す）
@@ -22,6 +24,7 @@ aws-sdk-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws-sdk" }
 aws-sdk-s3 = { module = "software.amazon.awssdk:s3" }
 aws-sdk-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+sudachi = { module = "com.worksap.nlp:sudachi", version.ref = "sudachi" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
