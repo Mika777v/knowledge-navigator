@@ -1,7 +1,7 @@
 # ai-service（FastAPI）の実行イメージ。DB には接続しない（ADR-0006）
 # ビルド: docker build -t knowledge-navigator/ai-service ai-service
 
-FROM python:3.12.14-slim-trixie AS build
+FROM python:3.15.0-slim-trixie AS build
 # uv は pyproject.toml の依存と同じく、公開から2週間以上たった版に固定する
 RUN pip install --no-cache-dir uv==0.13.0
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY app app
 
-FROM python:3.12.14-slim-trixie
+FROM python:3.15.0-slim-trixie
 RUN useradd --system --uid 10001 --no-create-home knavi
 WORKDIR /app
 COPY --from=build /app/.venv /app/.venv
