@@ -1,0 +1,36 @@
+[project]
+name = "knavi-ai-service"
+version = "0.1.0"
+description = "社内規程ナビの AI 処理（Embedding・回答生成）。DB に接続しない（ADR-0006）"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.143.0",
+    "pydantic-settings==2.15.0",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2==2.13.1",
+    "pytest==9.1.1",
+    "ruff==0.17.0",
+]
+
+[tool.uv]
+package = false
+# 公開から2週間以上たった版だけを使う（CLAUDE.md）。依存を上げるときはこの日付も進める
+exclude-newer = "2026-10-12T00:00:00Z"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# テストでは assert と固定のトークンを使う
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

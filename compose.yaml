@@ -78,6 +78,18 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  # AI の処理（ADR-0006）。`docker compose --profile ai up`（make up-ai）のときだけ起動する
+  ai-service:
+    profiles: ["ai"]
+    build: ./ai-service
+    image: knowledge-navigator/ai-service:local
+    environment:
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-only-change-me}
+    # ホストには出さない。backend からだけ http://ai-service:8000 で呼ぶ
+    expose:
+      - "8000"
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     image: knowledge-navigator/frontend:local

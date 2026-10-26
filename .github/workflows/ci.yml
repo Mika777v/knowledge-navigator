@@ -25,6 +25,7 @@ jobs:
       db: ${{ steps.filter.outputs.db }}
       compose: ${{ steps.filter.outputs.compose }}
       data: ${{ steps.filter.outputs.data }}
+      ai-service: ${{ steps.filter.outputs.ai-service }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -59,6 +60,10 @@ jobs:
               - data/**
               - scripts/eval/**
               - .github/workflows/ci-compose.yml
+            ai-service:
+              - *gate
+              - ai-service/**
+              - .github/workflows/ci-ai-service.yml
             data:
               - *gate
               - data/**
@@ -91,10 +96,15 @@ jobs:
     if: needs.changes.outputs.data == 'true'
     uses: ./.github/workflows/ci-data.yml
 
+  ai-service:
+    needs: changes
+    if: needs.changes.outputs.ai-service == 'true'
+    uses: ./.github/workflows/ci-ai-service.yml
+
   # 必須チェック。スキップされた CI は成功扱い、失敗・キャンセルがあれば失敗にする
   ci-ok:
     if: always()
-    needs: [changes, backend, frontend, db, compose, data]
+    needs: [changes, backend, frontend, db, compose, data, ai-service]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

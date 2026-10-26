@@ -17,6 +17,18 @@ help: ## コマンド一覧を表示する
 up: .env ## 全サービスをビルドして起動する（起動完了まで待つ。初回は数分かかる）
 	$(COMPOSE) up -d --build --wait
 
+.PHONY: up-ai
+up-ai: .env ## AI の処理（ai-service）も含めて起動する（ADR-0006。止めるときは make down-ai）
+	$(COMPOSE) --profile ai up -d --build --wait
+
+.PHONY: down-ai
+down-ai: ## ai-service も含めて停止する（データは残る）
+	$(COMPOSE) --profile ai down
+
+.PHONY: test-ai
+test-ai: ## ai-service の検査とテストを実行する（uv が必要）
+	cd ai-service && uv sync --frozen && uv run ruff check . && uv run ruff format --check . && uv run pytest
+
 .PHONY: down
 down: ## 全サービスを停止する（データは残る）
 	$(COMPOSE) down
