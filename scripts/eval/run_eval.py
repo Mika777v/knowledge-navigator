@@ -9,7 +9,7 @@
 
 終了コード:
     0: 成功（基準値より悪化した指標があっても、警告を出すだけ）
-    1: 目標（--min-hit5、既定は MVP の 70%）を下回った、窓口が1件もない結果があった、または検索に失敗した
+    1: 目標（--min-hit5、既定は v0.3.0 の目標の 85%）を下回った、窓口が1件もない結果があった、または検索に失敗した
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def main() -> int:
     parser.add_argument("--questions", type=Path, default=ROOT / "data/eval/questions.yaml")
     parser.add_argument("--baseline", type=Path, default=ROOT / "data/eval/baseline.json")
     parser.add_argument("--output", type=Path, default=ROOT / "build/eval", help="結果（result.json・report.md）の出力先")
-    parser.add_argument("--min-hit5", type=float, default=0.70, help="Hit@5 の下限（下回ったら失敗）")
+    parser.add_argument("--min-hit5", type=float, default=0.85, help="Hit@5 の下限（下回ったら失敗。v0.3.0 の目標）")
     parser.add_argument("--update-baseline", action="store_true", help="今回の結果を基準値として保存する")
     args = parser.parse_args()
 
