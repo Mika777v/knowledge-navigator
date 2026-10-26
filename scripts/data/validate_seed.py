@@ -218,18 +218,23 @@ def validate_programs_and_faqs(
 
 EVAL_TAGS = {
     "life-event", "no-name", "colloquial", "abbreviation", "variant",
-    "name", "document-name", "manager", "no-answer",
+    "name", "document-name", "manager", "no-answer", "paraphrase",
 }
+# 評価用質問セットのファイルと、ID の頭文字
+EVAL_FILES = {"questions.yaml": "Q", "paraphrase.yaml": "P"}
 DEFAULT_EVAL_USER = "sato@example.com"
 
 
 def validate_eval(seed_dir: Path, errors: list[str]) -> None:
-    """評価用質問セット（seed_dir の隣の eval/questions.yaml）の参照先を検査する"""
-    path = seed_dir.parent / "eval" / "questions.yaml"
-    if not path.exists():
-        return
-    with path.open(encoding="utf-8") as f:
-        questions = yaml.safe_load(f) or []
+    """評価用質問セット（seed_dir の隣の eval/ の EVAL_FILES）の参照先を検査する"""
+    for name, prefix in EVAL_FILES.items():
+        path = seed_dir.parent / "eval" / name
+        if path.exists():
+            with path.open(encoding="utf-8") as f:
+                validate_eval_questions(seed_dir, yaml.safe_load(f) or [], prefix, errors)
+
+
+def validate_eval_questions(seed_dir: Path, questions: list[dict], prefix: str, errors: list[str]) -> None:
     programs = {p["code"]: p for p in load(seed_dir, "programs.yaml")}
     faqs = {f["code"]: f for f in load(seed_dir, "faqs.yaml")}
     contacts = {c["code"] for c in load(seed_dir, "contacts.yaml")}
@@ -242,6 +247,8 @@ def validate_eval(seed_dir: Path, errors: list[str]) -> None:
     check_unique(questions, "id", "eval", errors)
     for q in questions:
         label = f"eval[{q.get('id')}]"
+        if not str(q.get("id", "")).startswith(prefix):
+            errors.append(f"{label}: ID は {prefix} で始めてください")
         if not q.get("q"):
             errors.append(f"{label}: q（質問文）がありません")
         expect = q.get("expect") or {}

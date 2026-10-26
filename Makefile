@@ -62,6 +62,13 @@ eval: .env ## 検索品質の評価を実行する（事前に make up・make se
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
 	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080}
 
+.PHONY: eval-paraphrase
+eval-paraphrase: .env ## 言い換えの質問で検索品質を測る（意味検索の効果を見る。失敗にはしない）
+	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
+	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080} \
+	  --questions data/eval/paraphrase.yaml --baseline data/eval/baseline-paraphrase.json \
+	  --output build/eval-paraphrase --min-hit5 0 $(ARGS)
+
 .PHONY: eval-tune
 eval-tune: .env ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
 	cd backend && ./gradlew bootJar
