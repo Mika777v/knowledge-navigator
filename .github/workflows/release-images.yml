@@ -1,6 +1,6 @@
 name: release-images
 
-# リリースのタグ（v0.2.0 など）を作ったら、backend・frontend・postgres のイメージを
+# リリースのタグ（v0.2.0 など）を作ったら、backend・frontend・postgres・ai-service のイメージを
 # GitHub Container Registry（ghcr.io）に公開する（E16-T2）。タグは GitHub の画面の Release から作る。
 # 公開したイメージは、ghcr.io/<owner>/knowledge-navigator-<サービス>:<版> で取得できる
 on:
@@ -34,6 +34,9 @@ jobs:
           - service: postgres
             context: ./infra/docker/postgres
             description: 社内規程ナビ用の PostgreSQL（pg_bigm・pgvector 入り）
+          - service: ai-service
+            context: ./ai-service
+            description: 社内規程ナビの ai-service（FastAPI。Embedding。DB には接続しない）
     steps:
       - uses: actions/checkout@v7
       - name: Image name

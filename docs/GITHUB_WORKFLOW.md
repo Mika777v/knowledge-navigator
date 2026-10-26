@@ -204,7 +204,7 @@ body:
 | タグ | `v0.1.0`（MVP）, `v0.2.0`（Phase2）, … `v1.0.0`（RAG + アシスタント公開） |
 | 自動化 | （予定・E16）**release-please** が Conventional Commits から Release PR と CHANGELOG を生成 → マージでタグ・GitHub Release 作成。**今は手動**（下の §7.1） |
 | 成果物 | GitHub Release にリリースノート、スクリーンショット、評価レポート（Hit@5 推移）を添付 |
-| コンテナ | タグ push で GHCR に `backend` / `frontend` / `postgres` イメージを発行（`release-images.yml`。Phase4 で `ai-service` を追加） |
+| コンテナ | タグ push で GHCR に `backend` / `frontend` / `postgres` / `ai-service` イメージを発行（`release-images.yml`） |
 | デモ環境 | Release 公開時にデモ環境へデプロイ（手動承認付き environment） |
 
 ### 7.1 今の運用（手動でのリリース）
