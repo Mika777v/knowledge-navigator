@@ -55,6 +55,20 @@ make eval              # 評価して結果を表示（build/eval/report.md・re
   - **警告**: 基準値 `baseline.json` より悪化した指標がある（失敗にはしない）
 - 検索を改善して指標が上がったら、`python3 scripts/eval/run_eval.py --update-baseline` で基準値を更新し、同じ PR に含める
 
+## 重みの調整（E12-T4）
+
+検索スコアの重み（`application.yaml` の `knavi.navigation.weights`、docs/ARCHITECTURE.md §4.3）は、この質問セットでグリッド探索して決める。
+
+```bash
+make up && make seed
+make eval-tune                                                   # 既定のグリッド（辞書・制度名・FAQ の質問文の重み）
+make eval-tune ARGS="--grid heading=1.0,1.5,2.0 --grid synonym=0.6,0.8,1.0"   # 調べる重みと値を指定する
+```
+
+- 組み合わせごとに backend の jar を起動し直して評価し、Hit@5 → MRR → Hit@1 の順に良いものを `build/eval/tuning.md` に並べる
+- 同じ点数の組み合わせが多いときは、今の値に近いものを選ぶ（質問セットに合わせすぎないように）
+- 重みを変えたら、`make eval` の結果と探索の表を PR に書き、`--update-baseline` で基準値も更新する
+
 ## 質問を追加するとき
 
 - 検索で期待どおりの結果が出なかった質問は、Issue（Search Quality テンプレート）を作り、ここに追加する
