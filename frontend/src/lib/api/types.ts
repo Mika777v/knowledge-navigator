@@ -16,6 +16,10 @@ export type KeywordTarget = Schemas["Target"];
 export type KeywordTargetType = KeywordResponse["targetType"];
 /** 類義語のグループ（/api/v1/admin/synonyms） */
 export type SynonymGroup = Schemas["SynonymGroupView"];
+/** GET /api/v1/search/suggest（入力補完） */
+export type SuggestionItem = Schemas["SuggestionItem"];
+/** GET /api/v1/programs/{id}/recommendations */
+export type RecommendedProgram = Schemas["RecommendedProgram"];
 export type QueryReport = Schemas["QueryReport"];
 export type FeedbackSummary = Schemas["FeedbackSummary"];
 export type AuditLogPage = Schemas["Page"];

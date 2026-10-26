@@ -7,7 +7,7 @@ import { BasisLink } from "@/components/basis-link";
 import { ContactCard } from "@/components/contact-card";
 import { QueryState } from "@/components/query-state";
 import { apiFetch } from "@/lib/api/http";
-import type { ProgramDetail } from "@/lib/api/types";
+import type { ProgramDetail, RecommendedProgram } from "@/lib/api/types";
 
 /** 制度の詳細。対象者・内容・申請方法・期限・必要書類と、根拠の条文・窓口・関連 FAQ */
 export function ProgramView() {
@@ -95,6 +95,8 @@ export function ProgramView() {
             </ul>
           </section>
         )}
+
+        <Recommendations programId={id} />
       </article>
 
       <aside className="flex flex-col gap-2" aria-labelledby="contacts-heading">
@@ -108,5 +110,33 @@ export function ProgramView() {
         )}
       </aside>
     </main>
+  );
+}
+
+/** あわせて見られている制度・同じきっかけの制度（E12-T5）。推薦がなければ何も出さない */
+function Recommendations({ programId }: { programId: string }) {
+  const { data } = useQuery({
+    queryKey: ["program", programId, "recommendations"],
+    queryFn: () => apiFetch<RecommendedProgram[]>(`/api/v1/programs/${encodeURIComponent(programId)}/recommendations`),
+  });
+  if (!data || data.length === 0) return null;
+  return (
+    <section aria-labelledby="recommendations-heading">
+      <h2 id="recommendations-heading" className="mb-2 font-semibold">
+        この制度を見た人はこちらも
+      </h2>
+      <ul className="flex list-disc flex-col gap-1 pl-5">
+        {data.map((r) => (
+          <li key={r.id}>
+            <Link className="underline" href={`/programs/${r.id}`}>
+              {r.name}
+            </Link>
+            <span className="ml-2 text-xs text-muted-foreground">
+              {r.reason === "CO_CLICK" ? "あわせて見られています" : r.lifeEvent ? `${r.lifeEvent}のときに` : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
