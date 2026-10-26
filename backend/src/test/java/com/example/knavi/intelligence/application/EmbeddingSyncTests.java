@@ -185,7 +185,7 @@ class EmbeddingSyncTests {
         UUID document = jdbc.sql("""
                         INSERT INTO documents (code, title, document_type, category_id, owner_department_id,
                                                visibility, status)
-                        VALUES (:code, 'テスト規程', 'REGULATION', :category, :dept, :vis, 'PUBLISHED')
+                        VALUES (:code, 'テスト規程', 'REGULATION', :category, :dept, :vis, 'DRAFT')
                         RETURNING id
                         """)
                 .param("code", "EMB-" + UUID.randomUUID().toString().substring(0, 8))
@@ -198,7 +198,8 @@ class EmbeddingSyncTests {
                         INSERT INTO document_versions (document_id, version_label, effective_from, body_markdown)
                         VALUES (:doc, 'v1.0', DATE '2026-04-01', '本文') RETURNING id
                         """).param("doc", document).query(UUID.class).single();
-        jdbc.sql("UPDATE documents SET current_version_id = :version WHERE id = :doc")
+        // 公開中の文書は版を指す必要がある（ck_documents_published_has_version）ため、版を作ってから公開にする
+        jdbc.sql("UPDATE documents SET current_version_id = :version, status = 'PUBLISHED' WHERE id = :doc")
                 .param("version", version)
                 .param("doc", document)
                 .update();
