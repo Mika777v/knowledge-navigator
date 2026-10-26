@@ -1,8 +1,8 @@
 # ADR-0006: AI の処理は FastAPI の別サービス（ai-service）に分け、DB に触れない「計算だけの窓口」にする
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-26
-- 関連 Issue / PR: E13-T1・E13-T3（TASKS.md）、#17（Epic E13）
+- 関連 Issue / PR: E13-T1・E13-T3（TASKS.md）、#17（Epic E13）、#137
 - 関連ドキュメント: [ARCHITECTURE.md §2.2・§5](../ARCHITECTURE.md)、[TECH_STACK_DECISION.md D-02](../TECH_STACK_DECISION.md)、[ADR-0001](./0001-modular-monolith-spring-boot.md)、[ADR-0004](./0004-permission-prefilter.md)、[ADR-0007](./0007-pgvector.md)、[ADR-0008](./0008-llm-provider-abstraction.md)、[ADR-0010](./0010-pdf-ingestion.md)
 
 ## 背景（Context）

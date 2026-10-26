@@ -1,8 +1,8 @@
 # ADR-0008: LLM・Embedding のプロバイダは ai-service の薄い自前の抽象で切り替え、既定はローカルの Ollama（bge-m3）にする
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-26
-- 関連 Issue / PR: E13-T2（TASKS.md）、E14-T7、#17（Epic E13）
+- 関連 Issue / PR: E13-T2（TASKS.md）、E14-T7、#17（Epic E13）、#137
 - 関連ドキュメント: [ARCHITECTURE.md §5.2・§5.6・§6](../ARCHITECTURE.md)、[TECH_STACK_DECISION.md D-06・D-07](../TECH_STACK_DECISION.md)、[ADR-0006](./0006-ai-service-stateless.md)、[ADR-0007](./0007-pgvector.md)
 
 ## 背景（Context）
