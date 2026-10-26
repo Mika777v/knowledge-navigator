@@ -3,6 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQuery } from "@/test/render";
 import { SynonymEditor, splitTerms } from "./synonym-editor";
 
+let search = new URLSearchParams();
+vi.mock("next/navigation", () => ({ useSearchParams: () => search }));
+
 const group = (over: Record<string, unknown> = {}) => ({
   id: "g1",
   canonical: "育児休業",
@@ -38,6 +41,7 @@ describe("splitTerms", () => {
 
 describe("SynonymEditor", () => {
   beforeEach(() => {
+    search = new URLSearchParams();
     document.cookie = "XSRF-TOKEN=t; path=/";
   });
   afterEach(() => vi.unstubAllGlobals());
@@ -49,6 +53,16 @@ describe("SynonymEditor", () => {
 
     const terms = await screen.findByRole("list", { name: "「育児休業」と同じ意味の言葉" });
     expect(within(terms).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["育休", "育児休暇"]);
+  });
+
+  it("?term= で開くと、その言葉を「同じ意味の言葉」に入れた状態になる", async () => {
+    search = new URLSearchParams({ term: "社食" });
+    const { fetchMock } = routes(({ method }) => (method === "GET" ? Response.json([]) : undefined));
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithQuery(<SynonymEditor />);
+
+    expect(screen.getByLabelText("同じ意味の言葉（「、」で区切る）")).toHaveValue("社食");
+    expect(screen.getByText(/「社食」を同じ意味の言葉に入れました/)).toBeInTheDocument();
   });
 
   it("言葉で絞り込む", async () => {

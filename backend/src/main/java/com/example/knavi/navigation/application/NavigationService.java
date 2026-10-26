@@ -112,8 +112,9 @@ public class NavigationService {
                 .toList());
         List<KeywordMatch> directKeywords = longestMatches(queries.keywordsIn(compactQuery, weights.keywordStem()));
         List<KeywordMatch> synonymKeywords = synonymKeywords(compactQuery, synonyms, directKeywords);
-        query = query.withTerms(
-                directKeywords.stream().map(KeywordMatch::term).distinct().toList());
+        List<String> keywordTerms =
+                directKeywords.stream().map(KeywordMatch::term).distinct().toList();
+        query = query.withTerms(keywordTerms).withContentTerms(keywordTerms);
         List<KeywordMatch> keywords = new ArrayList<>(directKeywords);
         keywords.addAll(synonymKeywords);
 

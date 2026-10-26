@@ -2,6 +2,7 @@ package com.example.knavi.seed;
 
 import com.example.knavi.content.DocumentImport;
 import com.example.knavi.content.DocumentImport.ImportedDocument;
+import com.example.knavi.shared.text.JapaneseNormalizer;
 import com.example.knavi.shared.text.TextNormalizer;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -255,16 +256,17 @@ class SeedLoader {
             UUID id = jdbc.sql("""
                             INSERT INTO programs (code, name, name_kana, summary, eligibility, benefit, how_to_apply,
                               deadline_note, required_documents, category_id, owner_department_id, visibility, status,
-                              search_text)
+                              search_text, search_norm)
                             VALUES (:code, :name, :kana, :summary, :eligibility, :benefit, :how, :deadline, :docs,
                               (SELECT id FROM categories WHERE slug = :category), :dept, :visibility, 'PUBLISHED',
-                              :search)
+                              :search, :norm)
                             ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, name_kana = EXCLUDED.name_kana,
                               summary = EXCLUDED.summary, eligibility = EXCLUDED.eligibility, benefit = EXCLUDED.benefit,
                               how_to_apply = EXCLUDED.how_to_apply, deadline_note = EXCLUDED.deadline_note,
                               required_documents = EXCLUDED.required_documents, category_id = EXCLUDED.category_id,
                               owner_department_id = EXCLUDED.owner_department_id, visibility = EXCLUDED.visibility,
-                              status = 'PUBLISHED', search_text = EXCLUDED.search_text, updated_at = now()
+                              status = 'PUBLISHED', search_text = EXCLUDED.search_text,
+                              search_norm = EXCLUDED.search_norm, updated_at = now()
                             RETURNING id
                             """)
                     .param("code", code)
@@ -280,6 +282,7 @@ class SeedLoader {
                     .param("dept", departmentId(str(p, "owner_department")))
                     .param("visibility", visibility)
                     .param("search", searchText)
+                    .param("norm", JapaneseNormalizer.normalize(searchText))
                     .query(UUID.class)
                     .single();
 
@@ -364,16 +367,17 @@ class SeedLoader {
         for (var f : rows) {
             String code = str(f, "code");
             String visibility = Objects.requireNonNullElse(str(f, "visibility"), "INTERNAL");
+            String faqSearchText = TextNormalizer.normalize(str(f, "question") + " " + str(f, "answer"));
             UUID id = jdbc.sql("""
                             INSERT INTO faqs (code, question, answer_markdown, category_id, contact_id,
-                              owner_department_id, visibility, status, search_text)
+                              owner_department_id, visibility, status, search_text, search_norm)
                             VALUES (:code, :question, :answer, (SELECT id FROM categories WHERE slug = :category),
-                              :contact, :dept, :visibility, 'PUBLISHED', :search)
+                              :contact, :dept, :visibility, 'PUBLISHED', :search, :norm)
                             ON CONFLICT (code) DO UPDATE SET question = EXCLUDED.question,
                               answer_markdown = EXCLUDED.answer_markdown, category_id = EXCLUDED.category_id,
                               contact_id = EXCLUDED.contact_id, owner_department_id = EXCLUDED.owner_department_id,
                               visibility = EXCLUDED.visibility, status = 'PUBLISHED',
-                              search_text = EXCLUDED.search_text, updated_at = now()
+                              search_text = EXCLUDED.search_text, search_norm = EXCLUDED.search_norm, updated_at = now()
                             RETURNING id
                             """)
                     .param("code", code)
@@ -383,7 +387,8 @@ class SeedLoader {
                     .param("contact", str(f, "contact") == null ? null : contactId(str(f, "contact")))
                     .param("dept", departmentId(str(f, "owner_department")))
                     .param("visibility", visibility)
-                    .param("search", TextNormalizer.normalize(str(f, "question") + " " + str(f, "answer")))
+                    .param("search", faqSearchText)
+                    .param("norm", JapaneseNormalizer.normalize(faqSearchText))
                     .query(UUID.class)
                     .single();
 

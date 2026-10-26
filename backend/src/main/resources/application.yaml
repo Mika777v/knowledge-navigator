@@ -51,6 +51,10 @@ springdoc:
   paths-to-match: /api/**
 
 knavi:
+  text:
+    sudachi:
+      # 形態素解析の辞書（ファイル、または .dic を1つ含むフォルダ。ADR-0011）。空なら表記ゆれの吸収なしで検索する
+      dictionary: ${KNAVI_SUDACHI_DICTIONARY:}
   storage:
     # 原本ファイルの置き場所（S3 互換。ローカルは compose の SeaweedFS。ADR-0010）
     endpoint: ${KNAVI_STORAGE_ENDPOINT:http://localhost:8333}

@@ -14,9 +14,12 @@ const stat = (query: string, over: Record<string, number> = {}) => ({
   ...over,
 });
 
-function stubApi() {
+function stubApi(role = "CONTENT_EDITOR") {
   const fetchMock = vi.fn<typeof fetch>(async (input) => {
     const url = String(input);
+    if (url.endsWith("/api/v1/me")) {
+      return Response.json({ id: "u", email: "x@example.com", displayName: "X", department: null, role, employmentType: "REGULAR", joinedOn: "2026-04-01" });
+    }
     if (url.includes("/zero-hits")) {
       return Response.json({ period, minDistinctUsers: 2, queries: [stat("社員食堂", { zeroHitSearches: 4 })] });
     }
@@ -36,6 +39,30 @@ function stubApi() {
 
 describe("AnalyticsDashboard", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it("何も見つからなかった質問から、類義語・FAQ の登録へ進める（FAQ はコンテンツ担当者だけ）", async () => {
+    stubApi("CONTENT_EDITOR");
+    renderWithQuery(<AnalyticsDashboard />);
+
+    const zero = await screen.findByRole("region", { name: "何も見つからなかった質問" });
+    expect(await within(zero).findByRole("link", { name: "類義語に登録" })).toHaveAttribute(
+      "href",
+      `/admin/synonyms?term=${encodeURIComponent("社員食堂")}`,
+    );
+    expect(await within(zero).findByRole("link", { name: "FAQ を作る" })).toHaveAttribute(
+      "href",
+      `/admin/faqs/new?question=${encodeURIComponent("社員食堂")}`,
+    );
+  });
+
+  it("システム管理者には FAQ を作るリンクを出さない", async () => {
+    stubApi("SYSTEM_ADMIN");
+    renderWithQuery(<AnalyticsDashboard />);
+
+    const zero = await screen.findByRole("region", { name: "何も見つからなかった質問" });
+    await within(zero).findByRole("link", { name: "類義語に登録" });
+    await waitFor(() => expect(within(zero).queryByRole("link", { name: "FAQ を作る" })).toBeNull());
+  });
 
   it("ゼロヒット・人気の質問・フィードバックを表示する", async () => {
     stubApi();

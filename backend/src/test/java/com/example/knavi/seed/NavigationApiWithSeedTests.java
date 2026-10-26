@@ -145,6 +145,14 @@ class NavigationApiWithSeedTests {
     }
 
     @Test
+    void inflectionsAndSpellingVariantsReachTheSameFaqThroughNormalizedForms() throws Exception {
+        // 形態素解析（ADR-0011）: 「振り込まれる」と FAQ の「振り込まれますか」は、どちらも正規化形「振り込む」になる
+        String body = navigate("お祝い金はいつ振り込まれる？", sato);
+        assertThat(JsonPath.<List<String>>read(body, "$.query.terms")).contains("振り込む");
+        assertThat(JsonPath.<List<String>>read(body, "$.faqs[*].code")).contains("FAQ-006");
+    }
+
+    @Test
     void unknownQuestionFallsBackToTheGeneralContact() throws Exception {
         String body = navigate("ぴよぴよ", sato);
 
