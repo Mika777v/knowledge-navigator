@@ -1,0 +1,10 @@
+{
+  "summary": {
+    "questions": 37,
+    "hit1": 0.1622,
+    "hit5": 0.2432,
+    "mrr": 0.2027,
+    "contact_accuracy": null,
+    "zero_hit_rate": 0.0541
+  }
+}
