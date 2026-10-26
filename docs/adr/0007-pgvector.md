@@ -1,8 +1,8 @@
 # ADR-0007: ベクトルは同じ PostgreSQL の pgvector に置き、権限で絞る SQL の中で検索して、キーワード検索と RRF で合わせる
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-26
-- 関連 Issue / PR: E13-T3〜T7（TASKS.md）、#17（Epic E13）
+- 関連 Issue / PR: E13-T3〜T7（TASKS.md）、#17（Epic E13）、#137
 - 関連ドキュメント: [ARCHITECTURE.md §4.5・§5.2・§5.3](../ARCHITECTURE.md)、[DOMAIN_MODEL.md §5.1](../DOMAIN_MODEL.md)、[TECH_STACK_DECISION.md D-05](../TECH_STACK_DECISION.md)、[ADR-0002](./0002-japanese-search-pg-bigm.md)、[ADR-0004](./0004-permission-prefilter.md)、[ADR-0006](./0006-ai-service-stateless.md)、[ADR-0008](./0008-llm-provider-abstraction.md)
 
 ## 背景（Context）
