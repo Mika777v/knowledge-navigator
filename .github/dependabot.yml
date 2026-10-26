@@ -86,3 +86,7 @@ updates:
       prefix: build
       include: scope
     labels: ["area:ai", "dependencies"]
+    ignore:
+      # Python は 3.12 に固定する（pyproject.toml の requires-python と合わせる）。上げるときは手動で行う
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
