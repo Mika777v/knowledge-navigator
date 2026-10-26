@@ -60,13 +60,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [backend, frontend, postgres]
+        service: [backend, frontend, postgres, ai-service]
     steps:
       - uses: actions/checkout@v7
       - name: Build the image
         run: |
           cp .env.example .env
-          docker compose build ${{ matrix.service }}
+          docker compose --profile ai build ${{ matrix.service }}
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           scan-type: image

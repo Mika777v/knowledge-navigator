@@ -59,6 +59,7 @@
 
 - backend: `cd backend && ./gradlew build`（テストとモジュール境界の検査を含む）
 - frontend: `cd frontend && pnpm typecheck && pnpm lint && pnpm test`
+- ai-service: `make test-ai`（ruff と pytest。uv が必要）
 - 画面に関わる変更は E2E（`frontend/e2e/`）を追加し、手元で起動して全件流す
 - 検索に関わる変更は `make eval`（基準値は `data/eval/baseline.json`）
 - ダミーデータを変えたら `python3 scripts/data/validate_seed.py`

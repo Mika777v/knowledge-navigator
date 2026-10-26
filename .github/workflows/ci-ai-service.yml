@@ -1,0 +1,32 @@
+name: ci-ai-service
+
+# ci.yml（ゲート）から、ai-service が変わったときだけ呼ばれる。手動実行も可
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-service
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      # uv は Dockerfile と同じ版に固定する（サードパーティの action を増やさない）
+      - run: pip install uv==0.13.0
+      - run: uv sync --frozen
+      - name: Lint (ruff)
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Test (pytest)
+        run: uv run pytest
+      - name: Build the image
+        run: docker build -t knowledge-navigator/ai-service:local .
