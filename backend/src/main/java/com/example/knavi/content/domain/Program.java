@@ -2,6 +2,7 @@ package com.example.knavi.content.domain;
 
 import com.example.knavi.shared.id.Ids;
 import com.example.knavi.shared.security.Visibility;
+import com.example.knavi.shared.text.JapaneseNormalizer;
 import com.example.knavi.shared.text.TextNormalizer;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
@@ -95,6 +96,10 @@ public class Program implements Persistable<UUID> {
     @Column(name = "search_text", nullable = false)
     private String searchText;
 
+    /** 表記ゆれを吸収する検索列（search_text の正規化形。ADR-0011。辞書がなければ空） */
+    @Column(name = "search_norm", nullable = false)
+    private String searchNorm;
+
     @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder")
     private List<ProgramBasis> basis = new ArrayList<>();
@@ -156,6 +161,7 @@ public class Program implements Persistable<UUID> {
         this.searchText = TextNormalizer.normalize(Stream.of(name, nameKana, summary, eligibility, benefit, howToApply)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining(" ")));
+        this.searchNorm = JapaneseNormalizer.normalize(searchText);
         checkInvariantsIfPublished();
     }
 

@@ -2,6 +2,7 @@ package com.example.knavi.content.domain;
 
 import com.example.knavi.shared.id.Ids;
 import com.example.knavi.shared.security.Visibility;
+import com.example.knavi.shared.text.JapaneseNormalizer;
 import com.example.knavi.shared.text.TextNormalizer;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -71,6 +72,10 @@ public class Faq implements Persistable<UUID> {
     @Column(name = "search_text", nullable = false)
     private String searchText;
 
+    /** 表記ゆれを吸収する検索列（search_text の正規化形。ADR-0011。辞書がなければ空） */
+    @Column(name = "search_norm", nullable = false)
+    private String searchNorm;
+
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
@@ -115,6 +120,7 @@ public class Faq implements Persistable<UUID> {
         this.contactId = contactId;
         this.visibility = visibility;
         this.searchText = TextNormalizer.normalize(question + " " + answerMarkdown);
+        this.searchNorm = JapaneseNormalizer.normalize(searchText);
         this.links.clear();
         this.links.addAll(newLinks);
     }

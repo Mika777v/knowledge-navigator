@@ -19,7 +19,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 /**
- * pg_bigm による全文検索（MVP）。search_text 列の 2-gram GIN インデックスで {@code LIKE '%語%'} を引く。
+ * pg_bigm による全文検索。search_text 列（原文の正規化）と search_norm 列（Sudachi の正規化形。ADR-0011）の
+ * 2-gram GIN インデックスで {@code LIKE '%語%'} を引く。
  *
  * <p>語ごとに「名前・見出しに含まれる」「本文に含まれる」で重みを付け、語の重み（類義語で広げた語は小さい）を掛けて足し合わせる（docs/ARCHITECTURE.md §4.3）。
  * 閲覧権限の条件は同じ SQL の WHERE 句に入れる（ADR-0004 のプレフィルタ）。CONFIDENTIAL は検索に出さない。
@@ -48,8 +49,7 @@ class PgBigmSearchAdapter implements SearchPort {
 
     private List<Hit> programs(List<Term> terms, AccessScope scope, int limit) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "programs", "p", Purpose.SEARCH);
-        Scoring s =
-                scoring(terms, i -> "strpos(lower(p.name), :t" + i + ") > 0", "p.search_text", weights.programName());
+        Scoring s = scoring(terms, i -> "strpos(lower(p.name), :t" + i + ") > 0", "p", weights.programName());
         return jdbc.sql("SELECT p.id, " + s.select() + " FROM programs p WHERE " + s.anyMatch() + " AND "
                         + visible.sql() + " ORDER BY score DESC, p.code LIMIT :limit")
                 .params(s.params())
@@ -65,7 +65,7 @@ class PgBigmSearchAdapter implements SearchPort {
         Scoring s = scoring(
                 terms,
                 i -> "strpos(lower(coalesce(s.heading, '') || ' ' || d.title), :t" + i + ") > 0",
-                "s.search_text",
+                "s",
                 weights.heading());
         return jdbc.sql("SELECT s.id, d.id AS document_id, " + s.select()
                         + " FROM sections s JOIN documents d ON d.current_version_id = s.document_version_id WHERE "
@@ -84,8 +84,7 @@ class PgBigmSearchAdapter implements SearchPort {
 
     private List<Hit> faqs(List<Term> terms, AccessScope scope, int limit) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "faqs", "f", Purpose.SEARCH);
-        Scoring s = scoring(
-                terms, i -> "strpos(lower(f.question), :t" + i + ") > 0", "f.search_text", weights.faqQuestion());
+        Scoring s = scoring(terms, i -> "strpos(lower(f.question), :t" + i + ") > 0", "f", weights.faqQuestion());
         return jdbc.sql("SELECT f.id, " + s.select() + " FROM faqs f WHERE " + s.anyMatch() + " AND " + visible.sql()
                         + " ORDER BY score DESC, f.code LIMIT :limit")
                 .params(s.params())
@@ -99,10 +98,10 @@ class PgBigmSearchAdapter implements SearchPort {
      * 語ごとのスコアの式を組み立てる。語と語の重みは名前付きパラメーター（:t0, :tw0, ...）で渡し、SQL に埋め込まない。
      *
      * @param strongMatch 名前・見出しに含まれる条件（i 番目の語）
-     * @param searchText 本文を含む検索用の列
+     * @param alias 検索用の列（search_text・search_norm）を持つテーブルの別名
      * @param strongWeight 名前・見出しに含まれるときの重み
      */
-    private Scoring scoring(List<Term> terms, IntFunction<String> strongMatch, String searchText, double strongWeight) {
+    private Scoring scoring(List<Term> terms, IntFunction<String> strongMatch, String alias, double strongWeight) {
         Map<String, Object> params = new HashMap<>();
         StringBuilder score = new StringBuilder("(0");
         StringBuilder matched = new StringBuilder("array_remove(ARRAY[NULL::text");
@@ -110,7 +109,9 @@ class PgBigmSearchAdapter implements SearchPort {
         for (int i = 0; i < terms.size(); i++) {
             params.put("t" + i, terms.get(i).text());
             params.put("tw" + i, terms.get(i).weight());
-            String like = searchText + " LIKE likequery(:t" + i + ")";
+            // 原文の正規化（search_text）と、表記ゆれをそろえた正規化形（search_norm。ADR-0011）のどちらかに含まれる
+            String like = "(" + alias + ".search_text LIKE likequery(:t" + i + ") OR " + alias
+                    + ".search_norm LIKE likequery(:t" + i + "))";
             score.append(" + CASE WHEN ")
                     .append(strongMatch.apply(i))
                     .append(" THEN :w_strong * :tw")

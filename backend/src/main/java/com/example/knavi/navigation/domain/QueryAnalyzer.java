@@ -1,5 +1,6 @@
 package com.example.knavi.navigation.domain;
 
+import com.example.knavi.shared.text.JapaneseNormalizer;
 import com.example.knavi.shared.text.TextNormalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -14,7 +15,8 @@ import java.util.regex.Pattern;
  * <ol>
  *   <li>正規化: {@link TextNormalizer}（NFKC・小文字化・空白の統一）のあと、記号を空白にする
  *   <li>口語の言い回し（「したら」「ありますか」「教えて」など）を取り除く
- *   <li>語の抽出: 漢字・カタカナ・英数字が2文字以上続く部分を語とする（MVP。Phase3 で形態素解析に置き換える）
+ *   <li>語の抽出: 漢字・カタカナ・英数字が2文字以上続く部分を語とする。形態素解析の辞書があれば、
+ *       名詞のまとまり・動詞・形容詞の正規化形も語にする（{@link AnalyzedQuery#withContentTerms}。ADR-0011）
  * </ol>
  *
  * <p>語の後ろに付いた一般的な語（「方法」「制度」など）は外す。
@@ -57,6 +59,7 @@ public final class QueryAnalyzer {
                 terms.add(term);
             }
         }
+
         return new AnalyzedQuery(raw, compact, cleaned, new ArrayList<>(terms));
     }
 
@@ -80,6 +83,30 @@ public final class QueryAnalyzer {
 
         public AnalyzedQuery {
             terms = List.copyOf(terms);
+        }
+
+        /**
+         * 形態素解析で取り出した語（正規化形。{@link JapaneseNormalizer#contentTerms}）を加える。
+         * 辞書の照合で一致した部分（「子どもが生まれる」など）からは取り出さない（意味は辞書の一致で拾えているため、
+         * その中の「子供」で関係の薄いものを強めないように）。
+         *
+         * @param covered 辞書の照合で一致した語
+         */
+        public AnalyzedQuery withContentTerms(List<String> covered) {
+            String rest = cleaned;
+            for (String c : covered) {
+                rest = rest.replace(c, " ");
+            }
+            Set<String> merged = new LinkedHashSet<>(terms);
+            for (String term : JapaneseNormalizer.contentTerms(rest)) {
+                if (merged.size() >= MAX_TERMS) {
+                    break;
+                }
+                if (!GENERIC_TERMS.contains(term)) {
+                    merged.add(term);
+                }
+            }
+            return new AnalyzedQuery(raw, normalized, cleaned, List.copyOf(merged));
         }
 
         /** 辞書の照合で見つかった語を加える（全文検索でも使う） */
