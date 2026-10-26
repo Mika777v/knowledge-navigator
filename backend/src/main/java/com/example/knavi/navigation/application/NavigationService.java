@@ -15,6 +15,8 @@ import com.example.knavi.navigation.application.NavigationResult.SectionRef;
 import com.example.knavi.navigation.application.SearchPort.SearchCandidates;
 import com.example.knavi.navigation.domain.QueryAnalyzer;
 import com.example.knavi.navigation.domain.QueryAnalyzer.AnalyzedQuery;
+import com.example.knavi.navigation.domain.SynonymExpansion;
+import com.example.knavi.navigation.domain.SynonymExpansion.Pair;
 import com.example.knavi.navigation.infrastructure.NavigationQueries;
 import com.example.knavi.navigation.infrastructure.NavigationQueries.BasisRow;
 import com.example.knavi.navigation.infrastructure.NavigationQueries.ContactRow;
@@ -48,7 +50,9 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * <ol>
  *   <li>質問の正規化と語の抽出（{@link QueryAnalyzer}）
- *   <li>辞書の照合: 質問に含まれるキーワード（最長一致）から、制度・きっかけ・窓口に直接案内する
+ *   <li>辞書の照合: 質問に含まれるキーワード（最長一致）から、制度・きっかけ・窓口に直接案内する。
+ *       類義語辞書の語が含まれていれば、類義語に置き換えた質問でも照合する
+ *   <li>類義語による語の追加（{@link SynonymExpansion}）。広げた語の一致は {@link NavigationWeights#synonym()} で弱める
  *   <li>全文検索（{@link SearchPort}）: 制度・条文・FAQ
  *   <li>統合とスコアリング（{@link NavigationWeights}）。上位の制度の根拠文書・FAQ も結果に加える
  *   <li>窓口の導出: 上位の制度の窓口 → 辞書で見つかった窓口 → FAQ の窓口。1件もなければ総合窓口（必ず1件以上返す）
@@ -101,11 +105,34 @@ public class NavigationService {
         AccessScope scope = AccessScope.of(user);
         AnalyzedQuery query = QueryAnalyzer.analyze(q);
 
-        // 2. 辞書の照合
-        List<KeywordMatch> keywords =
-                longestMatches(queries.keywordsIn(query.normalized().replace(" ", ""), weights.keywordStem()));
+        // 2. 辞書の照合（質問そのものと、類義語に置き換えた質問）
+        String compactQuery = query.normalized().replace(" ", "");
+        List<Pair> synonyms = SynonymExpansion.longest(queries.synonymsIn(compactQuery).stream()
+                .map(m -> new Pair(m.matched(), m.synonym()))
+                .toList());
+        List<KeywordMatch> directKeywords = longestMatches(queries.keywordsIn(compactQuery, weights.keywordStem()));
+        List<KeywordMatch> synonymKeywords = synonymKeywords(compactQuery, synonyms, directKeywords);
         query = query.withTerms(
-                keywords.stream().map(KeywordMatch::term).distinct().toList());
+                directKeywords.stream().map(KeywordMatch::term).distinct().toList());
+        List<KeywordMatch> keywords = new ArrayList<>(directKeywords);
+        keywords.addAll(synonymKeywords);
+
+        // 3. 類義語で広げた語（質問にそのまま含まれる語より弱くする）
+        List<String> baseTerms = query.terms();
+        List<String> extraTerms = new ArrayList<>(synonymKeywords.stream()
+                .map(KeywordMatch::term)
+                .filter(t -> !baseTerms.contains(t))
+                .distinct()
+                .toList());
+        SynonymExpansion.extraTerms(baseTerms, synonyms).stream()
+                .filter(t -> !extraTerms.contains(t))
+                .forEach(extraTerms::add);
+        List<SearchPort.Term> searchTerms =
+                new ArrayList<>(baseTerms.stream().map(SearchPort.Term::of).toList());
+        extraTerms.stream()
+                .limit(SynonymExpansion.MAX_EXTRA_TERMS)
+                .forEach(t -> searchTerms.add(new SearchPort.Term(t, weights.synonym())));
+        List<String> allTerms = searchTerms.stream().map(SearchPort.Term::text).toList();
 
         Scores programs = new Scores();
         Scores documents = new Scores();
@@ -135,8 +162,8 @@ public class NavigationService {
             }
         }
 
-        // 3. 全文検索
-        SearchCandidates candidates = searchPort.search(query.terms(), scope, CANDIDATE_LIMIT);
+        // 4. 全文検索
+        SearchCandidates candidates = searchPort.search(searchTerms, scope, CANDIDATE_LIMIT);
         candidates.programs().forEach(h -> programs.add(h.id(), h.score(), textReasons(h.matchedTerms())));
         candidates.faqs().forEach(h -> faqs.add(h.id(), h.score(), textReasons(h.matchedTerms())));
         Map<UUID, List<SearchPort.SectionHit>> sectionsByDocument = new HashMap<>();
@@ -148,7 +175,7 @@ public class NavigationService {
             documents.raiseTo(h.documentId(), h.score());
         }
 
-        // 4. 制度（閲覧できるものだけ）を並べ、上位の制度の根拠・FAQ を加える
+        // 5. 制度（閲覧できるものだけ）を並べ、上位の制度の根拠・FAQ を加える
         List<ProgramRow> visiblePrograms =
                 programs.rank(queries.programs(programs.ids(), scope), ProgramRow::id, ProgramRow::code);
         double topScore = visiblePrograms.isEmpty()
@@ -200,8 +227,7 @@ public class NavigationService {
                         programs.reasons(p.id())))
                 .toList();
 
-        List<DocumentHit> documentHits =
-                documentHits(documents, sectionsByDocument, basisSections, query.terms(), scope);
+        List<DocumentHit> documentHits = documentHits(documents, sectionsByDocument, basisSections, allTerms, scope);
 
         List<FaqRow> shownFaqs = faqs.rank(queries.faqs(faqs.ids(), scope), FaqRow::id, FaqRow::code).stream()
                 .limit(FAQ_LIMIT)
@@ -210,7 +236,7 @@ public class NavigationService {
                 .map(f -> new FaqHit(f.id(), f.code(), f.question(), round(faqs.score(f.id()))))
                 .toList();
 
-        // 5. 窓口の導出
+        // 6. 窓口の導出
         boolean fallback = programHits.isEmpty() && documentHits.isEmpty() && faqHits.isEmpty();
         List<ContactHit> contacts = contacts(shownPrograms, topProgramIds, dictionaryContacts, shownFaqs, fallback);
 
@@ -245,7 +271,7 @@ public class NavigationService {
 
         return new NavigationResult(
                 searchLogId,
-                new QueryInfo(query.raw(), query.cleaned(), query.terms(), List.copyOf(matchedLifeEvents.values())),
+                new QueryInfo(query.raw(), query.cleaned(), allTerms, List.copyOf(matchedLifeEvents.values())),
                 programHits,
                 documentHits,
                 faqHits,
@@ -365,6 +391,24 @@ public class NavigationService {
                 c.chatUrl(),
                 c.officeHours(),
                 reason);
+    }
+
+    /**
+     * 類義語に置き換えた質問での辞書の一致。質問そのもので既に一致した案内先は除き（同じ案内先を二重に強めない）、
+     * 案内先ごとに最も強い一致だけを、類義語の重みを掛けて使う。
+     */
+    private List<KeywordMatch> synonymKeywords(String compactQuery, List<Pair> synonyms, List<KeywordMatch> direct) {
+        Set<String> seen = new LinkedHashSet<>();
+        direct.forEach(k -> seen.add(k.targetType() + ":" + k.targetId()));
+        List<KeywordMatch> result = new ArrayList<>();
+        for (String variant : SynonymExpansion.variants(compactQuery, synonyms)) {
+            longestMatches(queries.keywordsIn(variant, weights.keywordStem())).stream()
+                    .sorted(Comparator.comparingDouble(KeywordMatch::weight).reversed())
+                    .filter(k -> seen.add(k.targetType() + ":" + k.targetId()))
+                    .map(k -> new KeywordMatch(k.term(), k.targetType(), k.targetId(), k.weight() * weights.synonym()))
+                    .forEach(result::add);
+        }
+        return result;
     }
 
     /** 辞書の一致のうち、より長い一致に含まれるもの（「結婚式」に対する「結婚」など）を除く */

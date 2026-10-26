@@ -6,6 +6,7 @@
 
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import yaml
@@ -311,6 +312,9 @@ def validate(seed_dir: Path) -> list[str]:
         if len(str(t.get("name", ""))) > 50:
             errors.append(f"tags[{t.get('name')}]: 名前は50文字以内にしてください")
 
+    # ---------- synonyms ----------
+    validate_synonyms(load(seed_dir, "synonyms.yaml"), errors)
+
     # ---------- contacts ----------
     check_unique(contacts, "code", "contacts", errors)
     primary_count: dict[str, int] = {}
@@ -368,6 +372,37 @@ def validate(seed_dir: Path) -> list[str]:
     validate_eval(seed_dir, errors)
 
     return errors
+
+
+def normalize_term(term: str) -> str:
+    """backend の TextNormalizer と同じ正規化（NFKC・空白の統一・小文字）"""
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", term)).strip().lower()
+
+
+def validate_synonyms(groups: list[dict], errors: list[str]) -> None:
+    """類義語辞書: 代表の語のほかに1語以上。1つの語（正規化後）は1つのグループにだけ入れる"""
+    owner: dict[str, str] = {}
+    for g in groups:
+        canonical = str(g.get("canonical") or "")
+        label = f"synonyms[{canonical}]"
+        if not canonical:
+            errors.append(f"synonyms: canonical がありません: {g}")
+            continue
+        terms = g.get("terms")
+        if not isinstance(terms, list) or not terms:
+            errors.append(f"{label}: terms は1語以上の配列で書いてください")
+            continue
+        normalized = [normalize_term(str(t)) for t in [canonical, *terms]]
+        if len(set(normalized)) < 2:
+            errors.append(f"{label}: 代表の語のほかに、同じ意味の語が必要です")
+        if len(set(normalized)) > 20:
+            errors.append(f"{label}: 語は20個までです")
+        for term in dict.fromkeys(normalized):
+            if len(term) > 100:
+                errors.append(f"{label}: 語は100文字以内にしてください: {term}")
+            if term in owner and owner[term] != canonical:
+                errors.append(f"{label}: 「{term}」は {owner[term]} のグループにも入っています")
+            owner.setdefault(term, canonical)
 
 
 def main() -> int:

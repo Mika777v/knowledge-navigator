@@ -421,15 +421,18 @@ CREATE TABLE navigation_keywords (
   UNIQUE (normalized_term, target_type, target_id)
 );
 
-CREATE TABLE synonym_groups (                 -- Phase3
-  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  canonical  varchar(100) NOT NULL UNIQUE
+CREATE TABLE synonym_groups (                 -- Phase3（V8）
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  canonical    varchar(100) NOT NULL,          -- 代表の語（グループの語の1つ。語は1グループにだけ入るため実質一意）
+  row_version  int NOT NULL DEFAULT 0,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  updated_at   timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE synonym_terms (
-  group_id         uuid REFERENCES synonym_groups(id) ON DELETE CASCADE,
+  group_id         uuid NOT NULL REFERENCES synonym_groups(id) ON DELETE CASCADE,
   term             varchar(100) NOT NULL,
   normalized_term  varchar(100) NOT NULL UNIQUE,
-  PRIMARY KEY (group_id, term)
+  PRIMARY KEY (group_id, normalized_term)
 );
 
 -- ========== Access / Audit ==========

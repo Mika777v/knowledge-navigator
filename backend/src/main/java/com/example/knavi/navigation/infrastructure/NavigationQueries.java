@@ -74,6 +74,30 @@ public class NavigationQueries {
                 .list();
     }
 
+    /**
+     * @param matched 質問に含まれていた類義語辞書の語
+     * @param synonym 同じグループのほかの語
+     */
+    public record SynonymMatch(String matched, String synonym) {}
+
+    /**
+     * 質問に含まれる類義語辞書の語と、同じグループのほかの語（E12-T2）。語の空白は無視して照合する。
+     *
+     * @param normalizedQuery 正規化して空白を除いた質問
+     */
+    public List<SynonymMatch> synonymsIn(String normalizedQuery) {
+        return jdbc.sql("""
+                        SELECT m.normalized_term AS matched, o.normalized_term AS synonym
+                        FROM synonym_terms m
+                        JOIN synonym_terms o ON o.group_id = m.group_id AND o.normalized_term <> m.normalized_term
+                        WHERE strpos(:q, replace(m.normalized_term, ' ', '')) > 0
+                        ORDER BY char_length(m.normalized_term) DESC, m.normalized_term, o.normalized_term
+                        """)
+                .param("q", normalizedQuery)
+                .query((rs, i) -> new SynonymMatch(rs.getString("matched"), rs.getString("synonym")))
+                .list();
+    }
+
     public record LifeEventProgramRow(UUID lifeEventId, String code, String name, UUID programId, String relation) {}
 
     public List<LifeEventProgramRow> lifeEventPrograms(Collection<UUID> lifeEventIds) {

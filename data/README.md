@@ -16,7 +16,8 @@ data/
 │   ├── documents/        # 架空の社内規程（10本、Markdown + front matter）
 │   ├── programs.yaml     # 制度（39件。根拠の条・窓口・キーワード）
 │   ├── life_events.yaml  # きっかけ（結婚・出産など8件）
-│   └── faqs.yaml         # よくある質問（50件。うち2件は管理職限定）
+│   ├── faqs.yaml         # よくある質問（50件。うち2件は管理職限定）
+│   └── synonyms.yaml     # 類義語辞書（16グループ。育休 = 育児休業 など）
 ├── pdf/                  # documents/ の規程を PDF にしたもの（10本。PDF 取り込みの確認・テスト用）
 └── eval/                 # 検索品質の評価用質問セット（50問。eval/README.md）
 ```

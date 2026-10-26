@@ -27,7 +27,8 @@ import org.yaml.snakeyaml.Yaml;
 /**
  * data/seed を DB に取り込む。コード（code / slug / email）で既存の行を特定して上書きするため、何度実行してもよい。
  *
- * <p>ナビゲーションキーワード（navigation_keywords）は投入のたびに作り直す。
+ * <p>ナビゲーションキーワード（navigation_keywords）は投入のたびに作り直す。類義語辞書は代表の語でグループを特定して上書きする
+ * （管理画面で追加したグループは残す）。
  */
 @Service
 class SeedLoader {
@@ -57,7 +58,8 @@ class SeedLoader {
             int programs,
             int lifeEvents,
             int faqs,
-            int keywords) {}
+            int keywords,
+            int synonymGroups) {}
 
     @Transactional
     public Summary load(Path dir, String demoUserPassword) {
@@ -73,6 +75,7 @@ class SeedLoader {
         loadLifeEvents(lifeEvents);
         int faqs = loadFaqs(list(dir, "faqs.yaml"));
         int keywords = rebuildKeywords(programs, lifeEvents, list(dir, "contacts.yaml"));
+        int synonymGroups = loadSynonyms(list(dir, "synonyms.yaml"));
         jdbc.sql("""
                         INSERT INTO app_settings (key, value) VALUES ('navigation.default_contact_code', :code)
                         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
@@ -86,7 +89,8 @@ class SeedLoader {
                 programs.size(),
                 lifeEvents.size(),
                 faqs,
-                keywords);
+                keywords,
+                synonymGroups);
     }
 
     // ------------------------------------------------------------------ 組織
@@ -451,6 +455,53 @@ class SeedLoader {
                     .update();
         }
         return count;
+    }
+
+    /**
+     * 類義語のグループを、代表の語（正規化後）を含むグループに上書きする。無ければ作る。
+     * 語がほかのグループに入っていれば失敗にする（1つの語は1つのグループにだけ入る）
+     */
+    private int loadSynonyms(List<Map<String, Object>> groups) {
+        for (var g : groups) {
+            String canonical = str(g, "canonical").strip();
+            List<String> terms = new ArrayList<>();
+            terms.add(canonical);
+            terms.addAll(strings(g.get("terms")));
+            UUID id = synonymGroupOf(TextNormalizer.normalize(canonical))
+                    .orElseGet(() -> jdbc.sql("INSERT INTO synonym_groups (canonical) VALUES (:c) RETURNING id")
+                            .param("c", canonical)
+                            .query(UUID.class)
+                            .single());
+            jdbc.sql("""
+                            UPDATE synonym_groups SET canonical = :c, row_version = row_version + 1, updated_at = now()
+                            WHERE id = :id
+                            """).param("c", canonical).param("id", id).update();
+            jdbc.sql("DELETE FROM synonym_terms WHERE group_id = :id")
+                    .param("id", id)
+                    .update();
+            for (String term : terms) {
+                String normalized = TextNormalizer.normalize(term);
+                var owner = synonymGroupOf(normalized);
+                if (owner.isPresent() && !owner.get().equals(id)) {
+                    throw new IllegalStateException("synonyms: 「" + term + "」がほかのグループに入っています（" + canonical + "）");
+                }
+                if (owner.isEmpty()) {
+                    jdbc.sql("INSERT INTO synonym_terms (group_id, term, normalized_term) VALUES (:g, :t, :n)")
+                            .param("g", id)
+                            .param("t", term.strip())
+                            .param("n", normalized)
+                            .update();
+                }
+            }
+        }
+        return groups.size();
+    }
+
+    private java.util.Optional<UUID> synonymGroupOf(String normalizedTerm) {
+        return jdbc.sql("SELECT group_id FROM synonym_terms WHERE normalized_term = :n")
+                .param("n", normalizedTerm)
+                .query(UUID.class)
+                .optional();
     }
 
     // ------------------------------------------------------------------ 参照の解決

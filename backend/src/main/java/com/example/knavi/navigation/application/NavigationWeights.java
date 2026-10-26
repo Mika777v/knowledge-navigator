@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param linkedFaq 上位の制度に紐づく FAQ（制度のスコアに掛ける）
  * @param minRelativeScore 1位のスコアに対してこの割合より低い制度は出さない（関係の薄いものを並べない）
  * @param keywordStem 辞書の語が語幹（活用語尾・助詞以下を除いたもの）でだけ一致したときに掛ける重み
+ * @param synonym 類義語辞書で広げた語での一致（辞書・全文検索）に掛ける重み
  */
 @ConfigurationProperties("knavi.navigation.weights")
 public record NavigationWeights(
@@ -26,4 +27,5 @@ public record NavigationWeights(
         @DefaultValue("0.5") double basis,
         @DefaultValue("0.3") double linkedFaq,
         @DefaultValue("0.2") double minRelativeScore,
-        @DefaultValue("0.7") double keywordStem) {}
+        @DefaultValue("0.7") double keywordStem,
+        @DefaultValue("0.8") double synonym) {}
