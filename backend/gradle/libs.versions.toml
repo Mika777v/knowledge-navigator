@@ -1,8 +1,8 @@
 # 依存バージョンの一元管理。Spring Boot の BOM が管理するもの（Flyway, Testcontainers, PostgreSQL JDBC 等）はここに書かない。
 [versions]
-spring-boot = "4.1.1"
+spring-boot = "4.1.2"
 spring-dependency-management = "1.1.7"
-spring-modulith = "2.1.1"
+spring-modulith = "2.1.2"
 springdoc = "3.1.1"
 # 原本ファイルの保存（S3 互換ストレージ。ADR-0010）
 aws-sdk = "2.55.11"
