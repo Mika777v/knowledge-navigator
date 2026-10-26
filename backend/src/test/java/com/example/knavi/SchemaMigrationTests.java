@@ -3,6 +3,7 @@ package com.example.knavi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Flyway の初期スキーマ（V1）の制約が設計どおりに働くことを確認する。docs/DOMAIN_MODEL.md */
+/** Flyway のスキーマの制約・索引が設計どおりに働くことを確認する。docs/DOMAIN_MODEL.md・ADR-0007 */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @Transactional
@@ -42,7 +43,8 @@ class SchemaMigrationTests {
                         "navigation_keywords",
                         "access_rules",
                         "audit_logs",
-                        "search_logs");
+                        "search_logs",
+                        "embeddings");
     }
 
     @Test
@@ -136,6 +138,64 @@ class SchemaMigrationTests {
                         .query(String.class)
                         .list());
         assertThat(plan).contains("idx_sections_search_bigm");
+    }
+
+    @Test
+    void embeddingsRejectUnknownSourceTypeAndWrongDimensions() {
+        assertThatThrownBy(() -> insertEmbedding("DOCUMENT", UUID.randomUUID(), "bge-m3", vector(1024, 0)))
+                .isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> insertEmbedding("SECTION", UUID.randomUUID(), "bge-m3", vector(768, 0)))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void embeddingsAreUniquePerSourceChunkAndModel() {
+        UUID source = UUID.randomUUID();
+        insertEmbedding("SECTION", source, "bge-m3", vector(1024, 0));
+        // 別のモデルなら同じ条でも持てる（モデルの切り替え中に並べて作るため）
+        insertEmbedding("SECTION", source, "text-embedding-3-small", vector(1024, 0));
+        assertThatThrownBy(() -> insertEmbedding("SECTION", source, "bge-m3", vector(1024, 1)))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void findsNearestEmbeddingsWithHnswIndex() {
+        UUID near = UUID.randomUUID();
+        insertEmbedding("SECTION", near, "bge-m3", vector(1024, 0));
+        insertEmbedding("SECTION", UUID.randomUUID(), "bge-m3", vector(1024, 500));
+
+        String nearest = "SELECT source_id FROM embeddings WHERE model = 'bge-m3'"
+                + " ORDER BY embedding <=> CAST(:q AS vector) LIMIT 1";
+        assertThat(jdbc.sql(nearest).param("q", vector(1024, 0)).query(UUID.class).single())
+                .isEqualTo(near);
+
+        // 権限の WHERE で候補が減っても件数が足りなくならないよう、反復スキャンを使う（ADR-0007）
+        jdbc.sql("SET LOCAL hnsw.iterative_scan = relaxed_order").update();
+        jdbc.sql("SET LOCAL enable_seqscan = off").update();
+        var plan = String.join(
+                "\n",
+                jdbc.sql("EXPLAIN " + nearest).param("q", vector(1024, 0)).query(String.class).list());
+        assertThat(plan).contains("idx_embeddings_hnsw_bge_m3");
+    }
+
+    private void insertEmbedding(String sourceType, UUID sourceId, String model, String embedding) {
+        jdbc.sql("""
+                        INSERT INTO embeddings (source_type, source_id, model, content_hash, embedding)
+                        VALUES (:type, :id, :model, repeat('0', 64), CAST(:embedding AS vector))
+                        """)
+                .param("type", sourceType)
+                .param("id", sourceId)
+                .param("model", model)
+                .param("embedding", embedding)
+                .update();
+    }
+
+    /** hot 番目だけが 1、ほかは 0 のベクトル（pgvector の文字列表現） */
+    private static String vector(int dims, int hot) {
+        var values = new String[dims];
+        Arrays.fill(values, "0");
+        values[hot] = "1";
+        return "[" + String.join(",", values) + "]";
     }
 
     private Long insertAuditLog() {
