@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,10 +10,12 @@ TOKEN = "test-token"
 
 
 @pytest.fixture
-def client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
     monkeypatch.setenv("AI_SERVICE_TOKEN", TOKEN)
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "fake")
     get_settings.cache_clear()
-    return TestClient(create_app())
+    with TestClient(create_app()) as client:
+        yield client
 
 
 def test_healthz_needs_no_token(client: TestClient) -> None:
@@ -34,7 +38,9 @@ def test_v1_rejects_wrong_token(client: TestClient) -> None:
 def test_v1_accepts_the_shared_token(client: TestClient) -> None:
     response = client.get("/v1/info", headers={"Authorization": f"Bearer {TOKEN}"})
     assert response.status_code == 200
-    assert response.json()["service"] == "knavi-ai-service"
+    body = response.json()
+    assert body["service"] == "knavi-ai-service"
+    assert body["embedding"] == {"provider": "fake", "model": "bge-m3", "dims": 1024, "external": False}
 
 
 def test_api_docs_are_not_exposed(client: TestClient) -> None:
