@@ -85,10 +85,47 @@ services:
     image: knowledge-navigator/ai-service:local
     environment:
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-only-change-me}
+      # プロバイダ（ADR-0008）。既定はローカルの Ollama。OpenAI・Azure に替えるときは .env で指定する
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-ollama}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
     # ホストには出さない。backend からだけ http://ai-service:8000 で呼ぶ
     expose:
       - "8000"
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
     restart: unless-stopped
+
+  # ローカルの LLM・Embedding（ADR-0008）。文章を社外に送らない。GPU なし（CPU）で動く
+  ollama:
+    profiles: ["ai"]
+    image: ollama/ollama:0.40.3
+    volumes:
+      - ollama:/root/.ollama
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # Embedding のモデルを取り寄せる（初回だけ時間がかかる。bge-m3 で約 1.2GB。取り寄せたものは ollama ボリュームに残る）
+  ollama-pull:
+    profiles: ["ai"]
+    image: ollama/ollama:0.40.3
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${EMBEDDING_MODEL:-bge-m3}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
 
   frontend:
     build: ./frontend
@@ -113,3 +150,4 @@ services:
 volumes:
   pgdata:
   storage:
+  ollama:
