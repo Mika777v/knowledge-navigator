@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { login, uniqueLetters } from "./helpers";
 
 test("一般社員には管理メニューを出さない", async ({ page }) => {
   await login(page, "sato@example.com");
@@ -10,7 +10,7 @@ test("一般社員には管理メニューを出さない", async ({ page }) => 
 
 test("コンテンツ担当者が辞書に言葉を追加すると、検索の案内が変わる", async ({ page }) => {
   // 毎回ちがう言葉にする（同じ環境で何度実行しても重複にならないように）
-  const term = `社食${Date.now().toString(36)}`;
+  const term = `社食${uniqueLetters()}`;
   await login(page, "ito@example.com");
 
   const before = await page.request.get("/api/v1/navigate?q=" + encodeURIComponent(term));
