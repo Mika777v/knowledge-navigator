@@ -323,7 +323,7 @@
     - { document: REG-HR-002, article: 第13条 }
   contacts:
     - { contact: HR-LABOR, role: INQUIRY }
-  keywords: [介護, 通院の付き添い, ケアマネ, 介護休暇]
+  keywords: [介護, 通院の付き添い, 通院に付き添う, ケアマネ, 介護休暇]
 
 - code: PRG-CHILDCARE-SHORT-HOURS
   name: 育児短時間勤務
@@ -495,7 +495,7 @@
     - { document: REG-HR-001, article: 第17条 }
   contacts:
     - { contact: HR-LABOR, role: INQUIRY }
-  keywords: [時差出勤, 早く帰りたい, 出勤時間をずらす, 始業時間]
+  keywords: [時差出勤, 早く帰りたい, 出勤時間をずらす, 始業時間, 満員電車, 通勤ラッシュ]
 
 - code: PRG-RESIGNATION
   name: 退職の手続き
