@@ -82,7 +82,7 @@ backend/src/main/java/com/example/knavi/
 | POST | `/auth/login` / `/auth/logout` | ログイン/ログアウト（CSRF トークン必須） | 1 |
 | GET | `/me` | ログインユーザー情報・ロール | 1 |
 | **GET** | **`/navigate?q=`** | **ナビゲーション検索（制度/文書/セクション/FAQ/窓口の4ブロック）** | 1 |
-| GET | `/search/suggest?q=` | サジェスト | 3 |
+| GET | `/search/suggest?q=` | サジェスト（入力に一致する制度名・きっかけ。名前の先頭一致 → 途中に含む → キーワードの前方一致の順、最大8件。制度は検索と同じ権限で絞る） | 3 |
 | GET | `/life-events` / `/life-events/{code}` | きっかけ一覧/詳細（PRIMARY = まず確認する制度、RELATED = あわせて必要な手続き） | 1 |
 | GET | `/programs`（`?category=`）/ `/programs/{id}` | 制度一覧 / 詳細（根拠条文・窓口・関連FAQ・きっかけ。根拠は文書ごとに閲覧範囲で絞る） | 1 |
 | GET | `/documents?category=` | 文書一覧（親カテゴリを指定すると子カテゴリも含む） | 1 |
