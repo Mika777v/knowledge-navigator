@@ -44,7 +44,7 @@
 ### 3. 推奨ディレクトリ構成
 
 MVP: `backend/` `frontend/` `data/{seed,eval}/` `infra/docker/` `docs/{adr,api}/` `.github/`
-将来: + `ai-service/` `ingest-worker/` `packages/api-client/` `infra/terraform/` `scripts/`
+将来: + `ai-service/` `packages/api-client/` `infra/terraform/` `scripts/`
 （詳細: [ARCHITECTURE.md §8](./ARCHITECTURE.md)）
 
 ### 4. 推奨技術構成

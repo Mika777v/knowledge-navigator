@@ -37,15 +37,12 @@ flowchart LR
   U[ブラウザ] --> FE[frontend Next.js]
   FE --> BE[backend Spring Boot<br/>認証・認可・検索オーケストレーション]
   BE --> PG[(PostgreSQL<br/>pg_bigm + pgvector)]
-  BE -->|内部API<br/>許可済みID集合を渡す| AI[ai-service<br/>FastAPI / Python]
-  AI --> PG
-  AI --> LLM{{LLM Gateway<br/>Ollama / OpenAI / Azure OpenAI}}
-  W[ingest-worker<br/>PDF解析・Embedding] --> PG
-  W --> S3[(MinIO / S3)]
-  BE -->|ジョブ投入<br/>PG queue| W
+  BE -->|内部API<br/>権限で絞った後の文章だけを渡す| AI[ai-service<br/>FastAPI / Python<br/>DB に接続しない]
+  AI --> LLM{{LLM / Embedding<br/>Ollama / OpenAI / Azure OpenAI}}
+  BE --> S3[(SeaweedFS / S3)]
 ```
 
-**権限は backend だけが判定する**。ai-service は「この ID 集合の中から検索せよ」という形で backend から許可済みの範囲を受け取り、自分では認可を持たない（ゼロトラスト的な責務分離、かつ認可ロジックの二重実装を防ぐ）。
+**権限は backend だけが判定する**。ai-service は DB に接続せず、backend が権限で絞り込んだ後の文章を受け取って、ベクトルや回答文を計算して返すだけにする（認可ロジックの二重実装を防ぐ。[ADR-0006](./adr/0006-ai-service-stateless.md)）。Embedding のジョブ・ベクトルの保存・ベクトル検索も backend が行い、Python の ingest-worker は置かない。
 
 ### 2.3 backend モジュール構成
 
@@ -264,7 +261,7 @@ public interface SearchPort {
 | 単位 | セクション（条単位）。長い条は 600〜800字で分割、前後 100字オーバーラップ。見出しパス（文書名 > 章 > 条）を先頭に付与 |
 | 対象 | `INTERNAL`/`MANAGERS`/`RESTRICTED` の公開済み最新版、FAQ、制度。**CONFIDENTIAL は対象外** |
 | モデル | ローカル: `bge-m3`（Ollama, 1024次元, 多言語） / クラウド: `text-embedding-3-small`（OpenAI / Azure OpenAI） |
-| 更新 | 版公開イベント → ジョブキュー（PostgreSQL の `SELECT ... FOR UPDATE SKIP LOCKED`）→ ingest-worker が差分計算（`content_hash`） |
+| 更新 | 版公開イベント → ジョブキュー（PostgreSQL の `SELECT ... FOR UPDATE SKIP LOCKED`）→ backend のワーカーが差分計算（`content_hash`）し、変わったものだけ ai-service でベクトルにして保存（[ADR-0006](./adr/0006-ai-service-stateless.md)） |
 | 再計算 | モデル変更時は新モデルで並行生成 → 評価 → 切替（Blue/Green） |
 
 ### 5.3 ハイブリッド検索
@@ -276,7 +273,7 @@ fused         = RRF(k=60)  : score = Σ 1 / (k + rank_i)
 reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系）
 ```
 
-- **段階的に入れる**: ベクトル検索は設定（例: `knavi.search.vector.enabled`）でオン・オフでき、オフなら今のキーワード検索だけで動く（§5.1 の Graceful Degradation）。評価用の質問で、オン・オフの成績を比べてからオンにする。設定の名前・既定値・判定する場所・トグルを消す時期は、v0.4.0 の ADR で決める
+- **段階的に入れる**: ベクトル検索は設定（例: `knavi.search.vector.enabled`）でオン・オフでき、オフなら今のキーワード検索だけで動く（§5.1 の Graceful Degradation）。評価用の質問で、オン・オフの成績を比べてからオンにする。設定の名前・既定値・判定する場所・トグルを消す時期は [ADR-0007](./adr/0007-pgvector.md) で決めた（`knavi.search.vector.enabled`、既定 `false`、navigation モジュールで判定、トグルは消さない）
 
 ### 5.4 RAG フロー
 
@@ -290,8 +287,8 @@ sequenceDiagram
   FE->>BE: POST /assistant/answers {question}
   BE->>BE: 認証・AccessScope算出
   BE->>BE: ナビゲーション検索（制度・窓口は構造化データで確定）
-  BE->>AI: /rag/answer {question, allowedScope, candidateSectionIds}
-  AI->>DB: ハイブリッド検索（allowedScope内）
+  BE->>DB: ハイブリッド検索（AccessScope 内）
+  BE->>AI: /v1/rag/answer {question, 権限で絞った条の本文}
   AI->>AI: 文脈構築（上位k件・引用番号付与・トークン上限）
   AI->>LLM: プロンプト（システム指示 + 文脈 + 質問）
   LLM-->>AI: 回答（引用番号付き）
@@ -410,10 +407,9 @@ knowledge-navigator/
 ├── backend/
 ├── frontend/
 ├── ai-service/                  # FastAPI（uv管理）
-│   ├── app/{api,llm,retrieval,rag,eval}/
+│   ├── app/{api,llm,rag,eval}/   # DB に接続しない（ADR-0006）
 │   ├── tests/
 │   └── pyproject.toml
-├── ingest-worker/               # PDF解析・セクション化・Embedding（Python、ai-service とパッケージ共有）
 ├── packages/
 │   └── api-client/              # OpenAPI生成クライアント（TS）
 ├── data/
