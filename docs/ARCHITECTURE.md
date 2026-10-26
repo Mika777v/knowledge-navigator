@@ -85,6 +85,7 @@ backend/src/main/java/com/example/knavi/
 | GET | `/search/suggest?q=` | サジェスト（入力に一致する制度名・きっかけ。名前の先頭一致 → 途中に含む → キーワードの前方一致の順、最大8件。制度は検索と同じ権限で絞る） | 3 |
 | GET | `/life-events` / `/life-events/{code}` | きっかけ一覧/詳細（PRIMARY = まず確認する制度、RELATED = あわせて必要な手続き） | 1 |
 | GET | `/programs`（`?category=`）/ `/programs/{id}` | 制度一覧 / 詳細（根拠条文・窓口・関連FAQ・きっかけ。根拠は文書ごとに閲覧範囲で絞る） | 1 |
+| GET | `/programs/{id}/recommendations` | 制度の推薦（検索結果からあわせて開いた人が3人以上の制度 → 同じきっかけの制度の順、最大5件。元の制度・推薦する制度とも検索と同じ権限で絞り、元の制度が見えなければ空） | 3 |
 | GET | `/documents?category=` | 文書一覧（親カテゴリを指定すると子カテゴリも含む） | 1 |
 | GET | `/documents/{id}`（`?version={versionId}` で公開済みの過去の版） | 文書詳細（条文・版の履歴・この文書を根拠にする制度と窓口） | 1 |
 | GET | `/sections/{id}` | 条文単体（引用リンク先。過去の版の条文も表示し、公開版かどうかを返す） | 1 |
