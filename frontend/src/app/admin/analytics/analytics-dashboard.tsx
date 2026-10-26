@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api/http";
 import type { FeedbackSummary, QueryReport } from "@/lib/api/types";
+import { fetchMe, meQueryKey } from "@/lib/auth/api";
 import { formatDateTime, formatRatio } from "@/lib/format";
 
 const BASE = "/api/v1/admin/analytics";
@@ -34,6 +35,7 @@ export function AnalyticsDashboard() {
   const [draft, setDraft] = useState<Period>({ from: "", to: "" });
   const [period, setPeriod] = useState<Period>({ from: "", to: "" });
   const query = periodQuery(period);
+  const { data: me } = useQuery({ queryKey: meQueryKey, queryFn: fetchMe });
 
   const zeroHits = useQuery({
     queryKey: ["admin", "analytics", "zero-hits", query],
@@ -94,7 +96,10 @@ export function AnalyticsDashboard() {
         <h2 id="zero-hits-heading" className="text-lg font-semibold">
           何も見つからなかった質問
         </h2>
-        <p className="text-sm text-muted-foreground">FAQ やキーワード辞書に追加する候補です。</p>
+        <p className="text-sm text-muted-foreground">
+          FAQ・キーワード辞書・類義語辞書に追加する候補です。言い方のちがいで見つからないなら類義語に、案内先がまだないなら
+          FAQ に追加します。
+        </p>
         {zeroHits.error ? (
           <ErrorText error={zeroHits.error} />
         ) : !zeroHits.data ? (
@@ -122,9 +127,20 @@ export function AnalyticsDashboard() {
                   <td className="py-1 pr-3 text-right">{q.users}</td>
                   <td className="py-1 pr-3">{formatDateTime(q.lastSearchedAt)}</td>
                   <td className="py-1 text-right">
-                    <Link href={`/admin/dictionary?term=${encodeURIComponent(q.query)}`} className="underline">
-                      辞書で確認
-                    </Link>
+                    <span className="flex flex-wrap justify-end gap-x-3">
+                      <Link href={`/admin/dictionary?term=${encodeURIComponent(q.query)}`} className="underline">
+                        辞書で確認
+                      </Link>
+                      <Link href={`/admin/synonyms?term=${encodeURIComponent(q.query)}`} className="underline">
+                        類義語に登録
+                      </Link>
+                      {/* FAQ を作れるのはコンテンツ担当者だけ（システム管理者は職務分離のため作れない） */}
+                      {me?.role === "CONTENT_EDITOR" && (
+                        <Link href={`/admin/faqs/new?question=${encodeURIComponent(q.query)}`} className="underline">
+                          FAQ を作る
+                        </Link>
+                      )}
+                    </span>
                   </td>
                 </tr>
               ))}

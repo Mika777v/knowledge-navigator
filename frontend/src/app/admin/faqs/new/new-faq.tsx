@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ApiError, apiFetch } from "@/lib/api/http";
 import type { AdminFaq } from "@/lib/api/types";
@@ -9,13 +9,17 @@ import { fetchMe, meQueryKey } from "@/lib/auth/api";
 import { adminFaqsKey } from "../faq-list";
 import { EMPTY_FAQ, FaqForm, type FaqFormValues, toContentRequest } from "../faq-form";
 
-/** FAQ を下書きとして作成する。所管部署はログイン中の担当者の部署になる */
+/**
+ * FAQ を下書きとして作成する。所管部署はログイン中の担当者の部署になる。
+ * 検索の分析（何も見つからなかった質問）から ?question= 付きで開かれたときは、その質問を入れた状態にする
+ */
 export function NewFaq() {
   const router = useRouter();
+  const initialQuestion = useSearchParams().get("question")?.trim() ?? "";
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: meQueryKey, queryFn: fetchMe });
   const [code, setCode] = useState("FAQ-");
-  const [values, setValues] = useState<FaqFormValues>(EMPTY_FAQ);
+  const [values, setValues] = useState<FaqFormValues>({ ...EMPTY_FAQ, question: initialQuestion });
 
   const create = useMutation({
     mutationFn: () =>

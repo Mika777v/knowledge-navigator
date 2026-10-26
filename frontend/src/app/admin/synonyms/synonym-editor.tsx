@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { apiFetch } from "@/lib/api/http";
 import type { SynonymGroup } from "@/lib/api/types";
@@ -24,6 +25,8 @@ export function splitTerms(input: string): string[] {
  * 1つの語は1つのグループにだけ登録できる（重なると 409 の理由を出す）。
  */
 export function SynonymEditor() {
+  // 検索の分析（何も見つからなかった質問）から ?term= 付きで開かれたときは、その言葉を「同じ意味の言葉」に入れる
+  const term = useSearchParams().get("term")?.trim() ?? "";
   const [input, setInput] = useState("");
   const [q, setQ] = useState("");
   const groups = useQuery({
@@ -51,7 +54,12 @@ export function SynonymEditor() {
         <h2 id="new-heading" className="text-lg font-semibold">
           グループを追加
         </h2>
-        <GroupForm submitLabel="追加" />
+        {term && (
+          <p className="text-sm">
+            「{term}」を同じ意味の言葉に入れました。意味が同じになる代表の言葉（規程・制度で使っている言い方）を入力してください。
+          </p>
+        )}
+        <GroupForm submitLabel="追加" initialTerms={term} />
       </section>
 
       <section aria-labelledby="list-heading" className="flex flex-col gap-3">
@@ -145,10 +153,20 @@ function GroupRow({ group }: { group: SynonymGroup }) {
 }
 
 /** グループの追加（group なし）と編集（group あり。If-Match で保存） */
-function GroupForm({ group, submitLabel, onDone }: { group?: SynonymGroup; submitLabel: string; onDone?: () => void }) {
+function GroupForm({
+  group,
+  submitLabel,
+  onDone,
+  initialTerms = "",
+}: {
+  group?: SynonymGroup;
+  submitLabel: string;
+  onDone?: () => void;
+  initialTerms?: string;
+}) {
   const queryClient = useQueryClient();
   const [canonical, setCanonical] = useState(group?.canonical ?? "");
-  const [terms, setTerms] = useState(group ? group.terms.filter((t) => t !== group.canonical).join("、") : "");
+  const [terms, setTerms] = useState(group ? group.terms.filter((t) => t !== group.canonical).join("、") : initialTerms);
   const save = useMutation({
     mutationFn: () => {
       const json = { canonical: canonical.trim(), terms: splitTerms(terms) };

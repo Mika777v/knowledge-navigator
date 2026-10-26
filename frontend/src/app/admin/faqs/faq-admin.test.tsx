@@ -10,7 +10,10 @@ const push = vi.fn();
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "f1" }),
   useRouter: () => ({ push }),
+  useSearchParams: () => search,
 }));
+
+let search = new URLSearchParams();
 
 const faq = (over: Partial<AdminFaq> = {}): AdminFaq => ({
   id: "f1",
@@ -141,6 +144,15 @@ describe("NewFaq", () => {
     push.mockReset();
   });
   afterEach(() => vi.unstubAllGlobals());
+
+  it("?question= で開くと、その質問を入れた状態になる", async () => {
+    search = new URLSearchParams({ question: " 社員食堂のメニュー " });
+    stubApi(() => undefined);
+    renderWithQuery(<NewFaq />);
+
+    expect(screen.getByLabelText("質問")).toHaveValue("社員食堂のメニュー");
+    search = new URLSearchParams();
+  });
 
   it("自分の部署を所管部署にして下書きを作り、編集画面へ移動する", async () => {
     const calls = stubApi(({ url, method }) => {
