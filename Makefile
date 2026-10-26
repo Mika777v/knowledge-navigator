@@ -61,3 +61,11 @@ pdfs: ## ダミー規程の PDF（data/pdf）を作り直す（reportlab と IPA
 eval: .env ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
 	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080}
+
+.PHONY: eval-tune
+eval-tune: .env ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
+	cd backend && ./gradlew bootJar
+	@set -a; . ./.env; set +a; \
+	DB_URL=jdbc:postgresql://localhost:$${POSTGRES_PORT:-5432}/$${POSTGRES_DB} \
+	KNAVI_SUDACHI_DICTIONARY=$$(ls $$HOME/.gradle/caches/knavi-sudachi/*.dic 2>/dev/null | head -1) \
+	python3 scripts/eval/tune_weights.py --jar backend/build/libs/knowledge-navigator-backend-0.0.1-SNAPSHOT.jar $(ARGS)
