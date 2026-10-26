@@ -13,6 +13,7 @@
 | [0004](./0004-permission-prefilter.md) | 権限フィルタは検索前（プレフィルタ）に適用する | Accepted |
 | [0005](./0005-nextjs-as-bff.md) | Next.js を画面兼 BFF として使う | Accepted |
 | [0010](./0010-pdf-ingestion.md) | PDF の取り込みは backend の中で行い、原本は S3 互換ストレージ、解析はジョブで非同期に行う | Proposed |
+| [0011](./0011-sudachi-normalized-search.md) | 表記ゆれ・活用のちがいは、backend の Sudachi で正規化形にそろえ、pg_bigm の検索列を足して吸収する | Proposed |
 
 0006〜0009 は下の予定で番号を確保しているため、v0.2.0 の PDF 取り込みは 0010 にした。
 
