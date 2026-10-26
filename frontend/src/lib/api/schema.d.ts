@@ -21,6 +21,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/synonyms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 類義語のグループ（ETag に版番号） */
+        get: operations["get"];
+        /** 類義語のグループを置き換える（If-Match 必須） */
+        put: operations["update"];
+        post?: never;
+        /** 類義語のグループを削除する */
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/programs/{id}": {
         parameters: {
             query?: never;
@@ -29,9 +48,9 @@ export interface paths {
             cookie?: never;
         };
         /** 制度の詳細 */
-        get: operations["get"];
+        get: operations["get_1"];
         /** 制度の説明を更新する */
-        put: operations["update"];
+        put: operations["update_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -81,9 +100,9 @@ export interface paths {
             cookie?: never;
         };
         /** きっかけの詳細 */
-        get: operations["get_1"];
+        get: operations["get_2"];
         /** きっかけを更新する（紐づける制度もまとめて置き換える。If-Match 必須） */
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -99,9 +118,9 @@ export interface paths {
             cookie?: never;
         };
         /** FAQ の詳細 */
-        get: operations["get_2"];
+        get: operations["get_3"];
         /** FAQ を更新する */
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -117,9 +136,9 @@ export interface paths {
             cookie?: never;
         };
         /** 文書の詳細 */
-        get: operations["get_3"];
+        get: operations["get_4"];
         /** 文書の属性を更新する */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -265,6 +284,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/synonyms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 類義語のグループの一覧（q を指定すると、その語を含むグループだけ） */
+        get: operations["list"];
+        put?: never;
+        /** 類義語のグループを追加する（ほかのグループに登録済みの語があれば 409） */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/programs": {
         parameters: {
             query?: never;
@@ -273,10 +310,10 @@ export interface paths {
             cookie?: never;
         };
         /** 自部署が所管する制度の一覧 */
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         /** 制度を作成する（下書き） */
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -325,7 +362,7 @@ export interface paths {
             cookie?: never;
         };
         /** 案内先ごとのキーワード一覧、または言葉からの逆引き（term） */
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
         /** キーワードを追加する（全角半角などは自動で正規化される） */
         post: operations["add"];
@@ -343,10 +380,10 @@ export interface paths {
             cookie?: never;
         };
         /** きっかけの一覧（紐づく制度つき。下書きの制度も含む） */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         /** きっかけを作成する */
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -378,10 +415,10 @@ export interface paths {
             cookie?: never;
         };
         /** 自部署が所管する FAQ の一覧 */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /** FAQ を作成する（下書き） */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -430,10 +467,10 @@ export interface paths {
             cookie?: never;
         };
         /** 自部署が所管する文書の一覧 */
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         /** 文書を作成する（下書き） */
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -500,7 +537,7 @@ export interface paths {
             cookie?: never;
         };
         /** 文書の取り込みの履歴（新しい順に20件） */
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         /** PDF の取り込みを依頼する（非同期。状況は返したジョブで確かめる） */
         post: operations["submit"];
@@ -843,7 +880,7 @@ export interface paths {
             cookie?: never;
         };
         /** 取り込みの状況 */
-        get: operations["get_4"];
+        get: operations["get_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -860,7 +897,7 @@ export interface paths {
             cookie?: never;
         };
         /** ファイルの情報 */
-        get: operations["get_5"];
+        get: operations["get_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -982,7 +1019,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** キーワードを削除する */
-        delete: operations["delete"];
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1012,6 +1049,18 @@ export interface components {
             /** Format: date */
             joinedOn: string;
             active: boolean;
+            /** Format: int32 */
+            rowVersion: number;
+        };
+        SynonymGroupRequest: {
+            canonical: string;
+            terms: string[];
+        };
+        SynonymGroupView: {
+            /** Format: uuid */
+            id: string;
+            canonical: string;
+            terms: string[];
             /** Format: int32 */
             rowVersion: number;
         };
@@ -1856,12 +1905,82 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ProgramResponse"];
+                    "*/*": components["schemas"]["SynonymGroupView"];
                 };
             };
         };
     };
     update: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-Match"?: string;
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SynonymGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SynonymGroupView"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProgramResponse"];
+                };
+            };
+        };
+    };
+    update_1: {
         parameters: {
             query?: never;
             header?: {
@@ -1945,7 +2064,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1967,7 +2086,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: {
@@ -1995,7 +2114,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2017,7 +2136,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: {
@@ -2045,7 +2164,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -2067,7 +2186,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: {
@@ -2341,6 +2460,52 @@ export interface operations {
     };
     list: {
         parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SynonymGroupView"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SynonymGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SynonymGroupView"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
             query?: never;
             header?: never;
             path?: never;
@@ -2359,7 +2524,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2431,7 +2596,7 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: {
                 targetType?: "PROGRAM" | "LIFE_EVENT" | "DOCUMENT" | "CONTACT" | "FAQ";
@@ -2479,7 +2644,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2499,7 +2664,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2550,7 +2715,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -2570,7 +2735,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2642,7 +2807,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -2662,7 +2827,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -2786,7 +2951,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -3294,7 +3459,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -3316,7 +3481,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -3483,7 +3648,7 @@ export interface operations {
             };
         };
     };
-    delete: {
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;

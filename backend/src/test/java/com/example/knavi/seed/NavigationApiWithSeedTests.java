@@ -117,6 +117,34 @@ class NavigationApiWithSeedTests {
     }
 
     @Test
+    void synonymsWidenTheSearchToOtherWordsWithTheSameMeaning() throws Exception {
+        // 類義語辞書（synonyms.yaml）: マイカー通勤 = 車で通勤、フィッシングメール = 不審なメール
+        String car = navigate("マイカー通勤はできる？", sato);
+        assertThat(JsonPath.<List<String>>read(car, "$.query.terms")).contains("マイカー通勤", "車で通勤");
+        assertThat(JsonPath.<String>read(car, "$.faqs[0].code")).isEqualTo("FAQ-037");
+
+        String phishing = navigate("フィッシングメールを開いてしまった", sato);
+        assertThat(JsonPath.<String>read(phishing, "$.faqs[0].code")).isEqualTo("FAQ-045");
+        assertThat(JsonPath.<List<String>>read(phishing, "$.contacts[*].code")).contains("IT-SECURITY");
+    }
+
+    @Test
+    void matchesThroughSynonymsScoreLowerThanTheWordsInTheQuestion() throws Exception {
+        // 「テレワーク手当」は類義語（テレワーク = 在宅勤務）で「在宅勤務手当」に届くが、そのまま入力したときより弱い
+        String direct = navigate("在宅勤務手当", sato);
+        String viaSynonym = navigate("テレワーク手当", sato);
+        assertThat(JsonPath.<String>read(direct, "$.programs[0].code")).isEqualTo("PRG-REMOTE-ALLOWANCE");
+        assertThat(JsonPath.<String>read(viaSynonym, "$.programs[0].code")).isEqualTo("PRG-REMOTE-ALLOWANCE");
+        assertThat(JsonPath.<Double>read(viaSynonym, "$.programs[0].score"))
+                .isLessThan(JsonPath.<Double>read(direct, "$.programs[0].score"));
+
+        // 辞書に無ければ広げない
+        jdbc.sql("DELETE FROM synonym_terms").update();
+        assertThat(JsonPath.<List<String>>read(navigate("テレワーク手当", sato), "$.query.terms"))
+                .doesNotContain("在宅勤務手当");
+    }
+
+    @Test
     void unknownQuestionFallsBackToTheGeneralContact() throws Exception {
         String body = navigate("ぴよぴよ", sato);
 

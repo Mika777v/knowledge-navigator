@@ -87,3 +87,4 @@ knavi:
       linked-faq: 0.3
       min-relative-score: 0.2
       keyword-stem: 0.7
+      synonym: 0.8

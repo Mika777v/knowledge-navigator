@@ -12,7 +12,19 @@ import java.util.UUID;
  */
 public interface SearchPort {
 
-    SearchCandidates search(List<String> terms, AccessScope scope, int limit);
+    SearchCandidates search(List<Term> terms, AccessScope scope, int limit);
+
+    /**
+     * 検索する語。
+     *
+     * @param weight 一致したときのスコアに掛ける（質問にそのまま含まれる語は 1.0、類義語で広げた語はそれより小さい）
+     */
+    record Term(String text, double weight) {
+
+        public static Term of(String text) {
+            return new Term(text, 1.0);
+        }
+    }
 
     /**
      * @param score 重み付きの一致度（大きいほど上位）

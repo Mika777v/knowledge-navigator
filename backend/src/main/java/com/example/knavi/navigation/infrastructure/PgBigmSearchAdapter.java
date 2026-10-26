@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 /**
  * pg_bigm による全文検索（MVP）。search_text 列の 2-gram GIN インデックスで {@code LIKE '%語%'} を引く。
  *
- * <p>語ごとに「名前・見出しに含まれる」「本文に含まれる」で重みを付けて足し合わせる（docs/ARCHITECTURE.md §4.3）。
+ * <p>語ごとに「名前・見出しに含まれる」「本文に含まれる」で重みを付け、語の重み（類義語で広げた語は小さい）を掛けて足し合わせる（docs/ARCHITECTURE.md §4.3）。
  * 閲覧権限の条件は同じ SQL の WHERE 句に入れる（ADR-0004 のプレフィルタ）。CONFIDENTIAL は検索に出さない。
  */
 @Component
@@ -38,7 +38,7 @@ class PgBigmSearchAdapter implements SearchPort {
     }
 
     @Override
-    public SearchCandidates search(List<String> terms, AccessScope scope, int limit) {
+    public SearchCandidates search(List<Term> terms, AccessScope scope, int limit) {
         if (terms.isEmpty()) {
             return SearchCandidates.empty();
         }
@@ -46,7 +46,7 @@ class PgBigmSearchAdapter implements SearchPort {
                 programs(terms, scope, limit), sections(terms, scope, limit), faqs(terms, scope, limit));
     }
 
-    private List<Hit> programs(List<String> terms, AccessScope scope, int limit) {
+    private List<Hit> programs(List<Term> terms, AccessScope scope, int limit) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "programs", "p", Purpose.SEARCH);
         Scoring s =
                 scoring(terms, i -> "strpos(lower(p.name), :t" + i + ") > 0", "p.search_text", weights.programName());
@@ -59,7 +59,7 @@ class PgBigmSearchAdapter implements SearchPort {
                 .list();
     }
 
-    private List<SectionHit> sections(List<String> terms, AccessScope scope, int limit) {
+    private List<SectionHit> sections(List<Term> terms, AccessScope scope, int limit) {
         // 公開中の版の条文だけを対象にする（過去の版は検索に出さない）
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.SEARCH);
         Scoring s = scoring(
@@ -82,7 +82,7 @@ class PgBigmSearchAdapter implements SearchPort {
                 .list();
     }
 
-    private List<Hit> faqs(List<String> terms, AccessScope scope, int limit) {
+    private List<Hit> faqs(List<Term> terms, AccessScope scope, int limit) {
         SqlPredicate visible = accessPolicy.readPredicate(scope, "faqs", "f", Purpose.SEARCH);
         Scoring s = scoring(
                 terms, i -> "strpos(lower(f.question), :t" + i + ") > 0", "f.search_text", weights.faqQuestion());
@@ -96,26 +96,30 @@ class PgBigmSearchAdapter implements SearchPort {
     }
 
     /**
-     * 語ごとのスコアの式を組み立てる。語は名前付きパラメーター（:t0, :t1, ...）で渡し、SQL に埋め込まない。
+     * 語ごとのスコアの式を組み立てる。語と語の重みは名前付きパラメーター（:t0, :tw0, ...）で渡し、SQL に埋め込まない。
      *
      * @param strongMatch 名前・見出しに含まれる条件（i 番目の語）
      * @param searchText 本文を含む検索用の列
      * @param strongWeight 名前・見出しに含まれるときの重み
      */
-    private Scoring scoring(
-            List<String> terms, IntFunction<String> strongMatch, String searchText, double strongWeight) {
+    private Scoring scoring(List<Term> terms, IntFunction<String> strongMatch, String searchText, double strongWeight) {
         Map<String, Object> params = new HashMap<>();
         StringBuilder score = new StringBuilder("(0");
         StringBuilder matched = new StringBuilder("array_remove(ARRAY[NULL::text");
         StringBuilder any = new StringBuilder("(false");
         for (int i = 0; i < terms.size(); i++) {
-            params.put("t" + i, terms.get(i));
+            params.put("t" + i, terms.get(i).text());
+            params.put("tw" + i, terms.get(i).weight());
             String like = searchText + " LIKE likequery(:t" + i + ")";
             score.append(" + CASE WHEN ")
                     .append(strongMatch.apply(i))
-                    .append(" THEN :w_strong WHEN ")
+                    .append(" THEN :w_strong * :tw")
+                    .append(i)
+                    .append(" WHEN ")
                     .append(like)
-                    .append(" THEN :w_body ELSE 0 END");
+                    .append(" THEN :w_body * :tw")
+                    .append(i)
+                    .append(" ELSE 0 END");
             matched.append(", CASE WHEN ")
                     .append(like)
                     .append(" THEN :t")
