@@ -29,6 +29,7 @@
 | `name` / `document-name` | 制度名・文書名を知っている | 通勤手当はどう申請する？ |
 | `manager` | 管理職向け | 部下から妊娠の報告を受けた |
 | `no-answer` | 該当なし（総合窓口を案内すべき） | 社員食堂のメニュー |
+| `paraphrase` | 言い換え（`paraphrase.yaml` だけで使う） | 籍を入れることになりました |
 
 ## 指標（#39 の評価バッチで算出）
 
@@ -54,6 +55,20 @@ make eval              # 評価して結果を表示（build/eval/report.md・re
   - **失敗**: Hit@5 が目標（v0.3.0 の 85%。MVP では 70%）を下回った、窓口が1件もない結果があった、検索に失敗した
   - **警告**: 基準値 `baseline.json` より悪化した指標がある（失敗にはしない）
 - 検索を改善して指標が上がったら、`python3 scripts/eval/run_eval.py --update-baseline` で基準値を更新し、同じ PR に含める
+
+## 言い換えの質問セット（E13-T7）
+
+`paraphrase.yaml` は、制度名・キーワード・類義語辞書・FAQ の言い方を**使わずに**同じことを聞く質問（「入籍」ではなく「籍を入れる」、「在宅勤務」ではなく「自宅から働きたい」）。キーワード検索だけでは当たりにくく、v0.4.0 の意味検索（[ADR-0007](../../docs/adr/0007-pgvector.md)）の効果を測るのに使う。
+
+```bash
+make up && make seed
+make eval-paraphrase   # build/eval-paraphrase/ に出力。Hit@5 が低くても失敗にはしない
+```
+
+- 書き方は `questions.yaml` と同じ。ID は `P001`〜、タグには必ず `paraphrase` を付ける（`validate_seed.py` が検査する）
+- 質問を足すときは、`data/seed` の keywords・synonyms・faqs の言い方と重ならないように書く。キーワード検索で当たるようにするために、辞書へ語を足すこともしない（意味検索の効果が測れなくなる）
+- 基準値 `baseline-paraphrase.json` は**キーワード検索だけ**の成績。v0.4.0 の目標は、意味検索をオンにしたとき Hit@5 がこれより 10 ポイント上がること（ROADMAP）
+- CI（ci-compose）でも `questions.yaml` の評価の後に実行し、結果をジョブのサマリーに出す
 
 ## 重みの調整（E12-T4）
 

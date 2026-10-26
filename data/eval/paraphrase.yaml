@@ -1,0 +1,170 @@
+# 言い換えの評価用質問セット（E13-T7）
+# 制度名・キーワード・類義語辞書・FAQ の言い方を**使わずに**、同じことを別の言葉で聞く質問。
+# キーワード検索だけでは当たりにくい質問で、意味検索（ベクトル検索、ADR-0007）の効果を測る。
+# v0.4.0 の目標: キーワード検索だけのとき（baseline-paraphrase.json）より Hit@5 が 10 ポイント上がること。
+#
+# 書き方は questions.yaml と同じ（data/eval/README.md）。ID は P001〜。tags には必ず paraphrase を付ける。
+# 新しい質問は、data/seed の keywords・synonyms・faqs の言い方と重ならないように書く。
+
+# ---------------------------------------------------------------- 結婚・慶弔
+- id: P001
+  q: 籍を入れることになりました
+  expect: { programs: [PRG-MARRIAGE-GIFT, PRG-MARRIAGE-LEAVE] }
+  tags: [paraphrase, life-event]
+- id: P002
+  q: 祖父が他界しました
+  expect: { programs: [PRG-BEREAVEMENT-LEAVE, PRG-CONDOLENCE] }
+  tags: [paraphrase, life-event]
+- id: P003
+  q: 家が燃えてしまった
+  expect: { programs: [PRG-DISASTER-AID] }
+  tags: [paraphrase, life-event, colloquial]
+- id: P004
+  q: 足の骨を折ってしばらく仕事に出られない
+  expect: { programs: [PRG-SICK-VISIT] }
+  tags: [paraphrase, life-event, colloquial]
+
+# ---------------------------------------------------------------- 出産・育児
+- id: P005
+  q: 奥さんがおめでたです。夫として休めますか
+  expect: { programs: [PRG-SPOUSE-BIRTH-LEAVE] }
+  tags: [paraphrase, life-event]
+- id: P006
+  q: 身ごもっていて体調がすぐれない
+  expect: { programs: [PRG-MATERNITY-LEAVE] }
+  tags: [paraphrase, life-event]
+- id: P007
+  q: わが子の世話に専念するため、しばらく仕事を離れたい
+  expect: { programs: [PRG-CHILDCARE-LEAVE, PRG-PATERNITY-LEAVE] }
+  tags: [paraphrase, no-name]
+- id: P008
+  q: 息子が高熱を出したので小児科へ連れて行きたい
+  expect: { programs: [PRG-CHILD-NURSING-LEAVE] }
+  tags: [paraphrase, life-event, colloquial]
+- id: P009
+  q: 夕方、園まで子を迎えに行けるよう勤務を短くしたい
+  expect: { programs: [PRG-CHILDCARE-SHORT-HOURS] }
+  tags: [paraphrase, no-name]
+- id: P010
+  q: 幼い子がいるので夜遅くまで働けない
+  expect: { programs: [PRG-OVERTIME-EXEMPTION] }
+  tags: [paraphrase, no-name, colloquial]
+- id: P011
+  q: 子守りを家に呼ぶ費用を会社が持ってくれる？
+  expect: { programs: [PRG-CARE-SERVICE-AID], faqs: [FAQ-019] }
+  tags: [paraphrase, no-name, colloquial]
+- id: P012
+  as: tanaka@example.com
+  q: チームのメンバーから子どもを授かったと打ち明けられた
+  expect: { programs: [PRG-MANAGER-CHILDCARE-SUPPORT], faqs: [FAQ-049] }
+  tags: [paraphrase, manager]
+
+# ---------------------------------------------------------------- 介護
+- id: P013
+  q: 年老いた父の世話で毎日が大変
+  expect: { programs: [PRG-CARE-LEAVE, PRG-CARE-DAYS], faqs: [FAQ-020] }
+  tags: [paraphrase, life-event, colloquial]
+- id: P014
+  q: 母のデイサービスの利用料に補助は出る？
+  expect: { programs: [PRG-CARE-SERVICE-AID] }
+  tags: [paraphrase, no-name]
+
+# ---------------------------------------------------------------- 休み・働き方
+- id: P015
+  q: 疲れがたまったので何日か仕事を離れてのんびりしたい
+  expect: { programs: [PRG-ANNUAL-LEAVE] }
+  tags: [paraphrase, colloquial]
+- id: P016
+  q: 午前中だけ歯医者に行きたい
+  expect: { programs: [PRG-HOURLY-LEAVE, PRG-ANNUAL-LEAVE] }
+  tags: [paraphrase, colloquial]
+- id: P017
+  q: 長く勤めたご褒美みたいな制度はある？
+  expect: { programs: [PRG-REFRESH-LEAVE] }
+  tags: [paraphrase, no-name, colloquial]
+- id: P018
+  q: 刑事裁判に市民として参加することになった
+  expect: { programs: [PRG-JUROR-LEAVE] }
+  tags: [paraphrase, no-name]
+- id: P019
+  q: 自宅から働きたい
+  expect: { programs: [PRG-REMOTE-WORK], faqs: [FAQ-029] }
+  tags: [paraphrase, colloquial]
+- id: P020
+  q: 自宅で働くときのネット回線の料金は出る？
+  expect: { programs: [PRG-REMOTE-ALLOWANCE], faqs: [FAQ-032] }
+  tags: [paraphrase, colloquial]
+- id: P021
+  q: 朝の混雑を避けて出社したい
+  expect: { programs: [PRG-TIME-SHIFT], faqs: [FAQ-026] }
+  tags: [paraphrase, colloquial]
+- id: P022
+  q: 本業とは別に収入を得てもいい？
+  expect: { faqs: [FAQ-027] }
+  tags: [paraphrase, colloquial]
+
+# ---------------------------------------------------------------- お金・住まい
+- id: P023
+  q: 会社までの電車賃は支給される？
+  expect: { programs: [PRG-COMMUTE-ALLOWANCE], faqs: [FAQ-034] }
+  tags: [paraphrase, colloquial]
+- id: P024
+  q: 自家用車で出勤したい
+  expect: { faqs: [FAQ-037] }
+  tags: [paraphrase]
+- id: P025
+  q: アパート代の補助はある？
+  expect: { programs: [PRG-HOUSING-ALLOWANCE] }
+  tags: [paraphrase, no-name, colloquial]
+- id: P026
+  q: 地方の支店に配属が決まり、住む所を探している
+  expect: { programs: [PRG-COMPANY-HOUSING] }
+  tags: [paraphrase, life-event]
+- id: P027
+  q: 新しい住まいに移った
+  expect: { programs: [PRG-PERSONAL-INFO-CHANGE] }
+  tags: [paraphrase, life-event]
+- id: P028
+  q: よその県の取引先へ泊まりがけで行く
+  expect: { programs: [PRG-BUSINESS-TRIP] }
+  tags: [paraphrase, no-name]
+
+# ---------------------------------------------------------------- 健康・相談
+- id: P029
+  q: 年に一度の体の詳しい検査に補助はある？
+  expect: { programs: [PRG-HEALTH-CHECKUP-AID] }
+  tags: [paraphrase, no-name]
+- id: P030
+  q: 気分が落ち込んで朝起きられない
+  expect: { programs: [PRG-HEALTH-CONSULTATION], faqs: [FAQ-047] }
+  tags: [paraphrase, colloquial]
+- id: P031
+  q: 上司に毎日のように怒鳴られている
+  expect: { programs: [PRG-HARASSMENT-CONSULTATION], faqs: [FAQ-048] }
+  tags: [paraphrase, colloquial]
+- id: P032
+  q: 簿記の試験を受けるのに会社から支援はある？
+  expect: { programs: [PRG-QUALIFICATION-AWARD] }
+  tags: [paraphrase, no-name]
+
+# ---------------------------------------------------------------- IT・退職
+- id: P033
+  q: 仕事用の端末の画面が真っ暗のままつかない
+  expect: { programs: [PRG-PC-REPAIR], faqs: [FAQ-041] }
+  tags: [paraphrase, colloquial]
+- id: P034
+  q: 会社から借りている電話を電車に忘れてきた
+  expect: { programs: [PRG-DEVICE-LOSS-REPORT], faqs: [FAQ-042] }
+  tags: [paraphrase, colloquial]
+- id: P035
+  q: サインインに必要な合言葉が思い出せない
+  expect: { faqs: [FAQ-043] }
+  tags: [paraphrase, colloquial]
+- id: P036
+  q: 見覚えのない差出人から添付付きの連絡が届いた
+  expect: { faqs: [FAQ-045] }
+  tags: [paraphrase]
+- id: P037
+  q: 今の職場を去ることに決めた
+  expect: { programs: [PRG-RESIGNATION], faqs: [FAQ-028] }
+  tags: [paraphrase, life-event]

@@ -88,11 +88,18 @@ def percent(value: float | None) -> str:
 
 
 def markdown_report(
-    summary: dict, baseline: dict, by_tag: dict, results: list[QuestionResult], worse: list[str], min_hit5: float
+    summary: dict,
+    baseline: dict,
+    by_tag: dict,
+    results: list[QuestionResult],
+    worse: list[str],
+    min_hit5: float,
+    questions_name: str = "data/eval/questions.yaml",
+    baseline_name: str = "data/eval/baseline.json",
 ) -> str:
-    lines = ["## 検索品質の評価（data/eval）", "", *summary_table(summary, baseline, min_hit5), ""]
+    lines = [f"## 検索品質の評価（{questions_name}）", "", *summary_table(summary, baseline, min_hit5), ""]
     if worse:
-        lines += ["**基準値（data/eval/baseline.json）より悪化した指標**", ""] + [f"- {w}" for w in worse] + [""]
+        lines += [f"**基準値（{baseline_name}）より悪化した指標**", ""] + [f"- {w}" for w in worse] + [""]
     lines += ["### タグ別", "", "| タグ | 問数 | Hit@1 | Hit@5 | 窓口正答率 |", "|---|---|---|---|---|"]
     for tag, s in by_tag.items():
         lines.append(
@@ -106,6 +113,14 @@ def markdown_report(
             got = ", ".join(f"{k}: {'/'.join(v[:3])}" for k, v in r.got.items() if v)
             lines.append(f"| {r.id} | {r.q} | {expected} | {got or '（なし）'} |")
     return "\n".join(lines) + "\n"
+
+
+def display_path(path: Path) -> str:
+    """リポジトリの中のファイルは、リポジトリからの相対パスで表示する"""
+    try:
+        return str(path.resolve().relative_to(ROOT))
+    except ValueError:
+        return str(path)
 
 
 def main() -> int:
@@ -136,7 +151,10 @@ def main() -> int:
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else {}
     worse = regressions(summary, baseline.get("summary", {}))
 
-    report = markdown_report(summary, baseline.get("summary", {}), by_tag, results, worse, args.min_hit5)
+    report = markdown_report(
+        summary, baseline.get("summary", {}), by_tag, results, worse, args.min_hit5,
+        display_path(args.questions), display_path(args.baseline),
+    )
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "report.md").write_text(report, encoding="utf-8")
     (args.output / "result.json").write_text(
@@ -151,7 +169,7 @@ def main() -> int:
         args.baseline.write_text(
             json.dumps({"summary": summary}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
-        print(f"基準値を更新しました: {args.baseline.relative_to(ROOT)}")
+        print(f"基準値を更新しました: {display_path(args.baseline)}")
 
     failures = list(errors)
     failures += [f"{r.id}: 窓口が1件もありません（必ず1件以上返す仕様）" for r in results if not r.has_contact]
