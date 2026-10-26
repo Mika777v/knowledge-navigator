@@ -166,7 +166,10 @@ class SchemaMigrationTests {
 
         String nearest = "SELECT source_id FROM embeddings WHERE model = 'bge-m3'"
                 + " ORDER BY embedding <=> CAST(:q AS vector) LIMIT 1";
-        assertThat(jdbc.sql(nearest).param("q", vector(1024, 0)).query(UUID.class).single())
+        assertThat(jdbc.sql(nearest)
+                        .param("q", vector(1024, 0))
+                        .query(UUID.class)
+                        .single())
                 .isEqualTo(near);
 
         // 権限の WHERE で候補が減っても件数が足りなくならないよう、反復スキャンを使う（ADR-0007）
@@ -174,7 +177,10 @@ class SchemaMigrationTests {
         jdbc.sql("SET LOCAL enable_seqscan = off").update();
         var plan = String.join(
                 "\n",
-                jdbc.sql("EXPLAIN " + nearest).param("q", vector(1024, 0)).query(String.class).list());
+                jdbc.sql("EXPLAIN " + nearest)
+                        .param("q", vector(1024, 0))
+                        .query(String.class)
+                        .list());
         assertThat(plan).contains("idx_embeddings_hnsw_bge_m3");
     }
 
