@@ -202,10 +202,25 @@ body:
 |---|---|
 | バージョニング | SemVer。`0.x` の間は minor = フェーズ到達 |
 | タグ | `v0.1.0`（MVP）, `v0.2.0`（Phase2）, … `v1.0.0`（RAG + アシスタント公開） |
-| 自動化 | **release-please** が Conventional Commits から Release PR と CHANGELOG を生成 → マージでタグ・GitHub Release 作成 |
+| 自動化 | （予定・E16）**release-please** が Conventional Commits から Release PR と CHANGELOG を生成 → マージでタグ・GitHub Release 作成。**今は手動**（下の §7.1） |
 | 成果物 | GitHub Release にリリースノート、スクリーンショット、評価レポート（Hit@5 推移）を添付 |
-| コンテナ | タグ push で GHCR に `backend` / `frontend` / `ai-service` イメージを発行 |
+| コンテナ | タグ push で GHCR に `backend` / `frontend` / `postgres` イメージを発行（`release-images.yml`。Phase4 で `ai-service` を追加） |
 | デモ環境 | Release 公開時にデモ環境へデプロイ（手動承認付き environment） |
+
+### 7.1 今の運用（手動でのリリース）
+
+開発環境（Claude Code のセッション）からはタグの push と Release の作成ができないため、オーナーが GitHub の画面で作る（CLAUDE.md の PR の進め方 7）。
+
+1. **リリース準備の PR**（CHANGELOG の版の節と README の更新。例: #133）を Claude が作る。自動マージは予約しない
+2. オーナーが内容を確かめてマージする
+3. オーナーが GitHub の画面で Release を作る
+   1. リポジトリの右側の「Releases」→「Draft a new release」
+   2. 「Choose a tag」に `vX.Y.Z` を入力し「Create new tag」を選ぶ（対象は `main`）
+   3. タイトルは `vX.Y.Z（版の名前）`（例: `v0.3.0（検索のナレッジ強化）`）
+   4. 本文は、Claude が渡すリリースノート（CHANGELOG の該当の版の節をもとに、アップグレードの注意を足したもの）を貼る
+   5. 「Publish release」
+4. タグができると `release-images.yml` が動き、GHCR にイメージを公開する。終わったら Actions の画面で成功を確かめる（GHCR のパッケージは非公開のまま。公開する場合はパッケージの設定で変える）
+5. 新しいセッションで次の版を始める（CLAUDE.md の「トークンの使い方」）
 
 | バージョン | 内容 |
 |---|---|
