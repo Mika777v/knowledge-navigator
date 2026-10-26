@@ -276,6 +276,8 @@ fused         = RRF(k=60)  : score = Σ 1 / (k + rank_i)
 reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系）
 ```
 
+- **段階的に入れる**: ベクトル検索は設定（例: `knavi.search.vector.enabled`）でオン・オフでき、オフなら今のキーワード検索だけで動く（§5.1 の Graceful Degradation）。評価用の質問で、オン・オフの成績を比べてからオンにする。設定の名前・既定値・判定する場所・トグルを消す時期は、v0.4.0 の ADR で決める
+
 ### 5.4 RAG フロー
 
 ```mermaid

@@ -1,6 +1,6 @@
 # ADR-0010: PDF の取り込みは backend の中で行い、原本は S3 互換ストレージ、解析はジョブで非同期に行う
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-23
 - 関連 Issue / PR: E11（TASKS.md）、#107（ダミー規程の PDF）
 - 関連ドキュメント: [ARCHITECTURE.md §2](../ARCHITECTURE.md)、[ROADMAP.md](../ROADMAP.md)（v0.2.0）、[ADR-0001](./0001-modular-monolith-spring-boot.md)、[ADR-0004](./0004-permission-prefilter.md)

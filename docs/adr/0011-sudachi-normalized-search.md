@@ -1,6 +1,6 @@
 # ADR-0011: 表記ゆれ・活用のちがいは、backend の Sudachi で正規化形にそろえ、pg_bigm の検索列を足して吸収する
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-26
 - 関連 Issue / PR: E12-T1（TASKS.md）、#16（Epic E12）、#123（類義語辞書）
 - 関連ドキュメント: [ARCHITECTURE.md §4.1〜4.3](../ARCHITECTURE.md)、[PRD F-302](../PRD_KNOWLEDGE_NAVIGATOR.md)、[ADR-0002](./0002-japanese-search-pg-bigm.md)、[ADR-0004](./0004-permission-prefilter.md)
