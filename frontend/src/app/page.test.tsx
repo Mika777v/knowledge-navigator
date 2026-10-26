@@ -35,7 +35,7 @@ describe("HomePage", () => {
     fetchMock.mockResolvedValue(Response.json([]));
     renderWithQuery(<HomePage />);
 
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "  PC壊れた " } });
+    fireEvent.change(screen.getByRole("combobox", { name: "知りたいこと" }), { target: { value: "  PC壊れた " } });
     fireEvent.click(screen.getByRole("button", { name: "検索" }));
     expect(push).toHaveBeenCalledWith(`/search?q=${encodeURIComponent("PC壊れた")}`);
   });

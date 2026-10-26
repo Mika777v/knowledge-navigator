@@ -617,6 +617,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 入力補完（入力に一致する制度名・きっかけ。最大8件。閲覧できる制度だけ） */
+        get: operations["suggestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/programs": {
         parameters: {
             query?: never;
@@ -643,6 +660,23 @@ export interface paths {
         };
         /** 制度の詳細（根拠の条・窓口・関連 FAQ・きっかけ） */
         get: operations["program"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/programs/{id}/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** あわせて見られている制度・同じきっかけの制度（最大5件。見えない制度なら空） */
+        get: operations["recommendations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1531,6 +1565,13 @@ export interface components {
             /** Format: int32 */
             pageTo: number;
         };
+        SuggestionItem: {
+            type: string;
+            /** Format: uuid */
+            id: string;
+            code: string;
+            label: string;
+        };
         ProgramSummary: {
             /** Format: uuid */
             id: string;
@@ -1586,6 +1627,14 @@ export interface components {
             contacts: components["schemas"]["ContactView"][];
             faqs: components["schemas"]["FaqSummary"][];
             lifeEvents: components["schemas"]["LifeEventSummary"][];
+        };
+        RecommendedProgram: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            reason: string;
+            lifeEvent: string;
         };
         BasisRef: {
             /** Format: uuid */
@@ -3129,6 +3178,29 @@ export interface operations {
             };
         };
     };
+    suggestions: {
+        parameters: {
+            query: {
+                /** @description 入力中の文字（例: 育児）。50文字まで */
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SuggestionItem"][];
+                };
+            };
+        };
+    };
     programs: {
         parameters: {
             query?: {
@@ -3169,6 +3241,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ProgramDetail"];
+                };
+            };
+        };
+    };
+    recommendations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecommendedProgram"][];
                 };
             };
         };

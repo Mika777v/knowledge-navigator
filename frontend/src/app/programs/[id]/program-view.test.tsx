@@ -49,8 +49,15 @@ describe("ProgramView", () => {
     vi.unstubAllGlobals();
   });
 
+  /** 制度の詳細と推薦を URL で分けて返す */
+  function respond(recommendations: unknown[]) {
+    fetchMock.mockImplementation(async (input) =>
+      Response.json(String(input).endsWith("/recommendations") ? recommendations : program),
+    );
+  }
+
   it("対象者・内容・期限と、根拠の条文・窓口・FAQ を表示する", async () => {
-    fetchMock.mockResolvedValueOnce(Response.json(program));
+    respond([]);
     renderWithQuery(<ProgramView />);
 
     expect(await screen.findByRole("heading", { level: 1, name: "結婚祝金" })).toBeInTheDocument();
@@ -64,5 +71,21 @@ describe("ProgramView", () => {
     expect(screen.getByRole("link", { name: "就業規則" })).toHaveAttribute("href", "/documents/doc-2");
     expect(screen.getByText("申請先")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "入籍前に申請できますか？" })).toHaveAttribute("href", "/faqs/f1");
+    // 推薦がなければ見出しも出さない
+    expect(screen.queryByRole("heading", { name: "この制度を見た人はこちらも" })).toBeNull();
+  });
+
+  it("あわせて見られている制度と、同じきっかけの制度を理由つきで出す", async () => {
+    respond([
+      { id: "p2", code: "PRG-PC-REPAIR", name: "PC の故障・代替機", reason: "CO_CLICK", lifeEvent: null },
+      { id: "p3", code: "PRG-MARRIAGE-LEAVE", name: "結婚休暇", reason: "LIFE_EVENT", lifeEvent: "結婚" },
+    ]);
+    renderWithQuery(<ProgramView />);
+
+    expect(await screen.findByRole("heading", { name: "この制度を見た人はこちらも" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "結婚休暇" })).toHaveAttribute("href", "/programs/p3");
+    expect(screen.getByText("結婚のときに")).toBeInTheDocument();
+    expect(screen.getByText("あわせて見られています")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/programs/p1/recommendations", expect.anything());
   });
 });

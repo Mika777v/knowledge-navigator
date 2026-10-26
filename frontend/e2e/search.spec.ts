@@ -15,7 +15,7 @@ test("質問から制度・規程・窓口を案内し、条文へ移動でき�
   const errors = collectErrors(page);
   await login(page, "sato@example.com");
 
-  await page.getByRole("searchbox").fill("結婚したら何か制度ある？");
+  await page.getByRole("combobox", { name: "知りたいこと" }).fill("結婚したら何か制度ある？");
   await page.getByRole("button", { name: "検索" }).click();
 
   await expect(page.getByText("「結婚」のときに使える制度と手続きを表示しています。")).toBeVisible();
@@ -61,4 +61,21 @@ test("制度の詳細から根拠の規程へ移動できる", async ({ page }) 
   await page.getByRole("region", { name: "根拠となる規程" }).getByRole("link").first().click();
   await expect(page).toHaveURL(/\/documents\//);
   await expect(page.getByRole("navigation", { name: "目次" })).toBeVisible();
+});
+
+test("入力の候補から制度を開くと、同じきっかけの制度もあわせて案内する", async ({ page }) => {
+  const errors = collectErrors(page);
+  await login(page, "sato@example.com");
+
+  await page.getByRole("combobox", { name: "知りたいこと" }).fill("結婚");
+  const options = page.getByRole("listbox", { name: "入力の候補" }).getByRole("option");
+  await expect(options.first()).toHaveText("きっかけ結婚");
+  await options.filter({ hasText: "結婚祝金" }).click();
+
+  await expect(page.getByRole("heading", { level: 1, name: "結婚祝金" })).toBeVisible();
+  const recommendations = page.getByRole("region", { name: "この制度を見た人はこちらも" });
+  await expect(recommendations.getByRole("link", { name: "結婚休暇" })).toBeVisible();
+  await expect(recommendations.getByText("結婚のときに").first()).toBeVisible();
+
+  expect(errors).toEqual([]);
 });
