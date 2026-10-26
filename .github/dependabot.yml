@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: ci
     labels: ["area:infra", "dependencies"]
@@ -12,6 +15,9 @@ updates:
     directory: /infra/docker/postgres
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -21,6 +27,9 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -33,6 +42,9 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -46,6 +58,9 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -60,6 +75,9 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -73,6 +91,9 @@ updates:
     directory: /ai-service
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
@@ -82,6 +103,9 @@ updates:
     directory: /ai-service
     schedule:
       interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
     commit-message:
       prefix: build
       include: scope
