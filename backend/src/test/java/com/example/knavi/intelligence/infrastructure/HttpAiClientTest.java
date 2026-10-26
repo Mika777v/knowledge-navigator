@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.example.knavi.intelligence.application.AiClient.AiServiceException;
 import com.example.knavi.intelligence.application.AiProperties;
 import com.example.knavi.intelligence.application.AiServiceInfo;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -51,9 +52,8 @@ class HttpAiClientTest {
 
     HttpAiClient client(String path) {
         String url = "http://127.0.0.1:" + server.getAddress().getPort() + path;
-        var properties =
-                new AiProperties(url, "secret-token", Duration.ofSeconds(2), Duration.ofSeconds(5), List.of("INTERNAL"));
-        return new HttpAiClient(properties);
+        Duration timeout = Duration.ofSeconds(5);
+        return new HttpAiClient(new AiProperties(url, "secret-token", timeout, timeout, List.of("INTERNAL")));
     }
 
     @Test
@@ -82,8 +82,7 @@ class HttpAiClientTest {
         assertThatThrownBy(() -> client("/fail").info()).isInstanceOf(AiServiceException.class);
     }
 
-    private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String body)
-            throws IOException {
+    private static void respond(HttpExchange exchange, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json");
         exchange.sendResponseHeaders(status, bytes.length);

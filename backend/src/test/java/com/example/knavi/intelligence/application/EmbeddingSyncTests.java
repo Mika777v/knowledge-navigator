@@ -197,10 +197,7 @@ class EmbeddingSyncTests {
         UUID version = jdbc.sql("""
                         INSERT INTO document_versions (document_id, version_label, effective_from, body_markdown)
                         VALUES (:doc, 'v1.0', DATE '2026-04-01', '本文') RETURNING id
-                        """)
-                .param("doc", document)
-                .query(UUID.class)
-                .single();
+                        """).param("doc", document).query(UUID.class).single();
         jdbc.sql("UPDATE documents SET current_version_id = :version WHERE id = :doc")
                 .param("version", version)
                 .param("doc", document)

@@ -50,7 +50,9 @@ class HttpAiClient implements AiClient {
                     .body(new EmbeddingRequest(texts))
                     .retrieve()
                     .body(EmbeddingResponse.class);
-            if (response == null || response.embeddings() == null || response.embeddings().size() != texts.size()) {
+            if (response == null
+                    || response.embeddings() == null
+                    || response.embeddings().size() != texts.size()) {
                 throw new AiServiceException("ai-service の /v1/embeddings の応答の数が違います", null);
             }
             return response.embeddings();

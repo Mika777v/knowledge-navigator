@@ -38,8 +38,7 @@ public class EmbeddingSyncService {
     private final AiProperties aiProperties;
     private final EmbeddingProperties properties;
 
-    EmbeddingSyncService(
-            AiClient ai, EmbeddingStore store, AiProperties aiProperties, EmbeddingProperties properties) {
+    EmbeddingSyncService(AiClient ai, EmbeddingStore store, AiProperties aiProperties, EmbeddingProperties properties) {
         this.ai = ai;
         this.store = store;
         this.aiProperties = aiProperties;
@@ -108,9 +107,8 @@ public class EmbeddingSyncService {
         if (!info.external()) {
             return LOCAL_VISIBILITIES;
         }
-        List<String> configured = aiProperties.externalVisibilities() == null
-                ? List.of()
-                : aiProperties.externalVisibilities();
+        List<String> configured =
+                aiProperties.externalVisibilities() == null ? List.of() : aiProperties.externalVisibilities();
         return Set.copyOf(
                 configured.stream().filter(LOCAL_VISIBILITIES::contains).toList());
     }
