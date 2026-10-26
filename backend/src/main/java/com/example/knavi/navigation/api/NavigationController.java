@@ -2,10 +2,13 @@ package com.example.knavi.navigation.api;
 
 import com.example.knavi.navigation.application.NavigationResult;
 import com.example.knavi.navigation.application.NavigationService;
+import com.example.knavi.navigation.application.SuggestionService;
+import com.example.knavi.navigation.application.SuggestionService.SuggestionItem;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 class NavigationController {
 
     private final NavigationService service;
+    private final SuggestionService suggestions;
 
-    NavigationController(NavigationService service) {
+    NavigationController(NavigationService service, SuggestionService suggestions) {
         this.service = service;
+        this.suggestions = suggestions;
     }
 
     @Operation(summary = "ナビゲーション検索（制度・文書・FAQ・窓口の4ブロック）")
@@ -30,5 +35,13 @@ class NavigationController {
             @Parameter(description = "知りたいこと（例: 結婚したら何か制度ある？）。200文字まで") @RequestParam String q,
             @AuthenticationPrincipal AuthenticatedUser user) {
         return service.navigate(q, user);
+    }
+
+    @Operation(summary = "入力補完（入力に一致する制度名・きっかけ。最大8件。閲覧できる制度だけ）")
+    @GetMapping("/search/suggest")
+    List<SuggestionItem> suggestions(
+            @Parameter(description = "入力中の文字（例: 育児）。50文字まで") @RequestParam String q,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return suggestions.suggest(q, user);
     }
 }
