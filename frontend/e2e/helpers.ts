@@ -22,3 +22,19 @@ export function collectErrors(page: Page): string[] {
   });
   return errors;
 }
+
+/**
+ * 実行ごとにちがう、どの検索語にも当たらない言葉を作る。
+ * 時刻を英字（母音・c・p を除く）だけで表す。数字を含めると形態素解析で「26」のように区切られ、
+ * ダミーデータの本文に当たってしまうため（キーワード「PC」にも当たらないよう c・p も使わない）。
+ */
+export function uniqueLetters(): string {
+  const letters = "bdfghjklmnqrstvwxz";
+  let n = Date.now();
+  let word = "";
+  while (n > 0) {
+    word = letters[n % letters.length] + word;
+    n = Math.floor(n / letters.length);
+  }
+  return word;
+}

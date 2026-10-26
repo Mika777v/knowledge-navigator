@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { login, uniqueLetters } from "./helpers";
 
 test("コンテンツ担当者が類義語を登録すると、その言葉でも同じ FAQ が見つかる", async ({ page }) => {
   // 毎回ちがう言葉にする（同じ環境で何度実行しても重複にならないように）
-  const word = `ぱすわ${Date.now().toString(36)}`;
+  const word = `ぱすわ${uniqueLetters()}`;
   await login(page, "ito@example.com");
 
   const before = await (await page.request.get("/api/v1/navigate?q=" + encodeURIComponent(word))).json();
