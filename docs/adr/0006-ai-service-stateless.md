@@ -1,6 +1,6 @@
 # ADR-0006: AI の処理は FastAPI の別サービス（ai-service）に分け、DB に触れない「計算だけの窓口」にする
 
-- ステータス: Accepted
+- ステータス: Accepted（決定 3 は [ADR-0012](./0012-embedding-reconciliation.md) で変更）
 - 日付: 2026-10-26
 - 関連 Issue / PR: E13-T1・E13-T3（TASKS.md）、#17（Epic E13）、#137
 - 関連ドキュメント: [ARCHITECTURE.md §2.2・§5](../ARCHITECTURE.md)、[TECH_STACK_DECISION.md D-02](../TECH_STACK_DECISION.md)、[ADR-0001](./0001-modular-monolith-spring-boot.md)、[ADR-0004](./0004-permission-prefilter.md)、[ADR-0007](./0007-pgvector.md)、[ADR-0008](./0008-llm-provider-abstraction.md)、[ADR-0010](./0010-pdf-ingestion.md)
@@ -18,7 +18,7 @@
 1. **AI の処理は Python 3.12 + FastAPI の別サービス `ai-service/` に置く。** パッケージ管理は uv、検査は ruff・pytest。compose では `ai` プロファイル（`docker compose --profile ai up`）で起動し、プロファイルなしでは今までどおり AI なしで動く。
 2. **ai-service は DB に接続しない。** 受け取った文章からベクトル（v0.4.0）や回答文（v0.5.0〜）を計算して返すだけの、状態を持たないサービスにする。DB の接続情報も渡さない。
    - 権限の判定、検索の SQL（キーワード・ベクトルとも）、ベクトルの保存は、**すべて backend が行う**。ai-service に渡すのは、backend が権限で絞り込んだ後の文章だけ。
-3. **Embedding のジョブは backend で動かす。** ADR-0010 と同じ PostgreSQL のキュー（`SELECT ... FOR UPDATE SKIP LOCKED`）を使う。版の公開・制度や FAQ の更新でジョブを積み、backend のワーカーが文章を区切り（チャンク分割）、`content_hash` で変わったものだけ ai-service に送り、返ってきたベクトルを保存する。Python の ingest-worker は作らない。
+3. **Embedding のジョブは backend で動かす。**（→ [ADR-0012](./0012-embedding-reconciliation.md) で、変更のたびに積むジョブから、定期的な差分合わせに変えた。backend で動かすことは同じ） ADR-0010 と同じ PostgreSQL のキュー（`SELECT ... FOR UPDATE SKIP LOCKED`）を使う。版の公開・制度や FAQ の更新でジョブを積み、backend のワーカーが文章を区切り（チャンク分割）、`content_hash` で変わったものだけ ai-service に送り、返ってきたベクトルを保存する。Python の ingest-worker は作らない。
 4. **検索のときは、backend が質問文を ai-service に送ってベクトルにし、その後の検索は backend の SQL で行う。** 呼び出しには短いタイムアウト（目安 2 秒）を付け、ai-service が止まっている・遅い・エラーのときは**キーワード検索だけで結果を返す**（利用者にはエラーを見せない）。
 5. **backend と ai-service は HTTP + JSON でやりとりする。** ai-service のポートは compose の内部ネットワークにだけ出し、ブラウザ・frontend からは呼べないようにする。backend は共有のトークン（環境変数 `AI_SERVICE_TOKEN`）を `Authorization` ヘッダーで送り、ai-service はトークンが合わない要求を断る。API は `/v1/...` で版を付ける。
 6. **PDF の解析は backend の PDFBox のまま（ADR-0010）にし、Python へは移さない。** 今の抽出で困っていないため。
