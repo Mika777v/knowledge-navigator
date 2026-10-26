@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.annotation.Transactional;
@@ -141,11 +142,17 @@ class SchemaMigrationTests {
     }
 
     @Test
-    void embeddingsRejectUnknownSourceTypeAndWrongDimensions() {
+    void embeddingsRejectUnknownSourceType() {
         assertThatThrownBy(() -> insertEmbedding("DOCUMENT", UUID.randomUUID(), "bge-m3", vector(1024, 0)))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void embeddingsRejectWrongDimensions() {
+        // 1つのトランザクションでは最初のエラーで以降の SQL が通らないため、テストを分ける
         assertThatThrownBy(() -> insertEmbedding("SECTION", UUID.randomUUID(), "bge-m3", vector(768, 0)))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("1024");
     }
 
     @Test
