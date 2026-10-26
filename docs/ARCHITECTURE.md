@@ -261,7 +261,7 @@ public interface SearchPort {
 | 単位 | セクション（条単位）。長い条は 600〜800字で分割、前後 100字オーバーラップ。見出しパス（文書名 > 章 > 条）を先頭に付与 |
 | 対象 | `INTERNAL`/`MANAGERS`/`RESTRICTED` の公開済み最新版、FAQ、制度。**CONFIDENTIAL は対象外** |
 | モデル | ローカル: `bge-m3`（Ollama, 1024次元, 多言語） / クラウド: `text-embedding-3-small`（OpenAI / Azure OpenAI） |
-| 更新 | 版公開イベント → ジョブキュー（PostgreSQL の `SELECT ... FOR UPDATE SKIP LOCKED`）→ backend のワーカーが差分計算（`content_hash`）し、変わったものだけ ai-service でベクトルにして保存（[ADR-0006](./adr/0006-ai-service-stateless.md)） |
+| 更新 | backend のワーカーが一定の間隔（既定 5 分）で「今あるべきベクトル」と `embeddings` を見比べ、足りない・変わったもの（`content_hash`）だけ ai-service でベクトルにして保存し、要らない行は消す（[ADR-0012](./adr/0012-embedding-reconciliation.md)） |
 | 再計算 | モデル変更時は新モデルで並行生成 → 評価 → 切替（Blue/Green） |
 
 ### 5.3 ハイブリッド検索
