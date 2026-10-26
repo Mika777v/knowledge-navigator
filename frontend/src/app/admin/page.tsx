@@ -47,6 +47,14 @@ export default function AdminHomePage() {
           </p>
         </li>
         <li>
+          <Link href="/admin/synonyms" className="font-medium underline">
+            類義語辞書
+          </Link>
+          <p className="text-sm text-muted-foreground">
+            同じ意味の言い方（例: 「育休」と「育児休業」）をまとめ、どの言い方で検索しても見つかるようにします。
+          </p>
+        </li>
+        <li>
           <Link href="/admin/analytics" className="font-medium underline">
             検索の分析
           </Link>

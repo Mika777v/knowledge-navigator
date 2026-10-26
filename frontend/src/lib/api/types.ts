@@ -14,6 +14,8 @@ export type LifeEventSummary = Schemas["LifeEventSummary"];
 export type KeywordResponse = Schemas["KeywordResponse"];
 export type KeywordTarget = Schemas["Target"];
 export type KeywordTargetType = KeywordResponse["targetType"];
+/** 類義語のグループ（/api/v1/admin/synonyms） */
+export type SynonymGroup = Schemas["SynonymGroupView"];
 export type QueryReport = Schemas["QueryReport"];
 export type FeedbackSummary = Schemas["FeedbackSummary"];
 export type AuditLogPage = Schemas["Page"];

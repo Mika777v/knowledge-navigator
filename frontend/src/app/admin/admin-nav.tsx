@@ -17,6 +17,7 @@ const MENU: MenuItem[] = [
   // きっかけは部署をまたぐため、どの部署のコンテンツ担当者でも編集できる
   { href: "/admin/life-events", label: "きっかけ", roles: ["CONTENT_EDITOR"] },
   { href: "/admin/dictionary", label: "キーワード辞書", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
+  { href: "/admin/synonyms", label: "類義語辞書", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
   { href: "/admin/analytics", label: "検索の分析", roles: ["CONTENT_EDITOR", "SYSTEM_ADMIN"] },
   { href: "/admin/organization", label: "組織", roles: ["SYSTEM_ADMIN"] },
   { href: "/admin/audit-logs", label: "監査ログ", roles: ["SYSTEM_ADMIN"] },

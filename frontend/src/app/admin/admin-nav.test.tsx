@@ -17,6 +17,7 @@ describe("AdminNav", () => {
     renderWithQuery(<AdminNav />);
     expect(await screen.findByRole("link", { name: "検索の分析" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "キーワード辞書" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "類義語辞書" })).toHaveAttribute("href", "/admin/synonyms");
     expect(screen.queryByRole("link", { name: "監査ログ" })).toBeNull();
     expect(screen.queryByRole("link", { name: "組織" })).toBeNull();
   });
