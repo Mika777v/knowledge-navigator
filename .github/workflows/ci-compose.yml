@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
       - name: Search quality evaluation (search-eval)
         # 評価用質問（data/eval）で検索品質を測り、結果をジョブのサマリーに出す。
-        # Hit@5 が目標（70%）を下回ったら失敗、基準値（data/eval/baseline.json）より悪化したら警告にする
+        # Hit@5 が目標（85%）を下回ったら失敗、基準値（data/eval/baseline.json）より悪化したら警告にする
         run: |
           pip install pyyaml
           python scripts/eval/run_eval.py

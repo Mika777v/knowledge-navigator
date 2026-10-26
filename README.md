@@ -43,7 +43,7 @@ GitHub Codespaces でもそのまま動きます。準備・確認の順番・�
 ```bash
 make up      # .env が無ければ .env.example から作成し、ビルドして起動
 make seed    # ダミーデータを投入（デモユーザーでログインできるようになる）
-make eval    # 検索品質の評価（評価用質問50問）
+make eval    # 検索品質の評価（評価用質問100問）
 make test    # テスト（backend・frontend）
 make down    # 停止（データは残る）
 make clean   # 停止してデータも削除
@@ -96,7 +96,7 @@ flowchart LR
 
 ## 品質
 
-評価用質問50問（[data/eval](data/eval/)）で、PR ごとに CI で検索品質を測り、基準値との比較を PR にコメントします。目標（Hit@5 70%）を下回ると CI が失敗します。
+評価用質問100問（[data/eval](data/eval/)）で、PR ごとに CI で検索品質を測り、基準値との比較を PR にコメントします。目標（Hit@5 85%。v0.3.0 の目標）を下回ると CI が失敗します。
 
 | 指標 | 現在の値 |
 |---|---|
