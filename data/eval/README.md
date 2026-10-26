@@ -51,7 +51,7 @@ make eval              # 評価して結果を表示（build/eval/report.md・re
 
 - 評価バッチは `scripts/eval/run_eval.py`。質問ごとに `as` のユーザーでログインし、`GET /api/v1/navigate` を呼ぶ
 - CI（ci-compose の `search-eval` ステップ）でも PR ごとに実行し、結果をジョブのサマリーに出す
-  - **失敗**: Hit@5 が目標（MVP の 70%）を下回った、窓口が1件もない結果があった、検索に失敗した
+  - **失敗**: Hit@5 が目標（v0.3.0 の 85%。MVP では 70%）を下回った、窓口が1件もない結果があった、検索に失敗した
   - **警告**: 基準値 `baseline.json` より悪化した指標がある（失敗にはしない）
 - 検索を改善して指標が上がったら、`python3 scripts/eval/run_eval.py --update-baseline` で基準値を更新し、同じ PR に含める
 

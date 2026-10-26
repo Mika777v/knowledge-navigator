@@ -19,7 +19,7 @@ data/
 │   ├── faqs.yaml         # よくある質問（50件。うち2件は管理職限定）
 │   └── synonyms.yaml     # 類義語辞書（16グループ。育休 = 育児休業 など）
 ├── pdf/                  # documents/ の規程を PDF にしたもの（10本。PDF 取り込みの確認・テスト用）
-└── eval/                 # 検索品質の評価用質問セット（50問。eval/README.md）
+└── eval/                 # 検索品質の評価用質問セット（100問。eval/README.md）
 ```
 
 ## デモユーザー
