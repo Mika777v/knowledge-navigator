@@ -69,7 +69,8 @@ class HybridSearchAdapter implements SearchPort {
         return new SearchCandidates(
                 fuse(byKeyword.programs(), vectors.programs(model, vector, scope, n, min), limit),
                 fuseSections(byKeyword.sections(), vectors.sections(model, vector, scope, n, min), limit),
-                fuse(byKeyword.faqs(), vectors.faqs(model, vector, scope, n, min), limit));
+                fuse(byKeyword.faqs(), vectors.faqs(model, vector, scope, n, min), limit),
+                true);
     }
 
     private List<Hit> fuse(List<Hit> byKeyword, List<VectorHit> byVector, int limit) {

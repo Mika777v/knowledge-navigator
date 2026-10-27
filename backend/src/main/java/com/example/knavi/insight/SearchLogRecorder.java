@@ -23,6 +23,7 @@ public interface SearchLogRecorder {
      * @param resultCounts ブロックごとの件数（例: programs=2）
      * @param topHits 上位の結果（種類・コード・スコア）
      * @param latencyMs 処理時間
+     * @param mode 検索の方式（意味検索を使ったか。ADR-0007 の決定 7）
      */
     record SearchLogEntry(
             UUID userId,
@@ -31,7 +32,16 @@ public interface SearchLogRecorder {
             String normalizedQuery,
             Map<String, Integer> resultCounts,
             List<TopHit> topHits,
-            long latencyMs) {}
+            long latencyMs,
+            Mode mode) {}
+
+    /** search_logs.mode の値 */
+    enum Mode {
+        /** キーワード検索だけ */
+        KEYWORD,
+        /** キーワード検索とベクトル検索を RRF で合わせた */
+        HYBRID
+    }
 
     record TopHit(String type, String code, double score) {}
 }

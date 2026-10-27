@@ -1,6 +1,7 @@
 package com.example.knavi.navigation.application;
 
 import com.example.knavi.insight.SearchLogRecorder;
+import com.example.knavi.insight.SearchLogRecorder.Mode;
 import com.example.knavi.insight.SearchLogRecorder.SearchLogEntry;
 import com.example.knavi.insight.SearchLogRecorder.TopHit;
 import com.example.knavi.navigation.application.NavigationResult.BasisRef;
@@ -271,7 +272,8 @@ public class NavigationService {
                                 "faqs", faqHits.size(),
                                 "contacts", contacts.size()),
                         topHits(programHits, documentHits, faqHits),
-                        (System.nanoTime() - started) / 1_000_000))
+                        (System.nanoTime() - started) / 1_000_000,
+                        candidates.hybrid() ? Mode.HYBRID : Mode.KEYWORD))
                 .orElse(null);
 
         return new NavigationResult(

@@ -63,7 +63,7 @@ class SearchLogApiWithSeedTests {
 
         Map<String, Object> row = jdbc.sql("""
                         SELECT user_hash, department_id, query, normalized_query, result_counts::text AS counts,
-                          top_hits::text AS hits, latency_ms
+                          top_hits::text AS hits, latency_ms, mode
                         FROM search_logs WHERE id = :id
                         """).param("id", logId).query().singleRow();
         assertThat((String) row.get("user_hash"))
@@ -74,6 +74,8 @@ class SearchLogApiWithSeedTests {
         assertThat((String) row.get("counts")).contains("\"programs\"");
         assertThat((String) row.get("hits")).contains("PRG-MARRIAGE-GIFT");
         assertThat((Integer) row.get("latency_ms")).isNotNegative();
+        // 意味検索は既定でオフなので、キーワード検索だけ
+        assertThat(row.get("mode")).isEqualTo("KEYWORD");
 
         UUID second = search("テスト:育休", sato);
         String hashes = jdbc.sql("SELECT count(DISTINCT user_hash) FROM search_logs WHERE id IN (:a, :b)")
