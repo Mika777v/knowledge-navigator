@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -24,10 +25,12 @@ class AiQueryEmbedder implements QueryEmbedder {
     private final Clock clock;
     private volatile CachedInfo cached;
 
+    @Autowired
     AiQueryEmbedder(AiClient ai) {
         this(ai, Clock.systemUTC());
     }
 
+    /** テストで時刻を進めるため */
     AiQueryEmbedder(AiClient ai, Clock clock) {
         this.ai = ai;
         this.clock = clock;
