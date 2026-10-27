@@ -79,6 +79,24 @@ knavi:
     min-distinct-users: 2
     # 検索ログ（クリック・フィードバックを含む）の保存期間。過ぎたものは毎日 3:17（日本時間）に削除する
     retention-days: 180
+  search:
+    vector:
+      # 意味検索（ベクトル検索）のオン・オフ（ADR-0007）。オフならベクトルの合わせも動かさない。make up-ai でオンにする
+      enabled: ${KNAVI_SEARCH_VECTOR_ENABLED:false}
+  ai:
+    # ai-service（ADR-0006）。compose では http://ai-service:8000
+    base-url: ${KNAVI_AI_BASE_URL:http://localhost:8000}
+    # ai-service との共有のトークン。本番では必ず AI_SERVICE_TOKEN を設定する
+    token: ${AI_SERVICE_TOKEN:local-dev-only-change-me}
+    connect-timeout: 2s
+    read-timeout: 60s
+    # 社外に送るプロバイダ（OpenAI など）のとき、ベクトルにしてよい公開範囲（ADR-0008。CONFIDENTIAL は指定しても送らない）
+    external-visibilities: INTERNAL
+  embedding:
+    # 「今あるべきベクトル」と embeddings 表を見比べる間隔（ADR-0012）
+    sync-interval: PT5M
+    # 1回に ai-service へ送る文章の数（ai-service の上限 64 以下）
+    batch-size: 32
   navigation:
     # 検索スコアの重み（docs/ARCHITECTURE.md §4.3）。data/eval の評価結果を見て調整する
     weights:

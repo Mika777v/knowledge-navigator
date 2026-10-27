@@ -55,7 +55,8 @@ backend/src/main/java/com/example/knavi/
 ├── ingestion/        # Phase2: ファイル・PDF解析・ジョブ
 ├── insight/          # 検索ログ・フィードバック・評価
 ├── audit/            # 監査ログ
-└── assistant/        # Phase5: ai-service クライアント、会話
+├── intelligence/     # Phase4: ai-service クライアント、ベクトルの差分合わせ（ADR-0006・0012）
+└── assistant/        # Phase5: 会話（RAG）
     各モジュール: api/ (Controller, DTO) / application/ (UseCase) / domain/ / infrastructure/ (JPA, jOOQ)
 ```
 
