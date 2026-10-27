@@ -70,6 +70,23 @@ make eval-paraphrase   # build/eval-paraphrase/ に出力。Hit@5 が低くて�
 - 基準値 `baseline-paraphrase.json` は**キーワード検索だけ**の成績。v0.4.0 の目標は、意味検索をオンにしたとき Hit@5 がこれより 10 ポイント上がること（ROADMAP）
 - CI（ci-compose）でも `questions.yaml` の評価の後に実行し、結果をジョブのサマリーに出す
 
+## 意味検索をオンにしたときの評価（E13-T7）
+
+意味検索（ハイブリッド検索。ADR-0007）は CI ではモデルを動かせないため、手元で測る。
+
+```bash
+make up-ai       # ai-service・Ollama も起動し、意味検索をオンにする（初回は bge-m3 の取り寄せに数分。約 1.2GB）
+make seed        # ダミーデータを入れる
+make eval-vector # ベクトルの合わせ（1 分ごと）が終わるのを待ってから、2つの質問セットで評価する
+```
+
+- 結果は `build/eval-vector/report.md`（100問）と `build/eval-paraphrase-vector/report.md`（言い換え37問）に出る。表の「基準値」は、キーワード検索だけの成績
+- 見るところ
+  - 言い換え37問の Hit@5 が **34.3% 以上**（基準値 24.3% より +10 ポイント。v0.4.0 の目標）
+  - 100問の Hit@5 が **85% 以上**のままで、基準値より大きく下がっていないこと。「該当なし」（`no-answer`）の質問で総合窓口が案内されること
+- 外れた質問は report.md の「外れた質問」に出る。似ていないものを除く値（`application.yaml` の `knavi.search.vector.min-similarity`、既定 0.5）を変えて測り直すときは、`.env` に `KNAVI_SEARCH_VECTOR_MIN_SIMILARITY=0.6` のように書いて `make up-ai` し直す
+- ベクトルの合わせが終わらないときは `docker compose logs backend ai-service ollama` を確かめる
+
 ## 重みの調整（E12-T4）
 
 検索スコアの重み（`application.yaml` の `knavi.navigation.weights`、docs/ARCHITECTURE.md §4.3）は、この質問セットでグリッド探索して決める。
