@@ -50,7 +50,12 @@ public interface SearchPort {
         }
     }
 
-    record SearchCandidates(List<Hit> programs, List<SectionHit> sections, List<Hit> faqs) {
+    /** @param hybrid ベクトル検索も使った（検索ログの mode に残す。オフ・ai-service に繋がらないときは false） */
+    record SearchCandidates(List<Hit> programs, List<SectionHit> sections, List<Hit> faqs, boolean hybrid) {
+
+        public SearchCandidates(List<Hit> programs, List<SectionHit> sections, List<Hit> faqs) {
+            this(programs, sections, faqs, false);
+        }
 
         public static SearchCandidates empty() {
             return new SearchCandidates(List.of(), List.of(), List.of());

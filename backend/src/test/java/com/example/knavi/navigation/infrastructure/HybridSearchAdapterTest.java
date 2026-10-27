@@ -63,7 +63,9 @@ class HybridSearchAdapterTest {
         var byKeyword = new SearchCandidates(List.of(new Hit(a, 2.5, List.of("結婚"))), List.of(), List.of());
         when(keyword.search(anyString(), any(), any(), anyInt())).thenReturn(byKeyword);
 
-        assertThat(adapter(false).search("結婚したら", TERMS, SCOPE, 30)).isSameAs(byKeyword);
+        var result = adapter(false).search("結婚したら", TERMS, SCOPE, 30);
+        assertThat(result).isSameAs(byKeyword);
+        assertThat(result.hybrid()).isFalse();
         verifyNoInteractions(embedder, vectors);
     }
 
@@ -103,7 +105,10 @@ class HybridSearchAdapterTest {
         when(vectors.sections(anyString(), anyString(), any(), anyInt(), anyDouble()))
                 .thenReturn(List.of(new VectorHit(a, doc, 0.9), new VectorHit(b, doc, 0.6)));
 
-        var sections = adapter(true).search("籍を入れる", List.of(), SCOPE, 30).sections();
+        var result = adapter(true).search("籍を入れる", List.of(), SCOPE, 30);
+        // ベクトル検索を使ったことを検索ログに残す（ADR-0007 の決定 7）
+        assertThat(result.hybrid()).isTrue();
+        var sections = result.sections();
 
         assertThat(sections).extracting(SectionHit::sectionId).containsExactly(a, b);
         assertThat(sections).extracting(SectionHit::documentId).containsOnly(doc);

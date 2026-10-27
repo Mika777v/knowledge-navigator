@@ -61,7 +61,7 @@ public class SearchLogService implements SearchLogRecorder {
         jdbc.sql("""
                             INSERT INTO search_logs (id, user_hash, department_id, query, normalized_query, mode,
                               result_counts, top_hits, latency_ms)
-                            VALUES (:id, :user, :dept, :query, :normalized, 'KEYWORD', CAST(:counts AS jsonb),
+                            VALUES (:id, :user, :dept, :query, :normalized, :mode, CAST(:counts AS jsonb),
                               CAST(:hits AS jsonb), :latency)
                             """)
                 .param("id", id)
@@ -72,6 +72,7 @@ public class SearchLogService implements SearchLogRecorder {
                 .param("counts", json.writeValueAsString(entry.resultCounts()))
                 .param("hits", json.writeValueAsString(entry.topHits()))
                 .param("latency", (int) Math.min(entry.latencyMs(), Integer.MAX_VALUE))
+                .param("mode", entry.mode().name())
                 .update();
         return id;
     }
