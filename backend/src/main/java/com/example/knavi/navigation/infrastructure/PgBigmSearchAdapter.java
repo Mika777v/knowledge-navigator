@@ -39,7 +39,7 @@ class PgBigmSearchAdapter implements SearchPort {
     }
 
     @Override
-    public SearchCandidates search(List<Term> terms, AccessScope scope, int limit) {
+    public SearchCandidates search(String question, List<Term> terms, AccessScope scope, int limit) {
         if (terms.isEmpty()) {
             return SearchCandidates.empty();
         }

@@ -274,6 +274,7 @@ fused         = RRF(k=60)  : score = Σ 1 / (k + rank_i)
 reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系）
 ```
 
+- **実装**（E13-T4・T5）: navigation の `HybridSearchAdapter`（`SearchPort` の実装）が、キーワード検索（`PgBigmSearchAdapter`）とベクトル検索（`VectorSearchQueries`）をブロック（制度・条・FAQ）ごとに RRF で合わせる。ベクトル検索は embeddings を元の表と結合し、キーワード検索と同じ `AccessPolicy.readPredicate(..., SEARCH)` で絞る。コサイン類似度が `knavi.search.vector.min-similarity` 未満のものは出さない（どんな質問にも何か出て、総合窓口の案内が出なくなるのを防ぐ）。合わせた点数は、辞書・きっかけの点数と足し合わせるため、キーワード検索の1位の点数（無ければ本文の重み）を上限にそろえる。意味検索で近かった結果の理由には `SEMANTIC` を付ける
 - **段階的に入れる**: ベクトル検索は設定（例: `knavi.search.vector.enabled`）でオン・オフでき、オフなら今のキーワード検索だけで動く（§5.1 の Graceful Degradation）。評価用の質問で、オン・オフの成績を比べてからオンにする。設定の名前・既定値・判定する場所・トグルを消す時期は [ADR-0007](./adr/0007-pgvector.md) で決めた（`knavi.search.vector.enabled`、既定 `false`、navigation モジュールで判定、トグルは消さない）
 
 ### 5.4 RAG フロー
