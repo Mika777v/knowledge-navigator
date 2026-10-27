@@ -5,7 +5,7 @@ spring-dependency-management = "1.1.7"
 spring-modulith = "2.1.1"
 springdoc = "3.1.1"
 # 原本ファイルの保存（S3 互換ストレージ。ADR-0010）
-aws-sdk = "2.55.11"
+aws-sdk = "2.55.15"
 # PDF からの文字の抽出（ADR-0010）
 pdfbox = "3.0.8"
 # 形態素解析・表記ゆれの正規化（ADR-0011）。辞書（SudachiDict）は build.gradle.kts の sudachiDictionary で取り寄せる
