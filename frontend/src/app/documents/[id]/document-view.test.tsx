@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithQuery } from "@/test/render";
 import { DocumentView } from "./document-view";
@@ -117,6 +117,34 @@ describe("DocumentView", () => {
     expect(screen.getByRole("link", { name: "第5条（結婚祝金）を原本の3ページで開く" })).toHaveTextContent("p.3");
   });
 
+  it("条に似た、ほかの規程の条を押したときに取りに行って出す", async () => {
+    fetchMock
+      .mockResolvedValueOnce(Response.json(detail(current)))
+      .mockResolvedValueOnce(
+        Response.json([
+          { id: "s9", articleNo: "第3条", heading: "特別休暇", documentId: "doc-2", documentCode: "REG-HR-002", documentTitle: "休暇規程" },
+        ]),
+      );
+    renderWithQuery(<DocumentView />);
+
+    const button = await screen.findByRole("button", { name: "第5条（結婚祝金）に似た規定" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(button);
+
+    expect(await screen.findByRole("link", { name: "休暇規程 第3条（特別休暇）" })).toHaveAttribute("href", "/documents/doc-2#section-s9");
+    expect(fetchMock.mock.calls[1]?.[0]).toBe("/api/v1/sections/s5/similar");
+    expect(button).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("似た条が無ければ（意味検索がオフのときも）その旨を出す", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json(detail(current))).mockResolvedValueOnce(Response.json([]));
+    renderWithQuery(<DocumentView />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "第5条（結婚祝金）に似た規定" }));
+
+    expect(await screen.findByText("似た条は見つかりませんでした。")).toBeInTheDocument();
+  });
+
   it("過去の版では注意書きと最新版へのリンクを出す", async () => {
     search = new URLSearchParams({ version: "v1" });
     fetchMock.mockResolvedValueOnce(Response.json(detail(past)));
@@ -125,6 +153,8 @@ describe("DocumentView", () => {
     expect(await screen.findByRole("note")).toHaveTextContent("これは過去の版です");
     expect(screen.getByRole("link", { name: "最新の版" })).toHaveAttribute("href", "/documents/doc-1");
     expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/documents/doc-1?version=v1");
+    // 似た条は公開中の版の条だけで比べるため、過去の版では出さない
+    expect(screen.queryByRole("button", { name: /に似た規定$/ })).toBeNull();
   });
 
   it("hl で渡された語を条文の中で強調する", async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import Link from "next/link";
 import { TagLinks } from "@/components/tag-links";
 import { useParams, useSearchParams } from "next/navigation";
@@ -8,7 +9,7 @@ import { ContactCard } from "@/components/contact-card";
 import { Markdown } from "@/components/markdown";
 import { QueryState } from "@/components/query-state";
 import { apiFetch } from "@/lib/api/http";
-import type { DocumentDetail } from "@/lib/api/types";
+import type { DocumentDetail, SimilarSection } from "@/lib/api/types";
 import { articleTitle, sectionAnchor } from "@/lib/content";
 import { useScrollToHash } from "@/lib/scroll-to-hash";
 
@@ -108,6 +109,8 @@ export function DocumentView() {
                 )}
               </div>
               <Markdown text={s.content} terms={terms} />
+              {/* 似た条は公開中の版の条だけで比べるため、過去の版を見ているときは出さない */}
+              {!version && <SimilarSections sectionId={s.id} title={articleTitle(s.articleNo, s.heading)} />}
             </section>
           ))}
         </div>
@@ -178,6 +181,52 @@ export function DocumentView() {
 }
 
 /** 原本のページの表示（p.3、またがるときは p.3–4） */
+/** この条に似た、ほかの規程の条（E13-T6）。押したときだけ取りに行く */
+function SimilarSections({ sectionId, title }: { sectionId: string; title: string }) {
+  const [open, setOpen] = useState(false);
+  const { data, isPending, error } = useQuery({
+    queryKey: ["section", sectionId, "similar"],
+    queryFn: () => apiFetch<SimilarSection[]>(`/api/v1/sections/${encodeURIComponent(sectionId)}/similar`),
+    enabled: open,
+  });
+  const panelId = `similar-${sectionId}`;
+  return (
+    <div className="mt-2 text-sm">
+      <button
+        type="button"
+        className="text-muted-foreground underline"
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={`${title}に似た規定`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        この条に似た規定
+      </button>
+      {open && (
+        <div id={panelId} className="mt-1">
+          {data ? (
+            data.length === 0 ? (
+              <p className="text-muted-foreground">似た条は見つかりませんでした。</p>
+            ) : (
+              <ul className="flex list-disc flex-col gap-1 pl-5">
+                {data.map((r) => (
+                  <li key={r.id}>
+                    <Link className="underline" href={`/documents/${r.documentId}#${sectionAnchor(r.id)}`}>
+                      {r.documentTitle} {articleTitle(r.articleNo, r.heading)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <QueryState isPending={isPending} error={error} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function pageLabel(from: number, to: number | null | undefined): string {
   return to != null && to !== from ? `p.${from}–${to}` : `p.${from}`;
 }

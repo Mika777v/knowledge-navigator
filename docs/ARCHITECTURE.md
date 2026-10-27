@@ -87,7 +87,7 @@ backend/src/main/java/com/example/knavi/
 | GET | `/documents?category=` | 文書一覧（親カテゴリを指定すると子カテゴリも含む） | 1 |
 | GET | `/documents/{id}`（`?version={versionId}` で公開済みの過去の版） | 文書詳細（条文・版の履歴・この文書を根拠にする制度と窓口） | 1 |
 | GET | `/sections/{id}` | 条文単体（引用リンク先。過去の版の条文も表示し、公開版かどうかを返す） | 1 |
-| GET | `/sections/{id}/similar` | 類似条文 | 4 |
+| GET | `/sections/{id}/similar` | 類似条文（ほかの規程の条、最大5件。embeddings の条どうしを比べ、ai-service は呼ばない。元の条・似た条とも検索と同じ権限で絞り、元の条が見えない・意味検索がオフなら空。同じ文書の条は出さない） | 4 |
 | GET | `/faqs`（`?category=`）/ `/faqs/{id}` | FAQ 一覧 / 詳細（回答・窓口・関連する制度と条文） | 1 |
 | GET | `/contacts` | 部署ごとの問い合わせ窓口 | 1 |
 | GET | `/categories` | カテゴリツリー | 1 |
