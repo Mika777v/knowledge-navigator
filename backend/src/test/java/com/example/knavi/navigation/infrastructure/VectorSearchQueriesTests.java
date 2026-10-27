@@ -134,6 +134,64 @@ class VectorSearchQueriesTests {
                 .doesNotContain(section);
     }
 
+    @Test
+    void similarSectionsComeFromOtherDocumentsOnly() {
+        UUID document = publishedDocument("INTERNAL");
+        UUID source = section(document);
+        UUID sameDocument = section(document);
+        UUID other = section(publishedDocument("INTERNAL"));
+        embed("SECTION", source, 0, near(0));
+        embed("SECTION", sameDocument, 0, near(0));
+        embed("SECTION", other, 0, near(0));
+
+        assertThat(queries.similarSections(source, employee, 5, 0.5))
+                .extracting(VectorHit::id)
+                .contains(other)
+                .doesNotContain(source, sameDocument);
+    }
+
+    @Test
+    void similarSectionsUseEveryChunkOfTheSource() {
+        UUID source = section(publishedDocument("INTERNAL"));
+        UUID other = section(publishedDocument("INTERNAL"));
+        embed("SECTION", source, 0, near(1));
+        embed("SECTION", source, 1, near(2));
+        embed("SECTION", other, 0, near(2));
+
+        var hits = queries.similarSections(source, employee, 5, 0.5).stream()
+                .filter(h -> h.id().equals(other))
+                .toList();
+
+        assertThat(hits).hasSize(1);
+        assertThat(hits.getFirst().similarity()).isGreaterThan(0.99);
+    }
+
+    @Test
+    void similarSectionsHideSectionsTheUserCannotSee() {
+        UUID source = section(publishedDocument("INTERNAL"));
+        UUID managersOnly = section(publishedDocument("MANAGERS"));
+        embed("SECTION", source, 0, near(0));
+        embed("SECTION", managersOnly, 0, near(0));
+
+        assertThat(queries.similarSections(source, employee, 5, 0.0))
+                .extracting(VectorHit::id)
+                .doesNotContain(managersOnly);
+        assertThat(queries.similarSections(source, manager, 5, 0.0))
+                .extracting(VectorHit::id)
+                .contains(managersOnly);
+    }
+
+    @Test
+    void similarSectionsOfASourceTheUserCannotSeeAreEmpty() {
+        UUID source = section(publishedDocument("MANAGERS"));
+        UUID other = section(publishedDocument("INTERNAL"));
+        embed("SECTION", source, 0, near(0));
+        embed("SECTION", other, 0, near(0));
+
+        // 見えない条から、似た条（＝見えない条の内容の手がかり）を引き出せない
+        assertThat(queries.similarSections(source, employee, 5, 0.0)).isEmpty();
+    }
+
     /** hot 番目だけが 1 のベクトル（違う hot どうしはコサイン類似度 0） */
     private static String near(int hot) {
         String[] values = new String[1024];
@@ -220,7 +278,10 @@ class VectorSearchQueriesTests {
                 .single();
         return jdbc.sql("""
                         INSERT INTO sections (document_version_id, ordinal, heading, content, search_text)
-                        VALUES (:version, 1, '第1条', '本文', '本文') RETURNING id
+                        VALUES (:version,
+                                (SELECT coalesce(max(ordinal), 0) + 1 FROM sections WHERE document_version_id = :version),
+                                '第1条', '本文', '本文')
+                        RETURNING id
                         """).param("version", version).query(UUID.class).single();
     }
 }

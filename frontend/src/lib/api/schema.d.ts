@@ -685,6 +685,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sections/{id}/similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** この条に似た、ほかの規程の条（最大5件。意味検索がオフ・見えない条なら空） */
+        get: operations["similar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/navigate": {
         parameters: {
             query?: never;
@@ -1635,6 +1652,16 @@ export interface components {
             name: string;
             reason: string;
             lifeEvent: string;
+        };
+        SimilarSection: {
+            /** Format: uuid */
+            id: string;
+            articleNo: string;
+            heading: string;
+            /** Format: uuid */
+            documentId: string;
+            documentCode: string;
+            documentTitle: string;
         };
         BasisRef: {
             /** Format: uuid */
@@ -3263,6 +3290,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecommendedProgram"][];
+                };
+            };
+        };
+    };
+    similar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SimilarSection"][];
                 };
             };
         };

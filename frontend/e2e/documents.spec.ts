@@ -18,6 +18,12 @@ test("社員がホームから規程の一覧を開き、タグで絞り込め�
   // make seed で原本（data/pdf）を結び付けているので、原本と条ごとのページを開ける
   await expect(page.getByRole("link", { name: "原本（PDF）を開く" })).toHaveAttribute("href", /\/source$/);
   await expect(page.getByRole("link", { name: /^第1条（目的）を原本の1ページで開く$/ })).toHaveAttribute("href", /#page=1$/);
+  // 条に似たほかの規程の条（E13-T6）。意味検索がオフ（make up）なら見つからない旨、オン（make up-ai）なら一覧が出る
+  const similar = page.getByRole("button", { name: "第1条（目的）に似た規定" });
+  await similar.click();
+  await expect(similar).toHaveAttribute("aria-expanded", "true");
+  const panel = page.locator(`#${await similar.getAttribute("aria-controls")}`);
+  await expect(panel.getByText("似た条は見つかりませんでした。").or(panel.getByRole("link").first())).toBeVisible();
   await page.getByRole("list", { name: "タグ", exact: true }).getByRole("link", { name: "全社員" }).click();
   await expect(page.getByText("「全社員」のタグが付いた規程を表示しています。")).toBeVisible();
 });

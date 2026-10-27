@@ -20,6 +20,7 @@ export type SynonymGroup = Schemas["SynonymGroupView"];
 export type SuggestionItem = Schemas["SuggestionItem"];
 /** GET /api/v1/programs/{id}/recommendations */
 export type RecommendedProgram = Schemas["RecommendedProgram"];
+export type SimilarSection = Schemas["SimilarSection"];
 export type QueryReport = Schemas["QueryReport"];
 export type FeedbackSummary = Schemas["FeedbackSummary"];
 export type AuditLogPage = Schemas["Page"];
