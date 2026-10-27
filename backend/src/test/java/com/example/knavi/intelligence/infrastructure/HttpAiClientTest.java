@@ -53,7 +53,7 @@ class HttpAiClientTest {
     HttpAiClient client(String path) {
         String url = "http://127.0.0.1:" + server.getAddress().getPort() + path;
         Duration timeout = Duration.ofSeconds(5);
-        return new HttpAiClient(new AiProperties(url, "secret-token", timeout, timeout, List.of("INTERNAL")));
+        return new HttpAiClient(new AiProperties(url, "secret-token", timeout, timeout, timeout, List.of("INTERNAL")));
     }
 
     @Test
@@ -70,6 +70,16 @@ class HttpAiClientTest {
         assertThat(vectors.get(0)).containsExactly(0.1f, 0.2f);
         assertThat(vectors.get(1)).containsExactly(0.3f, 0.4f);
         assertThat(seen.get("body")).contains("\"texts\"").contains("育児休業");
+    }
+
+    @Test
+    void embedQueryReturnsTheVectorOfTheQuestion() {
+        server.removeContext("/v1/embeddings");
+        server.createContext("/v1/embeddings", exchange -> respond(exchange, 200, """
+                {"model":"bge-m3","dims":2,"embeddings":[[0.5,0.6]]}
+                """));
+
+        assertThat(client("").embedQuery("結婚したら")).containsExactly(0.5f, 0.6f);
     }
 
     @Test

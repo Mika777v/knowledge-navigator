@@ -164,15 +164,19 @@ public class NavigationService {
         }
 
         // 4. 全文検索
-        SearchCandidates candidates = searchPort.search(searchTerms, scope, CANDIDATE_LIMIT);
-        candidates.programs().forEach(h -> programs.add(h.id(), h.score(), textReasons(h.matchedTerms())));
-        candidates.faqs().forEach(h -> faqs.add(h.id(), h.score(), textReasons(h.matchedTerms())));
+        SearchCandidates candidates = searchPort.search(query.raw(), searchTerms, scope, CANDIDATE_LIMIT);
+        for (SearchPort.Hit h : candidates.programs()) {
+            programs.add(h.id(), h.score(), textReasons(h.matchedTerms(), h.semantic()));
+        }
+        for (SearchPort.Hit h : candidates.faqs()) {
+            faqs.add(h.id(), h.score(), textReasons(h.matchedTerms(), h.semantic()));
+        }
         Map<UUID, List<SearchPort.SectionHit>> sectionsByDocument = new HashMap<>();
         for (SearchPort.SectionHit h : candidates.sections()) {
             sectionsByDocument
                     .computeIfAbsent(h.documentId(), k -> new ArrayList<>())
                     .add(h);
-            documents.add(h.documentId(), 0, textReasons(h.matchedTerms()));
+            documents.add(h.documentId(), 0, textReasons(h.matchedTerms(), h.semantic()));
             documents.raiseTo(h.documentId(), h.score());
         }
 
@@ -443,8 +447,14 @@ public class NavigationService {
         return (start > 0 ? "…" : "") + text.substring(start, end) + (end < text.length() ? "…" : "");
     }
 
-    private static List<String> textReasons(List<String> terms) {
-        return terms.stream().map(t -> "TEXT:" + t).toList();
+    /** 全文検索の理由（一致した語）。意味検索でも近かったものには SEMANTIC を付ける */
+    private static List<String> textReasons(List<String> terms, boolean semantic) {
+        List<String> reasons =
+                new ArrayList<>(terms.stream().map(t -> "TEXT:" + t).toList());
+        if (semantic) {
+            reasons.add("SEMANTIC");
+        }
+        return reasons;
     }
 
     private static double round(double score) {

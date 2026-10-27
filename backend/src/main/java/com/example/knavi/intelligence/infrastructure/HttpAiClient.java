@@ -3,6 +3,7 @@ package com.example.knavi.intelligence.infrastructure;
 import com.example.knavi.intelligence.application.AiClient;
 import com.example.knavi.intelligence.application.AiProperties;
 import com.example.knavi.intelligence.application.AiServiceInfo;
+import java.time.Duration;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -16,12 +17,19 @@ import org.springframework.web.client.RestClientException;
 class HttpAiClient implements AiClient {
 
     private final RestClient client;
+    /** 検索の質問用（待つ時間を短くする） */
+    private final RestClient queryClient;
 
     HttpAiClient(AiProperties properties) {
+        this.client = client(properties, properties.readTimeout());
+        this.queryClient = client(properties, properties.queryTimeout());
+    }
+
+    private static RestClient client(AiProperties properties, Duration readTimeout) {
         var factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(properties.connectTimeout());
-        factory.setReadTimeout(properties.readTimeout());
-        this.client = RestClient.builder()
+        factory.setReadTimeout(readTimeout);
+        return RestClient.builder()
                 .baseUrl(properties.baseUrl())
                 .requestFactory(factory)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.token())
@@ -43,6 +51,15 @@ class HttpAiClient implements AiClient {
 
     @Override
     public List<float[]> embed(List<String> texts) {
+        return embed(client, texts);
+    }
+
+    @Override
+    public float[] embedQuery(String question) {
+        return embed(queryClient, List.of(question)).getFirst();
+    }
+
+    private static List<float[]> embed(RestClient client, List<String> texts) {
         try {
             EmbeddingResponse response = client.post()
                     .uri("/v1/embeddings")
