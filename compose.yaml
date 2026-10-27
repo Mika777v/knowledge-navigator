@@ -64,6 +64,10 @@ services:
       KNAVI_STORAGE_CREATE_BUCKET: "true"
       # 意味検索（ADR-0006・0007）。make up-ai のときだけ true になる。ai-service がなくてもキーワード検索で動く
       KNAVI_SEARCH_VECTOR_ENABLED: ${KNAVI_SEARCH_VECTOR_ENABLED:-false}
+      # ベクトルを合わせる間隔（ADR-0012）。make up-ai では 1 分にする
+      KNAVI_EMBEDDING_SYNC_INTERVAL: ${KNAVI_EMBEDDING_SYNC_INTERVAL:-PT5M}
+      # 似ていないものを除く値（ADR-0007）。評価で決める
+      KNAVI_SEARCH_VECTOR_MIN_SIMILARITY: ${KNAVI_SEARCH_VECTOR_MIN_SIMILARITY:-0.5}
       KNAVI_AI_BASE_URL: http://ai-service:8000
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-only-change-me}
       TZ: Asia/Tokyo

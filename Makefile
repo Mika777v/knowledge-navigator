@@ -19,7 +19,7 @@ up: .env ## 全サービスをビルドして起動する（起動完了まで�
 
 .PHONY: up-ai
 up-ai: .env ## AI の処理（ai-service）も含めて起動し、意味検索をオンにする（ADR-0006・0007。止めるときは make down-ai）
-	KNAVI_SEARCH_VECTOR_ENABLED=true $(COMPOSE) --profile ai up -d --build --wait
+	KNAVI_SEARCH_VECTOR_ENABLED=true KNAVI_EMBEDDING_SYNC_INTERVAL=PT1M $(COMPOSE) --profile ai up -d --build --wait
 
 .PHONY: down-ai
 down-ai: ## ai-service も含めて停止する（データは残る）
@@ -72,7 +72,7 @@ pdfs: ## ダミー規程の PDF（data/pdf）を作り直す（reportlab と IPA
 .PHONY: eval
 eval: .env ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
-	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080}
+	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080} $(ARGS)
 
 .PHONY: eval-paraphrase
 eval-paraphrase: .env ## 言い換えの質問で検索品質を測る（意味検索の効果を見る。失敗にはしない）
@@ -80,6 +80,12 @@ eval-paraphrase: .env ## 言い換えの質問で検索品質を測る（意味�
 	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080} \
 	  --questions data/eval/paraphrase.yaml --baseline data/eval/baseline-paraphrase.json \
 	  --output build/eval-paraphrase --min-hit5 0 $(ARGS)
+
+.PHONY: eval-vector
+eval-vector: .env ## 意味検索をオンにした成績を測る（事前に make up-ai・make seed。ベクトルの合わせが終わるまで待ってから評価する）
+	scripts/eval/wait_embeddings.sh
+	-$(MAKE) eval ARGS="--output build/eval-vector"
+	$(MAKE) eval-paraphrase ARGS="--output build/eval-paraphrase-vector"
 
 .PHONY: eval-tune
 eval-tune: .env ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
