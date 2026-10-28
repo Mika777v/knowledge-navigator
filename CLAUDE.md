@@ -80,3 +80,5 @@
 - テキストブロック（`"""`）は行末の空白を削るので、SQL を連結するときは注意する
 - 手元で backend の jar を起動したまま `./gradlew build` すると jar が上書きされて落ちる。ビルドの後に起動し直す
 - 確認用の画面・データ投入: `make up` → `make seed`（Codespaces でも同じ。4コアを推奨）
+- **`schema.d.ts` は CI が API と比べる。** backend を起動できない環境では、API を変えた PR を一度 push し、backend の CI が出す `schema.d.ts` の差分をそのまま当てる（生成の順番も含めて一致させる。手で書いた型は順番がずれやすい）
+- この開発環境では Maven Central・Docker Hub が回数制限（429）を返すことがある。Gradle は取り寄せた分を残すので、時間をおいて繰り返せば進む（`--max-workers=1`）。DB を使うテストは CI で確かめる
