@@ -38,14 +38,22 @@
 
 - `passages` は検索の順位の順。backend が権限で絞り、番号（`ref`）を付けたもの。窓口・根拠の表示は backend が DB の値で描く（[ADR-0009](../docs/adr/0009-contacts-and-evidence-from-db.md)）
 - 文脈（E14-T1）: 渡された順に `<passage ref="n" title="…">` で囲んで並べる。全体 6000 文字・1件 1500 文字を上限にし、入らない下位の条は落とす（1件目は切り詰めて必ず入れる）。本文の中の `<passage` は全角にして、区切りの外に抜け出せないようにする
-- 応答: `answerable`・`reason`・`answer`・`citations`（回答文の `[n]`）・`model`
+- 応答: `answerable`・`reason`・`answer`・`citations`（回答文の `[n]`）・`model`・`failed_check`
   | `reason` | 意味 |
   |---|---|
-  | `ANSWERED` | 回答できた |
+  | `ANSWERED` | 回答できた（下の照合をすべて通った） |
   | `NO_EVIDENCE` | 条が1件もなく、LLM を呼ばなかった |
   | `NOT_IN_CONTEXT` | LLM が「該当する記載が見つかりません。」と答えた |
+  | `VERIFICATION_FAILED` | 照合に通らず、回答文を捨てた。通らなかった検査を `failed_check` に入れる |
 - プロバイダの失敗・時間切れ（110 秒）は 502。backend は 4ブロックの結果を残して「回答できない」にする
-- 引用の番号・数値・連絡先の照合（E14-T3）はまだ入っていない
+- 照合（E14-T3、`app/rag/verify.py`）。全角・半角、桁区切りのカンマ、「ヶ月・カ月」の書き方のちがいはそろえて比べる
+  | `failed_check` | 通らなかった検査 |
+  |---|---|
+  | `NO_CITATION` | 回答文に `[n]` が1つもない |
+  | `UNKNOWN_CITATION` | 文脈に入っていない番号を引用した（上限で落ちた条を含む） |
+  | `UNCITED_SENTENCE` | 引用のない文がある（15文字未満の短い前置きは除く） |
+  | `NUMBER_NOT_IN_SOURCE` | 金額・日数などの数値（単位を含む）が、その文で引用した条にない。「3万円」のような言い換えも通さない |
+  | `CONTACT_IN_ANSWER` | メールアドレス・電話番号・内線を書いた（窓口は backend が DB の値で出す。ADR-0009） |
 
 ## 手元で動かす
 

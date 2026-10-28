@@ -10,6 +10,11 @@ from app.main import create_app
 
 AUTH = {"Authorization": "Bearer test-token"}
 PASSAGE = {"ref": 1, "title": "慶弔見舞金規程 第5条（結婚祝金）", "text": "結婚祝金として30,000円を支給する。"}
+PASSAGE2 = {
+    "ref": 2,
+    "title": "慶弔見舞金規程 第3条（申請方法）",
+    "text": "申請は、事由が発生した日から6か月以内に行う。",
+}
 
 
 class RecordingChat(FakeChat):
@@ -60,6 +65,7 @@ def test_answers_with_citations_from_the_passages(client: TestClient) -> None:
         "answer": "結婚祝金として30,000円を支給する。[1]",
         "citations": [1],
         "model": "fake-chat",
+        "failed_check": None,
     }
 
 
@@ -83,14 +89,51 @@ def test_the_fixed_no_answer_phrase_means_not_in_context(monkeypatch: pytest.Mon
         "answer": None,
         "citations": [],
         "model": "recording",
+        "failed_check": None,
     }
 
 
 def test_citations_are_deduplicated_in_order_and_full_width_is_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
-    reply = "30,000円です。［２］申請は6か月以内です。[1][2]"
+    reply = "申請は6ヶ月以内です。［２］金額は30,000円です。[1][2]"
+    with make_client(monkeypatch, RecordingChat(reply)) as client:
+        body = client.post(
+            "/v1/rag/answer", json={"question": "結婚祝金", "passages": [PASSAGE, PASSAGE2]}, headers=AUTH
+        ).json()
+    assert body["answerable"] is True
+    assert body["citations"] == [2, 1]
+
+
+@pytest.mark.parametrize(
+    ("reply", "check"),
+    [
+        ("結婚祝金は35,000円です。[1]", "NUMBER_NOT_IN_SOURCE"),
+        ("結婚祝金は30,000円です。[3]", "UNKNOWN_CITATION"),
+        ("結婚祝金は30,000円です。", "NO_CITATION"),
+        ("結婚祝金は30,000円です。[1] 詳しくは総務部 ga@example.com へ。[1]", "CONTACT_IN_ANSWER"),
+    ],
+    ids=["wrong-number", "unknown-ref", "no-citation", "contact"],
+)
+def test_answers_that_fail_verification_are_discarded(monkeypatch: pytest.MonkeyPatch, reply: str, check: str) -> None:
     with make_client(monkeypatch, RecordingChat(reply)) as client:
         body = client.post("/v1/rag/answer", json={"question": "結婚祝金", "passages": [PASSAGE]}, headers=AUTH).json()
-    assert body["citations"] == [2, 1]
+    assert body == {
+        "answerable": False,
+        "reason": "VERIFICATION_FAILED",
+        "answer": None,
+        "citations": [],
+        "model": "recording",
+        "failed_check": check,
+    }
+
+
+def test_passages_dropped_from_the_context_cannot_be_cited(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_CONTEXT_CHARS", "10")
+    reply = "申請は6か月以内です。[2]"
+    with make_client(monkeypatch, RecordingChat(reply)) as client:
+        body = client.post(
+            "/v1/rag/answer", json={"question": "結婚祝金", "passages": [PASSAGE, PASSAGE2]}, headers=AUTH
+        ).json()
+    assert body["failed_check"] == "UNKNOWN_CITATION"
 
 
 def test_the_prompt_carries_the_rules_the_context_and_the_question(monkeypatch: pytest.MonkeyPatch) -> None:
