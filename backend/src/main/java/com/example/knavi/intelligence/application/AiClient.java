@@ -14,6 +14,21 @@ public interface AiClient {
     /** 検索の質問のベクトル。利用者を待たせないよう、短いタイムアウトで呼ぶ */
     float[] embedQuery(String question);
 
+    /** 今の回答文の生成のプロバイダ・モデル（{@code GET /v1/info} の chat） */
+    AiChatInfo chatInfo();
+
+    /** 根拠付きの回答文（{@code POST /v1/rag/answer}）。生成を待つため、長いタイムアウトで呼ぶ */
+    RagAnswer answer(String question, List<RagPassage> passages);
+
+    /** @param ref 根拠の番号（1〜） */
+    record RagPassage(int ref, String title, String text) {}
+
+    /**
+     * @param reason ANSWERED / NO_EVIDENCE / NOT_IN_CONTEXT（E14-T3 からは照合に通らなかった理由も）
+     * @param citations 回答文で引用した根拠の番号
+     */
+    record RagAnswer(boolean answerable, String reason, String answer, List<Integer> citations, String model) {}
+
     /** ai-service に繋がらない・失敗した */
     class AiServiceException extends RuntimeException {
         public AiServiceException(String message, Throwable cause) {

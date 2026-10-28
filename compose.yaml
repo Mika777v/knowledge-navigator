@@ -69,6 +69,8 @@ services:
       # 似ていないものを除く値（ADR-0007）。評価で決める
       KNAVI_SEARCH_VECTOR_MIN_SIMILARITY: ${KNAVI_SEARCH_VECTOR_MIN_SIMILARITY:-0.5}
       KNAVI_AI_BASE_URL: http://ai-service:8000
+      # 根拠付き回答（ADR-0013）。make up-ai のときだけ true になる
+      KNAVI_ASSISTANT_ENABLED: ${KNAVI_ASSISTANT_ENABLED:-false}
       AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-local-dev-only-change-me}
       TZ: Asia/Tokyo
     ports:

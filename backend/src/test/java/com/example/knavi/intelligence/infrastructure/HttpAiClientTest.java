@@ -3,7 +3,10 @@ package com.example.knavi.intelligence.infrastructure;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.knavi.intelligence.application.AiChatInfo;
 import com.example.knavi.intelligence.application.AiClient.AiServiceException;
+import com.example.knavi.intelligence.application.AiClient.RagAnswer;
+import com.example.knavi.intelligence.application.AiClient.RagPassage;
 import com.example.knavi.intelligence.application.AiProperties;
 import com.example.knavi.intelligence.application.AiServiceInfo;
 import com.sun.net.httpserver.HttpExchange;
@@ -32,7 +35,19 @@ class HttpAiClientTest {
             seen.put("auth", String.valueOf(exchange.getRequestHeaders().getFirst("Authorization")));
             respond(exchange, 200, """
                     {"service":"knavi-ai-service","version":"0.1.0",
-                     "embedding":{"provider":"ollama","model":"bge-m3","dims":1024,"external":false}}
+                     "embedding":{"provider":"ollama","model":"bge-m3","dims":1024,"external":false},
+                     "chat":{"provider":"ollama","model":"qwen3.5:4b","external":false}}
+                    """);
+        });
+        server.createContext("/old/v1/info", exchange -> respond(exchange, 200, """
+                {"service":"knavi-ai-service","version":"0.1.0",
+                 "embedding":{"provider":"ollama","model":"bge-m3","dims":1024,"external":false}}
+                """));
+        server.createContext("/v1/rag/answer", exchange -> {
+            seen.put("answer", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            respond(exchange, 200, """
+                    {"answerable":true,"reason":"ANSWERED","answer":"30,000円です。[1]","citations":[1],
+                     "model":"qwen3.5:4b"}
                     """);
         });
         server.createContext("/v1/embeddings", exchange -> {
@@ -53,7 +68,29 @@ class HttpAiClientTest {
     HttpAiClient client(String path) {
         String url = "http://127.0.0.1:" + server.getAddress().getPort() + path;
         Duration timeout = Duration.ofSeconds(5);
-        return new HttpAiClient(new AiProperties(url, "secret-token", timeout, timeout, timeout, List.of("INTERNAL")));
+        return new HttpAiClient(
+                new AiProperties(url, "secret-token", timeout, timeout, timeout, timeout, List.of("INTERNAL")));
+    }
+
+    @Test
+    void readsTheChatProvider() {
+        assertThat(client("").chatInfo()).isEqualTo(new AiChatInfo("ollama", "qwen3.5:4b", false));
+    }
+
+    @Test
+    void anOldServiceWithoutChatIsAnError() {
+        assertThatThrownBy(() -> client("/old").chatInfo()).isInstanceOf(AiServiceException.class);
+    }
+
+    @Test
+    void postsTheQuestionAndPassagesAndReadsTheAnswer() {
+        RagAnswer answer = client("").answer("結婚祝金はいくら？", List.of(new RagPassage(1, "規程 第5条", "30,000円を支給する。")));
+
+        assertThat(answer).isEqualTo(new RagAnswer(true, "ANSWERED", "30,000円です。[1]", List.of(1), "qwen3.5:4b"));
+        assertThat(seen.get("answer"))
+                .contains("\"question\":\"結婚祝金はいくら？\"")
+                .contains("\"ref\":1")
+                .contains("\"title\":\"規程 第5条\"");
     }
 
     @Test

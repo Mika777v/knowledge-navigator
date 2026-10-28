@@ -233,6 +233,49 @@ public class NavigationQueries {
                 .list();
     }
 
+    /**
+     * 回答の文脈にする条（E14-T4）。検索と同じ権限（SEARCH）で見える文書の、今の版の条だけを返す。
+     *
+     * @param visibility 文書の公開範囲（生成のプロバイダに送ってよいかを判断する。ADR-0008）
+     */
+    public record PassageRow(
+            UUID sectionId,
+            UUID documentId,
+            String documentTitle,
+            String versionLabel,
+            String visibility,
+            String articleNo,
+            String heading,
+            String content,
+            Integer pageFrom,
+            Integer pageTo) {}
+
+    public List<PassageRow> passages(Collection<UUID> sectionIds, AccessScope scope) {
+        if (sectionIds.isEmpty()) {
+            return List.of();
+        }
+        SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.SEARCH);
+        return jdbc.sql("SELECT s.id, d.id AS document_id, d.title, v.version_label, d.visibility, s.article_no,"
+                        + " s.heading, s.content, s.page_from, s.page_to FROM sections s"
+                        + " JOIN document_versions v ON v.id = s.document_version_id"
+                        + " JOIN documents d ON d.current_version_id = v.id WHERE s.id IN (:ids) AND "
+                        + visible.sql())
+                .params(visible.params())
+                .param("ids", sectionIds)
+                .query((rs, i) -> new PassageRow(
+                        rs.getObject("id", UUID.class),
+                        rs.getObject("document_id", UUID.class),
+                        rs.getString("title"),
+                        rs.getString("version_label"),
+                        rs.getString("visibility"),
+                        rs.getString("article_no"),
+                        rs.getString("heading"),
+                        rs.getString("content"),
+                        rs.getObject("page_from", Integer.class),
+                        rs.getObject("page_to", Integer.class)))
+                .list();
+    }
+
     // ------------------------------------------------------------------ FAQ
 
     public record FaqRow(UUID id, String code, String question, UUID contactId) {}
