@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { proxyToBackend } from "./proxy";
+import { proxyToBackend, timeoutFor } from "./proxy";
 
 describe("proxyToBackend", () => {
   const fetchMock = vi.fn();
@@ -80,5 +80,10 @@ describe("proxyToBackend", () => {
     expect(res.status).toBe(502);
     const body = await res.text();
     expect(body).not.toContain("ECONNREFUSED");
+  });
+
+  it("根拠付き回答（SSE）だけは、回答文の生成を待つため長く待つ", () => {
+    expect(timeoutFor(["v1", "assistant", "answers"])).toBe(180_000);
+    expect(timeoutFor(["v1", "navigate"])).toBe(60_000);
   });
 });
