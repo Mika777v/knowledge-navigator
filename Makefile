@@ -18,8 +18,9 @@ up: .env ## 全サービスをビルドして起動する（起動完了まで�
 	$(COMPOSE) up -d --build --wait
 
 .PHONY: up-ai
-up-ai: .env ## AI の処理（ai-service）も含めて起動し、意味検索をオンにする（ADR-0006・0007。止めるときは make down-ai）
-	KNAVI_SEARCH_VECTOR_ENABLED=true KNAVI_EMBEDDING_SYNC_INTERVAL=PT1M $(COMPOSE) --profile ai up -d --build --wait
+up-ai: .env ## AI の処理（ai-service）も含めて起動し、意味検索と根拠付き回答をオンにする（ADR-0006・0007・0013。止めるときは make down-ai）
+	KNAVI_SEARCH_VECTOR_ENABLED=true KNAVI_ASSISTANT_ENABLED=true KNAVI_EMBEDDING_SYNC_INTERVAL=PT1M \
+	  $(COMPOSE) --profile ai up -d --build --wait
 
 .PHONY: down-ai
 down-ai: ## ai-service も含めて停止する（データは残る）

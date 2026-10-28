@@ -96,8 +96,16 @@ knavi:
     read-timeout: 60s
     # 検索の質問をベクトルにするのを待つ時間。過ぎたらキーワード検索だけで返す
     query-timeout: 2s
-    # 社外に送るプロバイダ（OpenAI など）のとき、ベクトルにしてよい公開範囲（ADR-0008。CONFIDENTIAL は指定しても送らない）
+    # 回答文の生成を待つ時間（ADR-0013）。ai-service はこれより短い 110 秒で打ち切る
+    answer-timeout: 120s
+    # 社外に送るプロバイダ（OpenAI など）のとき、ベクトルにする・回答の文脈に入れてよい公開範囲
+    # （ADR-0008。CONFIDENTIAL は指定しても送らない）
     external-visibilities: INTERNAL
+  assistant:
+    # 根拠付き回答（ADR-0013）。ai-service（make up-ai）を動かしているときだけ true にする。false なら4ブロックの結果だけ返す
+    enabled: ${KNAVI_ASSISTANT_ENABLED:false}
+    # 回答の文脈に入れる条の数の上限（検索の上位から）
+    max-passages: 6
   embedding:
     # 「今あるべきベクトル」と embeddings 表を見比べる間隔（ADR-0012）
     sync-interval: PT5M

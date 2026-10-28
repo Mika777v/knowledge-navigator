@@ -56,11 +56,13 @@ backend/src/main/java/com/example/knavi/
 ├── insight/          # 検索ログ・フィードバック・評価
 ├── audit/            # 監査ログ
 ├── intelligence/     # Phase4: ai-service クライアント、ベクトルの差分合わせ（ADR-0006・0012）
-└── assistant/        # Phase5: 会話（RAG）
+└── assistant/        # Phase5: 会話（RAG）。v0.5.0 の根拠付き回答は navigation に置いた（下の注）
     各モジュール: api/ (Controller, DTO) / application/ (UseCase) / domain/ / infrastructure/ (JPA, jOOQ)
 ```
 
 モジュール間依存は **Spring Modulith** で検証（循環依存をテストで検出）。
+
+> 根拠付き回答（`POST /assistant/answers`、E14-T4）は、4ブロックの結果と、権限で絞った条の読み直しを検索と共有するため、navigation モジュールに置いた（`AnswerService`・`AssistantController`）。ai-service の呼び出しは intelligence の `AnswerGenerator` を入口にする。会話（確認の質問など、v0.6.0）で処理が大きくなったら assistant モジュールに分ける。
 
 ---
 
@@ -279,6 +281,8 @@ reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系�
 
 ### 5.4 RAG フロー
 
+> 実装（E14-T4）: SSE のイベントは `results`（4ブロック）→ `answer`（回答文と、DB の値で描いた根拠）または `unanswerable`（理由）→ `done`。文脈にする条は、上位3件の制度の根拠の条と上位の文書の条（検索の順、最大 `knavi.assistant.max-passages` 件）を、検索と同じ権限で読み直し、生成のプロバイダに送ってよい公開範囲（ADR-0008）だけにしたもの。機能のオン・オフは `knavi.assistant.enabled`（`make up-ai` でオン）
+>
 > 生成のモデル・回答の届け方（確かめてから段階ごとに SSE で送る）は [ADR-0013](./adr/0013-rag-generation-model-and-delivery.md)、窓口・根拠を DB の値で描くことは [ADR-0009](./adr/0009-contacts-and-evidence-from-db.md) で決めた。下の図の `answer` は1回の JSON で返す
 
 ```mermaid

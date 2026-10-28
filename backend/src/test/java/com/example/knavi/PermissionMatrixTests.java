@@ -1,18 +1,30 @@
 package com.example.knavi;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.knavi.content.DocumentImport;
 import com.example.knavi.content.DocumentImport.ImportedDocument;
+import com.example.knavi.intelligence.AnswerGenerator;
+import com.example.knavi.intelligence.AnswerGenerator.GeneratedAnswer;
+import com.example.knavi.intelligence.AnswerGenerator.Passage;
+import com.example.knavi.navigation.application.AnswerService;
+import com.example.knavi.navigation.application.AnswerService.AnswerSink;
+import com.example.knavi.navigation.application.AssistantAnswer;
+import com.example.knavi.navigation.application.AssistantUnanswerable;
+import com.example.knavi.navigation.application.NavigationResult;
 import com.example.knavi.organization.infrastructure.KnaviUserDetails;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +36,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +51,8 @@ import org.springframework.transaction.annotation.Transactional;
  *   <li>関連（VIEW）: 制度の根拠・FAQ・きっかけの制度など、別の資源を経由しても見えないものは出ない
  *   <li>検索（SEARCH）: 見えるもの（CONFIDENTIAL を除く）だけが出る。見えないものだけに含まれる語で検索しても、
  *       件数・抜粋・窓口・関連制度のどこにも痕跡が出ない（該当なしと同じ応答になる）
+ *   <li>回答の文脈（E14-T4・T7）: 生成のプロバイダに渡す条も、検索と同じく見えるものだけ。社外に送るプロバイダには、
+ *       さらに送ってよい公開範囲だけを渡す
  * </ul>
  *
  * <p>RESTRICTED は人事部に、CONFIDENTIAL はユーザー「機密閲覧者」に access_rules で許可する。
@@ -45,6 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional
+@TestPropertySource(properties = "knavi.assistant.enabled=true")
 class PermissionMatrixTests {
 
     static final List<String> VISIBILITIES = List.of("INTERNAL", "MANAGERS", "RESTRICTED", "CONFIDENTIAL");
@@ -61,6 +78,13 @@ class PermissionMatrixTests {
 
     @Autowired
     DocumentImport documentImport;
+
+    @Autowired
+    AnswerService answerService;
+
+    /** 生成は差し替え、渡された条を記録する */
+    @MockitoBean
+    AnswerGenerator generator;
 
     UUID ga;
     UUID hr;
@@ -255,7 +279,53 @@ class PermissionMatrixTests {
         }
     }
 
+    @ParameterizedTest(name = "{0}: 回答の文脈に入るのは {1} から機密を除いた条だけ")
+    @MethodSource("matrix")
+    void answerContextHasOnlySearchableSections(String who, List<String> viewable) {
+        List<String> searchable =
+                viewable.stream().filter(v -> !v.equals("CONFIDENTIAL")).toList();
+        when(generator.sendableVisibilities()).thenReturn(Set.of("INTERNAL", "MANAGERS", "RESTRICTED"));
+
+        List<Passage> passages = answerContext("マトリクス", who);
+
+        assertThat(passages).extracting(Passage::title).allSatisfy(title -> assertThat(title)
+                .startsWith("DOC-"));
+        assertThat(passages.stream().map(p -> p.title().split(" ")[0]).toList())
+                .containsExactlyInAnyOrderElementsOf(prefixed("DOC-", searchable));
+        assertNoTraceOfHidden(passages.toString(), searchable);
+    }
+
+    @ParameterizedTest(name = "{0}: 社外に送るプロバイダには、社内公開の条だけを渡す")
+    @MethodSource("matrix")
+    void externalProvidersReceiveOnlySendableVisibilities(String who, List<String> viewable) {
+        when(generator.sendableVisibilities()).thenReturn(Set.of("INTERNAL"));
+
+        assertThat(answerContext("マトリクス", who))
+                .extracting(p -> p.title().split(" ")[0])
+                .containsExactly("DOC-INTERNAL");
+    }
+
     // ------------------------------------------------------------------ 補助
+
+    /** 回答を求め、生成のプロバイダに渡された条を返す（渡されなければ空） */
+    private List<Passage> answerContext(String q, String who) {
+        List<List<Passage>> received = new java.util.ArrayList<>();
+        when(generator.generate(anyString(), anyList())).thenAnswer(invocation -> {
+            received.add(invocation.getArgument(1));
+            return new GeneratedAnswer(true, "ANSWERED", "回答です。[1]", List.of(1), "fake");
+        });
+        answerService.answer(q, users.get(who), new AnswerSink() {
+            @Override
+            public void results(NavigationResult result) {}
+
+            @Override
+            public void answer(AssistantAnswer answer) {}
+
+            @Override
+            public void unanswerable(AssistantUnanswerable unanswerable) {}
+        });
+        return received.isEmpty() ? List.of() : received.getFirst();
+    }
 
     /** 応答のどこにも（抜粋・窓口名・根拠を含めて）見えない資源のコード・固有の語が含まれない */
     private static void assertNoTraceOfHidden(String body, List<String> visible) {

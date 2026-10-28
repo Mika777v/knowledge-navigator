@@ -31,7 +31,7 @@ public class EmbeddingSyncService {
     /** DB の embeddings.embedding の次元（ADR-0007） */
     static final int DIMS = 1024;
     /** 社外に送らないプロバイダに送ってよい公開範囲（CONFIDENTIAL はどこにも送らない） */
-    static final Set<String> LOCAL_VISIBILITIES = Set.of("INTERNAL", "MANAGERS", "RESTRICTED");
+    static final Set<String> LOCAL_VISIBILITIES = SendableVisibilities.LOCAL;
 
     private final AiClient ai;
     private final EmbeddingStore store;
@@ -104,13 +104,7 @@ public class EmbeddingSyncService {
 
     /** プロバイダに送ってよい公開範囲（ADR-0008） */
     Set<String> visibilities(AiServiceInfo info) {
-        if (!info.external()) {
-            return LOCAL_VISIBILITIES;
-        }
-        List<String> configured =
-                aiProperties.externalVisibilities() == null ? List.of() : aiProperties.externalVisibilities();
-        return Set.copyOf(
-                configured.stream().filter(LOCAL_VISIBILITIES::contains).toList());
+        return SendableVisibilities.of(info.external(), aiProperties.externalVisibilities());
     }
 
     static String sha256(String text) {
