@@ -69,26 +69,32 @@ test: .env ## テストを実行する（backend・frontend）
 pdfs: ## ダミー規程の PDF（data/pdf）を作り直す（reportlab と IPA ゴシックが必要）
 	python3 scripts/data/generate_pdfs.py
 
+# 評価のスクリプトは PyYAML を使う。無ければ、入れ方を案内して止める（#163）
+.PHONY: check-pyyaml
+check-pyyaml:
+	@python3 -c 'import yaml' 2>/dev/null || { \
+	  echo "PyYAML が見つかりません。python3 -m pip install --user pyyaml を実行してから、もう一度実行してください" >&2; exit 1; }
+
 .PHONY: eval
-eval: .env ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
+eval: .env check-pyyaml ## 検索品質の評価を実行する（事前に make up・make seed。PyYAML が必要）
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
 	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080} $(ARGS)
 
 .PHONY: eval-paraphrase
-eval-paraphrase: .env ## 言い換えの質問で検索品質を測る（意味検索の効果を見る。失敗にはしない）
+eval-paraphrase: .env check-pyyaml ## 言い換えの質問で検索品質を測る（意味検索の効果を見る。失敗にはしない）
 	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
 	python3 scripts/eval/run_eval.py --base-url http://localhost:$${port:-8080} \
 	  --questions data/eval/paraphrase.yaml --baseline data/eval/baseline-paraphrase.json \
 	  --output build/eval-paraphrase --min-hit5 0 $(ARGS)
 
 .PHONY: eval-vector
-eval-vector: .env ## 意味検索をオンにした成績を測る（事前に make up-ai・make seed。ベクトルの合わせが終わるまで待ってから評価する）
+eval-vector: .env check-pyyaml ## 意味検索をオンにした成績を測る（事前に make up-ai・make seed。ベクトルの合わせが終わるまで待ってから評価する）
 	scripts/eval/wait_embeddings.sh
 	-$(MAKE) eval ARGS="--output build/eval-vector"
 	$(MAKE) eval-paraphrase ARGS="--output build/eval-paraphrase-vector"
 
 .PHONY: eval-tune
-eval-tune: .env ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
+eval-tune: .env check-pyyaml ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
 	cd backend && ./gradlew bootJar
 	@set -a; . ./.env; set +a; \
 	DB_URL=jdbc:postgresql://localhost:$${POSTGRES_PORT:-5432}/$${POSTGRES_DB} \
