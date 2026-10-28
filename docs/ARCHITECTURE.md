@@ -317,10 +317,11 @@ sequenceDiagram
 ```python
 # ai-service/app/llm/base.py
 class ChatModel(Protocol):
-    async def stream(self, messages: list[Message], **opts) -> AsyncIterator[str]: ...
+    # 最後まで作ってから返す（引用を確かめてから画面に出すため。ADR-0013）
+    async def complete(self, messages: list[Message]) -> str: ...
 class EmbeddingModel(Protocol):
     async def embed(self, texts: list[str]) -> list[list[float]]: ...
-# 実装: OllamaChat / OpenAIChat / AzureOpenAIChat  ← 環境変数 LLM_PROVIDER で切替
+# 実装: OllamaChat / OpenAIChat（Azure も同じクラス）/ FakeChat  ← 環境変数 CHAT_PROVIDER で切替（Embedding は EMBEDDING_PROVIDER）
 ```
 
 - デフォルトは **Ollama（ローカル）**: ダミーデータでも「外部送信ゼロで動く」構成を示せる

@@ -41,6 +41,8 @@ def test_v1_accepts_the_shared_token(client: TestClient) -> None:
     body = response.json()
     assert body["service"] == "knavi-ai-service"
     assert body["embedding"] == {"provider": "fake", "model": "bge-m3", "dims": 1024, "external": False}
+    # CHAT_PROVIDER の既定はローカルの Ollama（ADR-0013）
+    assert body["chat"] == {"provider": "ollama", "model": "qwen3.5:4b", "external": False}
 
 
 def test_api_docs_are_not_exposed(client: TestClient) -> None:

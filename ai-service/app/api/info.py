@@ -4,8 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.llm.base import EmbeddingModel
-from app.llm.deps import get_embedding_model
+from app.llm.base import ChatModel, EmbeddingModel
+from app.llm.deps import get_chat_model, get_embedding_model
 
 router = APIRouter()
 
@@ -18,14 +18,25 @@ class EmbeddingInfo(BaseModel):
     external: bool
 
 
+class ChatInfo(BaseModel):
+    provider: str
+    model: str
+    # true なら回答の文脈（条の本文）が社外に出る。backend は送る条を公開範囲で絞る（ADR-0008・E14-T7）
+    external: bool
+
+
 class ServiceInfo(BaseModel):
     service: str
     version: str
     embedding: EmbeddingInfo
+    chat: ChatInfo
 
 
 @router.get("/info")
-def info(embedding: Annotated[EmbeddingModel, Depends(get_embedding_model)]) -> ServiceInfo:
+def info(
+    embedding: Annotated[EmbeddingModel, Depends(get_embedding_model)],
+    chat: Annotated[ChatModel, Depends(get_chat_model)],
+) -> ServiceInfo:
     """今のプロバイダ・モデル・次元。backend は保存・検索するベクトルのモデル名をここから決める（ADR-0007）"""
     return ServiceInfo(
         service="knavi-ai-service",
@@ -33,6 +44,7 @@ def info(embedding: Annotated[EmbeddingModel, Depends(get_embedding_model)]) -> 
         embedding=EmbeddingInfo(
             provider=embedding.provider, model=embedding.model, dims=embedding.dims, external=embedding.external
         ),
+        chat=ChatInfo(provider=chat.provider, model=chat.model, external=chat.external),
     )
 
 

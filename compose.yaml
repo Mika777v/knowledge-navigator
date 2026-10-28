@@ -96,6 +96,9 @@ services:
       # プロバイダ（ADR-0008）。既定はローカルの Ollama。OpenAI・Azure に替えるときは .env で指定する
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-ollama}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
+      # 回答文の生成（ADR-0013）。CHAT_MODEL が空なら ai-service の既定（Ollama の qwen3.5:4b）
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-ollama}
+      CHAT_MODEL: ${CHAT_MODEL:-}
       OLLAMA_BASE_URL: http://ollama:11434
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
@@ -123,13 +126,19 @@ services:
       retries: 30
     restart: unless-stopped
 
-  # Embedding のモデルを取り寄せる（初回だけ時間がかかる。bge-m3 で約 1.2GB。取り寄せたものは ollama ボリュームに残る）
+  # モデルを取り寄せる（初回だけ時間がかかる。bge-m3 で約 1.2GB、生成の qwen3.5:4b で数 GB。取り寄せたものは ollama ボリュームに残る）
+  # 生成のモデルは CHAT_PROVIDER=ollama のときだけ取り寄せる。既定のモデル名は ai-service（app/config.py）とそろえる
   ollama-pull:
     profiles: ["ai"]
     image: ollama/ollama:0.40.3
     environment:
       OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["ollama", "pull", "${EMBEDDING_MODEL:-bge-m3}"]
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
+      CHAT_PROVIDER: ${CHAT_PROVIDER:-ollama}
+      CHAT_MODEL: ${CHAT_MODEL:-qwen3.5:4b}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - ollama pull "$$EMBEDDING_MODEL" && if [ "$$CHAT_PROVIDER" = ollama ]; then ollama pull "$$CHAT_MODEL"; fi
     depends_on:
       ollama:
         condition: service_healthy
