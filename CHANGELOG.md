@@ -5,6 +5,39 @@
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-10-28（意味検索）
+
+言葉が一致しなくても、意味の近い制度・条・FAQ が見つかるようにした版です。質問と文章を Embedding（意味を数値の並びにしたもの）にして比べ、今までのキーワード検索と順位を合わせます（ハイブリッド検索）。言い換えた質問37問で、正解が上位5件に入る割合は 24.3% → 81.1%（目標 34.3%）になりました。
+
+意味検索は `make up-ai` で起動したときだけオンになります。`make up` では今までどおりキーワード検索だけで動きます。
+
+### 設計
+- AI の処理は別のサービス（ai-service、FastAPI）に分け、DB には触れさせない。権限の判定は backend の1か所のまま（[ADR-0006](docs/adr/0006-ai-service-stateless.md)、#137）
+- ベクトルは同じ PostgreSQL の pgvector に置き、キーワード検索と同じ権限の条件で絞る SQL の中で探す。順位は RRF で合わせる（[ADR-0007](docs/adr/0007-pgvector.md)、#137）
+- モデルの提供元（Ollama・OpenAI・Azure OpenAI）は薄い自前の抽象で切り替える。既定は手元で動く Ollama の bge-m3 で、文書を外部に送らない（[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)、#137・#139）
+- ベクトルは、変わった文章だけを定期的に作り直す（[ADR-0012](docs/adr/0012-embedding-reconciliation.md)、#153）
+
+### 意味検索
+- ai-service の雛形（FastAPI・uv・ruff・pytest・CI）（#141）と、Embedding の API（Ollama・OpenAI・Azure・テスト用の fake）（#147）
+- ベクトルを置く `embeddings` 表（#152）と、条・FAQ・制度のベクトルを定期的に作り直す処理。下書きと `CONFIDENTIAL` の文書は作らない。外部のプロバイダには、送ってよい公開範囲の文書だけを送る（#155）
+- ハイブリッド検索: キーワード検索とベクトル検索の上位を RRF で1つの順位にする。どちらも同じ権限の条件で絞る。ai-service が止まっている・遅いときは、キーワード検索だけで結果を返す（#157）
+- 検索ログに、意味検索を使ったかどうかを残す（#159）
+- 規程の詳細の各条に「この条に似た規定」。意味の近い、ほかの規程の条を出す（見えない条は出さない）（#160）
+
+### 品質評価
+- 言い換えの質問セット（37問。制度名・キーワード・類義語を使わずに聞く）（#138）
+- 意味検索をオンにした成績を手元で測る `make eval-vector`（#158）
+
+| 指標 | キーワード検索だけ | 意味検索オン（v0.4.0） |
+|---|---|---|
+| 言い換え37問 Hit@5 | 24.3% | 81.1% |
+| 言い換え37問 MRR | 0.203 | 0.634 |
+| 100問 Hit@1 | 91% | 87% |
+| 100問 Hit@5 | 100% | 99% |
+| 100問 MRR | 0.947 | 0.921 |
+
+> 意味検索をオンにすると、今までの100問は少し下がります（外れたのは「育休明けに元の部署に戻れる？」の1問。意味の近い別の FAQ が上位に入った）。似ているとみなす基準の値を 0.5 → 0.6 に上げると100問は Hit@1 90% まで戻りますが、言い換え37問の Hit@5 が 40.5% に下がるため、0.5 のままにしています。測定は Codespaces（4コア・CPU）で行いました。
+
 ## [0.3.0] — 2026-10-26（検索のナレッジ強化）
 
 言い方のちがい（略語・言い換え・活用・表記ゆれ）に強くし、入力補完・推薦・ゼロヒットの改善の流れを加えた版です。評価用の質問を100問に増やし、Hit@5 は 93% → 100%（目標 85%）になりました。
@@ -112,6 +145,8 @@
 - OpenAPI の型名（クラス名で決まる）が別の API と重なり、画面の型が壊れていた問題（#97・#101）
 - 依存ライブラリの既知の脆弱性（Tomcat の CRITICAL 3件・Jackson の HIGH 10件）を修正版に更新（#105）
 
-[Unreleased]: https://github.com/Mika777v/knowledge-navigator/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Mika777v/knowledge-navigator/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.4.0
+[0.3.0]: https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.1.0

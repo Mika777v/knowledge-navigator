@@ -87,6 +87,16 @@ make eval-vector # ベクトルの合わせ（1 分ごと）が終わるのを�
 - 外れた質問は report.md の「外れた質問」に出る。似ていないものを除く値（`application.yaml` の `knavi.search.vector.min-similarity`、既定 0.5）を変えて測り直すときは、`.env` に `KNAVI_SEARCH_VECTOR_MIN_SIMILARITY=0.6` のように書いて `make up-ai` し直す
 - ベクトルの合わせが終わらないときは `docker compose logs backend ai-service ollama` を確かめる
 
+v0.4.0 での結果（2026-10-28、Codespaces 4コア・CPU。条215・制度39・FAQ 50 のベクトル304件）:
+
+| 似ているとみなす基準の値 | 言い換え37問 Hit@5 | 言い換え37問 MRR | 100問 Hit@1 | 100問 Hit@5 | 100問 MRR |
+|---|---|---|---|---|---|
+| キーワード検索だけ（基準値） | 24.3% | 0.203 | 91% | 100% | 0.947 |
+| 0.5（既定） | **81.1%** | 0.634 | 87% | 99% | 0.921 |
+| 0.6 | 40.5% | 0.322 | 90% | 99% | 0.938 |
+
+0.6 にすると100問はわずかに戻るが、言い換えの効果が半分になるため、0.5 のままにした。
+
 ## 重みの調整（E12-T4）
 
 検索スコアの重み（`application.yaml` の `knavi.navigation.weights`、docs/ARCHITECTURE.md §4.3）は、この質問セットでグリッド探索して決める。
