@@ -58,8 +58,7 @@ class AiAnswerGeneratorTest {
         when(ai.answer("結婚祝金", List.of(new RagPassage(1, "規程 第5条", "30,000円"))))
                 .thenReturn(new RagAnswer(true, "ANSWERED", "30,000円です。[1]", List.of(1), "qwen3.5:4b"));
 
-        GeneratedAnswer answer =
-                generator(List.of()).generate("結婚祝金", List.of(new Passage(1, "規程 第5条", "30,000円")));
+        GeneratedAnswer answer = generator(List.of()).generate("結婚祝金", List.of(new Passage(1, "規程 第5条", "30,000円")));
 
         assertThat(answer).isEqualTo(new GeneratedAnswer(true, "ANSWERED", "30,000円です。[1]", List.of(1), "qwen3.5:4b"));
     }
@@ -68,7 +67,9 @@ class AiAnswerGeneratorTest {
     void failuresBecomeUnanswerable() {
         when(ai.answer(anyString(), anyList())).thenThrow(new AiServiceException("timeout", null));
 
-        assertThat(generator(List.of()).generate("q", List.of(new Passage(1, "t", "x"))).reason())
+        assertThat(generator(List.of())
+                        .generate("q", List.of(new Passage(1, "t", "x")))
+                        .reason())
                 .isEqualTo("GENERATION_FAILED");
     }
 

@@ -288,8 +288,9 @@ class PermissionMatrixTests {
 
         List<Passage> passages = answerContext("マトリクス", who);
 
-        assertThat(passages).extracting(Passage::title).allSatisfy(title -> assertThat(title)
-                .startsWith("DOC-"));
+        assertThat(passages)
+                .extracting(Passage::title)
+                .allSatisfy(title -> assertThat(title).startsWith("DOC-"));
         assertThat(passages.stream().map(p -> p.title().split(" ")[0]).toList())
                 .containsExactlyInAnyOrderElementsOf(prefixed("DOC-", searchable));
         assertNoTraceOfHidden(passages.toString(), searchable);

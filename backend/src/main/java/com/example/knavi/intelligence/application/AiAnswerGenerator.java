@@ -46,7 +46,8 @@ class AiAnswerGenerator implements AnswerGenerator {
                             .map(p -> new RagPassage(p.ref(), p.title(), p.text()))
                             .toList());
             List<Integer> citations = answer.citations() == null ? List.of() : answer.citations();
-            return new GeneratedAnswer(answer.answerable(), answer.reason(), answer.answer(), citations, answer.model());
+            return new GeneratedAnswer(
+                    answer.answerable(), answer.reason(), answer.answer(), citations, answer.model());
         } catch (AiServiceException e) {
             // 時間切れ・接続できない・プロバイダの失敗（502）。4ブロックの結果は呼ぶ側で出ている
             log.warn("回答文を作れませんでした: {}", e.getMessage());

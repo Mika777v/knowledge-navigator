@@ -111,7 +111,9 @@ public class AnswerService {
                 .filter(ref -> ref >= 1 && ref <= rows.size())
                 .map(ref -> evidence(ref, rows.get(ref - 1)))
                 .toList();
-        if (evidence.isEmpty() || generated.answer() == null || generated.answer().isBlank()) {
+        if (evidence.isEmpty()
+                || generated.answer() == null
+                || generated.answer().isBlank()) {
             sink.unanswerable(new AssistantUnanswerable("VERIFICATION_FAILED"));
             return;
         }
