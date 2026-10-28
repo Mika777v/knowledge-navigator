@@ -136,7 +136,7 @@ make eval-tune ARGS="--grid heading=1.0,1.5,2.0 --grid synonym=0.6,0.8,1.0"   # 
 | `procedure` | 手続き・時期 | いつ振り込まれる？ |
 | `no-answer` | 規程に記載がない（回答しないのが正解） | 社員食堂のメニュー |
 
-### 指標（評価バッチは E14-T6 の後半で作る）
+### 指標
 
 | 指標 | 定義 |
 |---|---|
@@ -146,6 +146,17 @@ make eval-tune ARGS="--grid heading=1.0,1.5,2.0 --grid synonym=0.6,0.8,1.0"   # 
 | 回答不能の適切さ | `answerable: false` の質問のうち、`unanswerable` になった割合 |
 | 回答までの時間 | 質問から回答（または `unanswerable`）までの時間の中央値・最大 |
 
+### 評価の実行
+
+```bash
+make up-ai && make seed   # ai-service（Ollama）も起動してダミーデータを投入
+make eval-rag             # ベクトルの合わせを待ってから評価する（build/eval-rag/report.md・result.json にも出力）
+make eval-rag ARGS="--min-citation 0.95"   # 引用正確性が 95% を下回ったら失敗にする
+```
+
+- 評価バッチは `scripts/eval/run_rag_eval.py`（指標の計算は `rag_metrics.py`）。質問ごとに `as` のユーザーでログインし、`POST /api/v1/assistant/answers` の SSE を最後まで読む
+- 本物のモデルの速さ・品質は手元の環境で変わるため、CI では動かさない（指標の計算の単体テストだけ CI で動かす）。既定では指標が低くても失敗にしない
+- 根拠は文書名と条で返るので、`expect.sections` の文書のコードは `data/seed/documents` の文書名に読み替えて比べる
 - 回答文の忠実さ（言い換えた内容が根拠と合っているか）は、機械では測りきれないため、抜き取りで人が確かめる（docs/ARCHITECTURE.md §5.7）
 - `validate_seed.py` は、条が存在することと、`expect.facts` が条の本文にあることを検査する
 

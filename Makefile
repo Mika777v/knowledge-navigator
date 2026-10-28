@@ -94,6 +94,12 @@ eval-vector: .env check-pyyaml ## 意味検索をオンにした成績を測る�
 	-$(MAKE) eval ARGS="--output build/eval-vector"
 	$(MAKE) eval-paraphrase ARGS="--output build/eval-paraphrase-vector"
 
+.PHONY: eval-rag
+eval-rag: .env check-pyyaml ## 根拠付き回答の品質を測る（事前に make up-ai・make seed。本物のモデルで1問に数十秒かかる）
+	scripts/eval/wait_embeddings.sh
+	@port=$$(sed -n 's/^BACKEND_PORT=//p' .env); \
+	python3 scripts/eval/run_rag_eval.py --base-url http://localhost:$${port:-8080} $(ARGS)
+
 .PHONY: eval-tune
 eval-tune: .env check-pyyaml ## 検索スコアの重みをグリッド探索する（事前に make up・make seed。jar を起動し直すため数十分かかる）
 	cd backend && ./gradlew bootJar
