@@ -15,11 +15,11 @@
 | [0006](./0006-ai-service-stateless.md) | AI の処理は FastAPI の別サービス（ai-service）に分け、DB に触れない「計算だけの窓口」にする | Accepted（決定 3 は 0012 で変更） |
 | [0007](./0007-pgvector.md) | ベクトルは同じ PostgreSQL の pgvector に置き、権限で絞る SQL の中で検索して、キーワード検索と RRF で合わせる | Accepted |
 | [0008](./0008-llm-provider-abstraction.md) | LLM・Embedding のプロバイダは ai-service の薄い自前の抽象で切り替え、既定はローカルの Ollama（bge-m3）にする | Accepted |
-| [0009](./0009-contacts-and-evidence-from-db.md) | AI 回答の窓口・根拠表示は LLM 生成ではなく DB 値から描画する | Proposed |
+| [0009](./0009-contacts-and-evidence-from-db.md) | AI 回答の窓口・根拠表示は LLM 生成ではなく DB 値から描画する | Accepted |
 | [0010](./0010-pdf-ingestion.md) | PDF の取り込みは backend の中で行い、原本は S3 互換ストレージ、解析はジョブで非同期に行う | Accepted |
 | [0011](./0011-sudachi-normalized-search.md) | 表記ゆれ・活用のちがいは、backend の Sudachi で正規化形にそろえ、pg_bigm の検索列を足して吸収する | Accepted |
 | [0012](./0012-embedding-reconciliation.md) | ベクトルは、変更のたびのジョブではなく、定期的な差分合わせで作る | Proposed |
-| [0013](./0013-rag-generation-model-and-delivery.md) | 回答文の生成は既定でローカルの Ollama（qwen3.5:4b）を使い、引用を確かめてから画面に出す | Proposed |
+| [0013](./0013-rag-generation-model-and-delivery.md) | 回答文の生成は既定でローカルの Ollama（qwen3.5:4b）を使い、引用を確かめてから画面に出す | Accepted |
 
 0006〜0009 は予定で番号を確保していたため、v0.2.0 の PDF 取り込みは 0010 にした。予約していた 0009 は v0.5.0 で書いた。
 

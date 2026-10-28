@@ -1,8 +1,8 @@
 # ADR-0009: AI 回答の窓口・根拠表示は LLM 生成ではなく DB 値から描画する
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-28
-- 関連 Issue / PR: #18（Epic E14）、E14-T1・T3・T4・T5（TASKS.md）
+- 関連 Issue / PR: #18（Epic E14）、#167、E14-T1・T3・T4・T5（TASKS.md）
 - 関連ドキュメント: [PRD §1.1・§3 Phase5〜6](../PRD_KNOWLEDGE_NAVIGATOR.md)、[ARCHITECTURE.md §5.4・§5.5](../ARCHITECTURE.md)、[DOMAIN_MODEL.md §3.2](../DOMAIN_MODEL.md)、[ADR-0003](./0003-program-as-first-class-entity.md)、[ADR-0004](./0004-permission-prefilter.md)、[ADR-0008](./0008-llm-provider-abstraction.md)、[ADR-0013](./0013-rag-generation-model-and-delivery.md)
 
 ## 背景（Context）

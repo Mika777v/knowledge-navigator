@@ -1,8 +1,8 @@
 # ADR-0013: 回答文の生成は既定でローカルの Ollama（qwen3.5:4b）を使い、引用を確かめてから画面に出す
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-28
-- 関連 Issue / PR: #18（Epic E14）、E14-T1〜T4・T6（TASKS.md）
+- 関連 Issue / PR: #18（Epic E14）、#167、E14-T1〜T4・T6（TASKS.md）
 - 関連ドキュメント: [PRD §3 Phase5・§6 非機能](../PRD_KNOWLEDGE_NAVIGATOR.md)、[ARCHITECTURE.md §5.4〜§5.7](../ARCHITECTURE.md)、[ADR-0006](./0006-ai-service-stateless.md)、[ADR-0008](./0008-llm-provider-abstraction.md)、[ADR-0009](./0009-contacts-and-evidence-from-db.md)
 
 ## 背景（Context）
