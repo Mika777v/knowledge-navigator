@@ -16,8 +16,8 @@
     "ghcr.io/devcontainers/features/node:1": { "version": "22" },
     "ghcr.io/devcontainers/features/python:1": { "version": "3.12" }
   },
-  // pnpm は frontend/package.json の packageManager の版を corepack で使う。評価バッチ用に PyYAML を入れる
-  "postCreateCommand": "sudo corepack enable && pip install --user pyyaml",
+  // corepack（pnpm）を有効にし、評価バッチ用に PyYAML を入れる。中身は post-create.sh
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "forwardPorts": [3000, 8080],
   "portsAttributes": {
     "3000": { "label": "画面（ここを開く）", "onAutoForward": "notify" },
