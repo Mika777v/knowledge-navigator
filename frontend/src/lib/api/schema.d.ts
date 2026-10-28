@@ -266,6 +266,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 根拠付きの回答（SSE。results → answer か unanswerable → done の順に送る） */
+        post: operations["answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -1415,6 +1432,126 @@ export interface components {
             /** Format: date */
             joinedOn: string;
         };
+        AssistantQuestion: {
+            question: string;
+        };
+        BasisRef: {
+            /** Format: uuid */
+            documentId: string;
+            documentTitle: string;
+            versionLabel: string;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+        };
+        ContactHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            department: string;
+            phoneExt: string;
+            email: string;
+            chatUrl: string;
+            officeHours: string;
+            reason: string;
+        };
+        DocumentHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            title: string;
+            versionLabel: string;
+            /** Format: date */
+            effectiveFrom: string;
+            sections: components["schemas"]["SectionRef"][];
+            /** Format: double */
+            score: number;
+            hasSourceFile: boolean;
+        };
+        FaqHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            question: string;
+            /** Format: double */
+            score: number;
+        };
+        LifeEventRef: {
+            code: string;
+            name: string;
+        };
+        NavigationResult: {
+            /** Format: uuid */
+            searchLogId: string;
+            query: components["schemas"]["QueryInfo"];
+            programs: components["schemas"]["ProgramHit"][];
+            documents: components["schemas"]["DocumentHit"][];
+            faqs: components["schemas"]["FaqHit"][];
+            contacts: components["schemas"]["ContactHit"][];
+            relatedPrograms: components["schemas"]["RelatedProgram"][];
+            fallback: boolean;
+        };
+        ProgramHit: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            summary: string;
+            benefit: string;
+            deadlineNote: string;
+            basis: components["schemas"]["BasisRef"][];
+            /** Format: double */
+            score: number;
+            reasons: string[];
+        };
+        QueryInfo: {
+            raw: string;
+            normalized: string;
+            terms: string[];
+            matchedLifeEvents: components["schemas"]["LifeEventRef"][];
+        };
+        RelatedProgram: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+        };
+        SectionRef: {
+            /** Format: uuid */
+            id: string;
+            articleNo: string;
+            heading: string;
+            snippet: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
+        };
+        AssistantAnswer: {
+            answer: string;
+            evidence: components["schemas"]["AssistantEvidence"][];
+            model: string;
+        };
+        AssistantEvidence: {
+            /** Format: int32 */
+            ref: number;
+            /** Format: uuid */
+            documentId: string;
+            documentTitle: string;
+            versionLabel: string;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+            heading: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
+        };
+        AssistantUnanswerable: {
+            reason: string;
+        };
         CreateOrgUserRequest: {
             /** Format: email */
             email: string;
@@ -1662,99 +1799,6 @@ export interface components {
             name: string;
             reason: string;
             lifeEvent: string;
-        };
-        BasisRef: {
-            /** Format: uuid */
-            documentId: string;
-            documentTitle: string;
-            versionLabel: string;
-            /** Format: uuid */
-            sectionId: string;
-            articleNo: string;
-        };
-        ContactHit: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            name: string;
-            department: string;
-            phoneExt: string;
-            email: string;
-            chatUrl: string;
-            officeHours: string;
-            reason: string;
-        };
-        DocumentHit: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            title: string;
-            versionLabel: string;
-            /** Format: date */
-            effectiveFrom: string;
-            sections: components["schemas"]["SectionRef"][];
-            /** Format: double */
-            score: number;
-            hasSourceFile: boolean;
-        };
-        FaqHit: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            question: string;
-            /** Format: double */
-            score: number;
-        };
-        LifeEventRef: {
-            code: string;
-            name: string;
-        };
-        NavigationResult: {
-            /** Format: uuid */
-            searchLogId: string;
-            query: components["schemas"]["QueryInfo"];
-            programs: components["schemas"]["ProgramHit"][];
-            documents: components["schemas"]["DocumentHit"][];
-            faqs: components["schemas"]["FaqHit"][];
-            contacts: components["schemas"]["ContactHit"][];
-            relatedPrograms: components["schemas"]["RelatedProgram"][];
-            fallback: boolean;
-        };
-        ProgramHit: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            name: string;
-            summary: string;
-            benefit: string;
-            deadlineNote: string;
-            basis: components["schemas"]["BasisRef"][];
-            /** Format: double */
-            score: number;
-            reasons: string[];
-        };
-        QueryInfo: {
-            raw: string;
-            normalized: string;
-            terms: string[];
-            matchedLifeEvents: components["schemas"]["LifeEventRef"][];
-        };
-        RelatedProgram: {
-            /** Format: uuid */
-            id: string;
-            code: string;
-            name: string;
-        };
-        SectionRef: {
-            /** Format: uuid */
-            id: string;
-            articleNo: string;
-            heading: string;
-            snippet: string;
-            /** Format: int32 */
-            pageFrom: number;
-            /** Format: int32 */
-            pageTo: number;
         };
         LifeEventDetail: {
             lifeEvent: components["schemas"]["LifeEventSummary"];
@@ -2486,6 +2530,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantQuestion"];
+            };
+        };
+        responses: {
+            /** @description イベントのデータは、results が NavigationResult、answer が AssistantAnswer、unanswerable が AssistantUnanswerable */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["NavigationResult"] | components["schemas"]["AssistantAnswer"] | components["schemas"]["AssistantUnanswerable"];
                 };
             };
         };
