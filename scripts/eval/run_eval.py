@@ -46,6 +46,8 @@ class Client:
         self.base_url = base_url.rstrip("/")
         self.password = password
         self.openers: dict[str, urllib.request.OpenerDirector] = {}
+        # POST のとき X-XSRF-TOKEN に入れる値を Cookie から読むため、ユーザーごとに残す
+        self.jars: dict[str, http.cookiejar.CookieJar] = {}
 
     def navigate(self, email: str, q: str) -> dict:
         opener = self.openers.get(email) or self._login(email)
@@ -70,6 +72,7 @@ class Client:
         )
         opener.open(request, timeout=30).read()
         self.openers[email] = opener
+        self.jars[email] = jar
         return opener
 
 
