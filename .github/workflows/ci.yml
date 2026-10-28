@@ -40,6 +40,8 @@ jobs:
               - backend/**
               - infra/docker/postgres/**
               - .github/workflows/ci-backend.yml
+              # backend の CI で API との一致を確かめる
+              - frontend/src/lib/api/schema.d.ts
             frontend:
               - *gate
               - frontend/**

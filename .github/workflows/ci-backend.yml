@@ -33,5 +33,24 @@ jobs:
         with:
           name: backend-test-reports
           path: backend/build/reports/
+      # frontend の型（schema.d.ts）が今の API とずれていないか確かめる。
+      # 上のテストが書き出した OpenAPI（build/openapi/openapi.json）から pnpm api:types で作り直して比べる
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Check frontend API types are up to date
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          OPENAPI_URL=../backend/build/openapi/openapi.json pnpm api:types
+          if ! git diff --exit-code -- src/lib/api/schema.d.ts; then
+            echo "::error::frontend/src/lib/api/schema.d.ts が API とずれています。backend を起動して cd frontend && pnpm api:types で作り直してください（上の差分をそのまま当てても同じです）"
+            exit 1
+          fi
       - name: Build container image
         run: docker build -t knowledge-navigator/backend:ci .
