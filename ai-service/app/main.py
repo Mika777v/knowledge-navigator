@@ -5,10 +5,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
 
-from app.api import embeddings, health, info
+from app.api import embeddings, health, info, rag
 from app.auth import require_token
 from app.config import get_settings
-from app.llm.factory import create_embedding_model
+from app.llm.factory import create_chat_model, create_embedding_model
 
 
 @asynccontextmanager
@@ -18,6 +18,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # テストで差し替えたものがあれば、それを使う
     if not hasattr(app.state, "embedding_model"):
         app.state.embedding_model = create_embedding_model(settings)
+    if not hasattr(app.state, "chat_model"):
+        app.state.chat_model = create_chat_model(settings)
     yield
 
 
@@ -26,7 +28,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="knavi-ai-service", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.include_router(health.router)
     # /v1 はすべて backend のトークンが必要
-    for router in (info.router, embeddings.router):
+    for router in (info.router, embeddings.router, rag.router):
         app.include_router(router, prefix="/v1", dependencies=[Depends(require_token)])
     return app
 

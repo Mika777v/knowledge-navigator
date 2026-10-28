@@ -1,6 +1,6 @@
 """LLM・Embedding のプロバイダの薄い抽象（ADR-0008）。LangChain などは使わない"""
 
-from typing import Protocol
+from typing import Literal, Protocol, TypedDict
 
 
 class EmbeddingError(Exception):
@@ -29,3 +29,23 @@ def check_vectors(texts: list[str], vectors: list[list[float]], dims: int) -> li
         if len(vector) != dims:
             raise EmbeddingError(f"expected {dims} dimensions, got {len(vector)}")
     return vectors
+
+
+class ChatError(Exception):
+    """回答文の生成に失敗した（接続できない・時間切れ・応答の形が違う）"""
+
+
+class Message(TypedDict):
+    role: Literal["system", "user"]
+    content: str
+
+
+class ChatModel(Protocol):
+    provider: str
+    model: str
+    # 文章を社外に送るか（EmbeddingModel と同じ。ADR-0008）
+    external: bool
+
+    async def complete(self, messages: list[Message]) -> str:
+        """回答文を最後まで作って返す。ストリーミングはしない（引用を確かめてから返すため。ADR-0013）"""
+        ...

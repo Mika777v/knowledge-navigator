@@ -2,7 +2,7 @@
 
 import openai
 
-from app.llm.base import EmbeddingError, check_vectors
+from app.llm.base import ChatError, EmbeddingError, Message, check_vectors
 
 
 class OpenAIEmbedding:
@@ -22,3 +22,22 @@ class OpenAIEmbedding:
             raise EmbeddingError(f"{self.provider}: {type(e).__name__}: {e}") from e
         vectors = [item.embedding for item in sorted(response.data, key=lambda item: item.index)]
         return check_vectors(texts, vectors, self.dims)
+
+
+class OpenAIChat:
+    external = True
+
+    def __init__(self, client: openai.AsyncOpenAI, provider: str, model: str) -> None:
+        self._client = client
+        self.provider = provider
+        self.model = model
+
+    async def complete(self, messages: list[Message]) -> str:
+        try:
+            response = await self._client.chat.completions.create(model=self.model, messages=messages, temperature=0)
+        except openai.OpenAIError as e:
+            raise ChatError(f"{self.provider}: {type(e).__name__}: {e}") from e
+        content = response.choices[0].message.content if response.choices else None
+        if not content or not content.strip():
+            raise ChatError(f"{self.provider}: empty answer")
+        return content.strip()

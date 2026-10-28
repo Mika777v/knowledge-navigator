@@ -2,7 +2,10 @@
 
 import hashlib
 import math
+import re
 import struct
+
+from app.llm.base import Message
 
 
 class FakeEmbedding:
@@ -26,3 +29,20 @@ class FakeEmbedding:
         values = values[: self.dims]
         norm = math.sqrt(sum(v * v for v in values)) or 1.0
         return [v / norm for v in values]
+
+
+class FakeChat:
+    """文脈の1番目の根拠の最初の文に [1] を付けて返す。決まった答えになり、外部に通信しない"""
+
+    provider = "fake"
+    external = False
+
+    def __init__(self, model: str) -> None:
+        self.model = model
+
+    async def complete(self, messages: list[Message]) -> str:
+        m = re.search(r'<passage ref="1"[^>]*>\n(.*?)\n</passage>', messages[-1]["content"], re.DOTALL)
+        if not m:
+            return "該当する記載が見つかりません。"
+        first = re.split(r"(?<=。)", m.group(1).strip(), maxsplit=1)[0]
+        return f"{first}[1]"
