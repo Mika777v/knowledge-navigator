@@ -279,6 +279,8 @@ reranked      = (Phase5オプション) Cross-Encoder rerank（bge-reranker 系�
 
 ### 5.4 RAG フロー
 
+> 生成のモデル・回答の届け方（確かめてから段階ごとに SSE で送る）は [ADR-0013](./adr/0013-rag-generation-model-and-delivery.md)、窓口・根拠を DB の値で描くことは [ADR-0009](./adr/0009-contacts-and-evidence-from-db.md) で決めた。下の図の `answer` は1回の JSON で返す
+
 ```mermaid
 sequenceDiagram
   participant FE as frontend
