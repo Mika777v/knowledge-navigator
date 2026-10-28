@@ -35,3 +35,7 @@ export type DocumentSummary = Schemas["DocumentSummary"];
 export type TagCount = Schemas["TagCount"];
 /** GET /api/v1/contacts（部署ごとの窓口） */
 export type DirectoryDepartment = Schemas["DirectoryDepartment"];
+/** POST /api/v1/assistant/answers（SSE）の answer・unanswerable イベント（ADR-0013） */
+export type AssistantAnswer = Schemas["AssistantAnswer"];
+export type AssistantEvidence = Schemas["AssistantEvidence"];
+export type AssistantUnanswerable = Schemas["AssistantUnanswerable"];

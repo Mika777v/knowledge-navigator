@@ -79,7 +79,7 @@ async function problemDetail(response: Response): Promise<string> {
     : "リクエストを処理できませんでした。";
 }
 
-function redirectToLogin() {
+export function redirectToLogin() {
   if (typeof window === "undefined") return;
   const next = window.location.pathname + window.location.search;
   // セッション切れなので、画面の状態ごと捨てるために再読み込みを伴う移動にする

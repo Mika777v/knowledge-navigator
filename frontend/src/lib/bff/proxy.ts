@@ -22,6 +22,8 @@ const DROPPED_RESPONSE_HEADERS = new Set([
 ]);
 
 const TIMEOUT_MS = 60_000;
+/** 根拠付き回答（SSE）は回答文の生成を待つため長くする（backend は 150 秒で閉じる。ADR-0013） */
+const ASSISTANT_TIMEOUT_MS = 180_000;
 
 function problem(status: number, title: string, detail: string): Response {
   return Response.json(
@@ -34,6 +36,11 @@ function problem(status: number, title: string, detail: string): Response {
  * `/api/<path>` へのリクエストを backend の `/api/<path>` へ転送する（BFF）。
  * Cookie ベースのセッションを同一オリジンで扱うため、ブラウザは backend を直接呼ばない。
  */
+/** 転送を打ち切るまでの時間（応答の本文を読み終えるまでを含む） */
+export function timeoutFor(path: string[]): number {
+  return path[0] === "v1" && path[1] === "assistant" ? ASSISTANT_TIMEOUT_MS : TIMEOUT_MS;
+}
+
 export async function proxyToBackend(request: Request, path: string[]): Promise<Response> {
   // パストラバーサル（/api/../actuator など）で /api 以外に到達させない
   if (path.some((segment) => segment === "." || segment === ".." || segment === "")) {
@@ -62,7 +69,7 @@ export async function proxyToBackend(request: Request, path: string[]): Promise<
       headers,
       body: hasBody ? request.body : undefined,
       redirect: "manual",
-      signal: AbortSignal.any([request.signal, AbortSignal.timeout(TIMEOUT_MS)]),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(timeoutFor(path))]),
       // ReadableStream をそのまま送るために必要（Node.js の fetch）
       ...(hasBody ? { duplex: "half" } : {}),
     } as RequestInit);

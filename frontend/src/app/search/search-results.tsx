@@ -39,6 +39,11 @@ export function SearchResults() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
       {/* 検索語が変わったら入力欄も作り直す */}
       <SearchForm key={q} initialQuery={q} />
+      {q && (
+        <Link href={`/assistant?q=${encodeURIComponent(q)}`} className="self-start text-sm underline">
+          AI に根拠付きで答えてもらう
+        </Link>
+      )}
       {!q ? (
         <p className="text-muted-foreground">知りたいことを入力してください。</p>
       ) : !data ? (
@@ -50,7 +55,8 @@ export function SearchResults() {
   );
 }
 
-function Results({ result }: { result: NavigationResult }) {
+/** 4ブロックの検索結果。根拠付き回答の画面（/assistant）でも、回答の下に同じものを出す */
+export function Results({ result }: { result: NavigationResult }) {
   const { query, searchLogId } = result;
   const terms = query.terms;
   const click = (type: Parameters<typeof recordClick>[1], id: string, rank: number) => () =>
