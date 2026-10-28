@@ -280,6 +280,79 @@ def validate_eval_questions(seed_dir: Path, questions: list[dict], prefix: str, 
                 errors.append(f"{label}: 未定義のタグ {tag}（data/eval/README.md を参照）")
 
 
+RAG_TAGS = {"amount", "days", "deadline", "condition", "procedure", "no-answer"}
+RAG_FILE = "rag.yaml"
+
+
+def article_texts(body: str) -> dict[int, str]:
+    """条番号 → その条の本文（見出しから、次の見出しの手前まで）"""
+    texts: dict[int, str] = {}
+    matches = list(ARTICLE_HEADING.finditer(body))
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(body)
+        chunk = body[m.end():end]
+        # 章の見出し（## 第N章）より後ろは次の条に含めない
+        texts[int(m.group(1))] = re.split(r"^## ", chunk, maxsplit=1, flags=re.MULTILINE)[0]
+    return texts
+
+
+def validate_rag(seed_dir: Path, errors: list[str]) -> None:
+    """RAG の評価用質問セット（seed_dir の隣の eval/rag.yaml）を検査する"""
+    path = seed_dir.parent / "eval" / RAG_FILE
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            validate_rag_questions(seed_dir, yaml.safe_load(f) or [], errors)
+
+
+def validate_rag_questions(seed_dir: Path, questions: list[dict], errors: list[str]) -> None:
+    users = {u["email"] for u in load(seed_dir, "users.yaml")}
+    docs: dict[str, tuple[dict, str, set[int]]] = {}
+    texts: dict[str, dict[int, str]] = {}
+    for doc in (seed_dir / "documents").glob("*.md"):
+        meta, body = parse_document(doc)
+        docs[meta.get("code")] = (meta, body, set(article_texts(body)))
+        texts[meta.get("code")] = article_texts(body)
+
+    check_unique(questions, "id", "rag", errors)
+    for q in questions:
+        label = f"rag[{q.get('id')}]"
+        if not str(q.get("id", "")).startswith("R"):
+            errors.append(f"{label}: ID は R で始めてください")
+        if not q.get("q"):
+            errors.append(f"{label}: q（質問文）がありません")
+        if q.get("as", DEFAULT_EVAL_USER) not in users:
+            errors.append(f"{label}: ユーザー {q.get('as')} が存在しません")
+        tags = q.get("tags") or []
+        for tag in tags:
+            if tag not in RAG_TAGS:
+                errors.append(f"{label}: 未定義のタグ {tag}（data/eval/README.md を参照）")
+        answerable = q.get("answerable", True)
+        expect = q.get("expect") or {}
+        if not answerable:
+            if expect:
+                errors.append(f"{label}: answerable: false の質問に expect は書かないでください")
+            if "no-answer" not in tags:
+                errors.append(f"{label}: answerable: false の質問には no-answer タグを付けてください")
+            continue
+        sections = expect.get("sections") or []
+        facts = expect.get("facts") or []
+        if not sections:
+            errors.append(f"{label}: expect.sections（引用してほしい条）がありません")
+        if not facts:
+            errors.append(f"{label}: expect.facts（回答に含まれるべき数値・語）がありません")
+        bodies = []
+        for ref in sections:
+            if check_document_ref(label, ref, docs, errors) is None:
+                continue
+            m = re.fullmatch(r"第(\d+)条", str(ref.get("article")))
+            if m and int(m.group(1)) in texts[ref["document"]]:
+                bodies.append(texts[ref["document"]][int(m.group(1))])
+        # 正解の数値が根拠の条に書かれていなければ、回答の数値の照合（ADR-0013）を正しく評価できない
+        for fact in facts:
+            if bodies and not any(fact in b for b in bodies):
+                errors.append(f"{label}: 「{fact}」が expect.sections の条の本文にありません")
+
+
 def validate(seed_dir: Path) -> list[str]:
     errors: list[str] = []
     departments = load(seed_dir, "departments.yaml")
@@ -377,6 +450,7 @@ def validate(seed_dir: Path) -> list[str]:
 
     # ---------- eval ----------
     validate_eval(seed_dir, errors)
+    validate_rag(seed_dir, errors)
 
     return errors
 

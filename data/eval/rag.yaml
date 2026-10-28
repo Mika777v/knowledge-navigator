@@ -1,0 +1,269 @@
+# 根拠付き回答（RAG）の評価用質問セット（E14-T6・ADR-0013）
+# 回答文が、正しい条を引用し、条文の数値を写し間違えずに書けているかを測る。
+#
+# answerable: false のとき、規程に記載がなく「回答できない」と答えるべき質問（窓口の案内だけを出す）
+# expect.sections: 引用してほしい条（{document: 文書のコード, article: 第N条}）。いずれか1つを引用すれば正解
+# expect.facts:    回答に含まれるべき数値・語。expect.sections のどれかの本文に、同じ書き方で含まれていること（validate_seed.py で検査）
+# as:      質問するユーザー（省略時は一般社員 sato@example.com）
+# tags:    集計の切り口（data/eval/README.md の「RAG の質問セット」）
+#
+# 評価の指標と実行方法は data/eval/README.md を参照。
+
+# ---------------------------------------------------------------- 慶弔
+- id: R001
+  q: 結婚したらお祝い金はいくらもらえますか？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第5条 }]
+    facts: ["30,000円"]
+  tags: [amount]
+- id: R002
+  q: 結婚祝金の申請はいつまでにすればいい？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第5条 }]
+    facts: ["6か月以内"]
+  tags: [deadline]
+- id: R003
+  q: 子どもが生まれたときのお祝い金は？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第6条 }]
+    facts: ["20,000円"]
+  tags: [amount]
+- id: R004
+  q: 配偶者が亡くなったとき、弔慰金はいくら出ますか？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第8条 }]
+    facts: ["50,000円"]
+  tags: [amount]
+- id: R005
+  q: 台風で家が床上浸水しました。見舞金はありますか？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第12条 }]
+    facts: ["20,000円"]
+  tags: [amount]
+- id: R006
+  q: 病気で2週間以上休んだら見舞金は出る？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第11条 }]
+    facts: ["14日以上", "10,000円"]
+  tags: [amount, condition]
+- id: R007
+  q: 慶弔見舞金はいつ振り込まれますか？
+  expect:
+    sections: [{ document: REG-GA-001, article: 第4条 }]
+    facts: ["翌月25日"]
+  tags: [procedure]
+- id: R008
+  q: 契約社員でも慶弔見舞金の対象になりますか？
+  as: yamamoto@example.com
+  expect:
+    sections: [{ document: REG-GA-001, article: 第2条 }]
+    facts: ["勤続6か月以上"]
+  tags: [condition]
+
+# ---------------------------------------------------------------- 休暇・労働時間
+- id: R009
+  q: 結婚休暇は何日取れますか？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第32条 }]
+    facts: ["連続5日"]
+  tags: [days]
+- id: R010
+  q: 祖母が亡くなったときの忌引は何日？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第32条 }]
+    facts: ["3日"]
+  tags: [days]
+- id: R011
+  q: 入社してどれくらいで有給がもらえて、何日ですか？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第25条 }, { document: REG-HR-001, article: 第26条 }]
+    facts: ["6か月", "10日"]
+  tags: [days, condition]
+- id: R012
+  q: 有給は時間単位で取れますか？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第28条 }]
+    facts: ["5日"]
+  tags: [condition]
+- id: R013
+  q: 1日の所定労働時間は？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第16条 }]
+    facts: ["7時間45分"]
+  tags: [days]
+- id: R014
+  q: 試用期間はどれくらいありますか？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第7条 }]
+    facts: ["3か月"]
+  tags: [days]
+- id: R015
+  q: 住所が変わったら、いつまでに届け出ればいい？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第10条 }]
+    facts: ["14日以内"]
+  tags: [deadline]
+- id: R016
+  q: 定年は何歳？その後も働ける？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第40条 }]
+    facts: ["満60歳", "満65歳"]
+  tags: [condition]
+- id: R017
+  q: 年末年始の休みはいつからいつまで？
+  expect:
+    sections: [{ document: REG-HR-001, article: 第19条 }]
+    facts: ["12月29日から1月3日まで"]
+  tags: [days]
+
+# ---------------------------------------------------------------- 育児・介護
+- id: R018
+  q: 育児休業は何回に分けて取れますか？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第5条 }]
+    facts: ["2回まで"]
+  tags: [condition]
+- id: R019
+  q: 産後パパ育休は最大何日？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第7条 }]
+    facts: ["28日"]
+  tags: [days]
+- id: R020
+  q: 育児休業の申出は、いつまでに出せばいい？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第6条 }]
+    facts: ["1か月前まで"]
+  tags: [deadline, procedure]
+- id: R021
+  q: 介護休業は合計で何日まで取れる？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第10条 }]
+    facts: ["93日"]
+  tags: [days]
+- id: R022
+  q: 子どもが2人いるとき、子の看護等休暇は年に何日？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第12条 }]
+    facts: ["10日"]
+  tags: [days]
+- id: R023
+  q: 子どもが小さいうちは時短勤務できますか？何時間になる？
+  expect:
+    sections: [{ document: REG-HR-002, article: 第16条 }]
+    facts: ["3歳", "6時間"]
+  tags: [condition]
+
+# ---------------------------------------------------------------- お金・手当
+- id: R024
+  q: 通勤手当の月額の上限はいくら？
+  expect:
+    sections: [{ document: REG-HR-004, article: 第4条 }]
+    facts: ["50,000円"]
+  tags: [amount]
+- id: R025
+  q: 自転車で片道12kmを通勤しています。通勤手当はいくら？
+  expect:
+    sections: [{ document: REG-HR-004, article: 第5条 }]
+    facts: ["7,500円"]
+  tags: [amount, condition]
+- id: R026
+  q: 在宅勤務の手当はいくら出ますか？
+  expect:
+    sections: [{ document: REG-HR-003, article: 第12条 }]
+    facts: ["3,000円"]
+  tags: [amount]
+- id: R027
+  q: 在宅勤務は週に何日までできる？
+  expect:
+    sections: [{ document: REG-HR-003, article: 第7条 }]
+    facts: ["3日まで"]
+  tags: [days]
+- id: R028
+  q: 賃貸に住んでいます。住宅手当はいくらですか？
+  expect:
+    sections: [{ document: REG-HR-005, article: 第5条 }]
+    facts: ["20,000円"]
+  tags: [amount]
+- id: R029
+  q: 人間ドックの補助は何歳から、いくら？
+  expect:
+    sections: [{ document: REG-HR-005, article: 第7条 }]
+    facts: ["35歳以上", "30,000円"]
+  tags: [amount, condition]
+- id: R030
+  q: 勤続20年の記念品は何ですか？
+  expect:
+    sections: [{ document: REG-HR-005, article: 第14条 }]
+    facts: ["50,000円"]
+  tags: [amount]
+- id: R031
+  q: 外部研修の受講料は補助してもらえますか？
+  expect:
+    sections: [{ document: REG-HR-005, article: 第11条 }]
+    facts: ["2分の1"]
+  tags: [amount]
+
+# ---------------------------------------------------------------- 出張
+- id: R032
+  q: 大阪に出張するときの宿泊費の上限は？
+  expect:
+    sections: [{ document: REG-FIN-001, article: 第7条 }]
+    facts: ["12,000円"]
+  tags: [amount]
+- id: R033
+  q: 日帰り出張の日当はいくら？
+  expect:
+    sections: [{ document: REG-FIN-001, article: 第8条 }]
+    facts: ["1,000円"]
+  tags: [amount]
+- id: R034
+  q: 出張の精算はいつまでにすればいい？
+  expect:
+    sections: [{ document: REG-FIN-001, article: 第12条 }]
+    facts: ["2週間以内"]
+  tags: [deadline]
+- id: R035
+  q: 出張申請は何日前までに出す？
+  expect:
+    sections: [{ document: REG-FIN-001, article: 第4条 }]
+    facts: ["3営業日前まで"]
+  tags: [deadline, procedure]
+
+# ---------------------------------------------------------------- IT・その他
+- id: R036
+  q: パスワードは何文字以上にする決まり？
+  expect:
+    sections: [{ document: REG-IT-001, article: 第6条 }]
+    facts: ["12文字以上"]
+  tags: [condition]
+- id: R037
+  q: 会社のPCは何年で新しくなりますか？
+  expect:
+    sections: [{ document: REG-IT-002, article: 第7条 }]
+    facts: ["4年"]
+  tags: [days]
+- id: R038
+  q: ハラスメントの相談をしたら、どれくらいで事実確認してもらえる？
+  expect:
+    sections: [{ document: REG-LEGAL-001, article: 第10条 }]
+    facts: ["1か月以内"]
+  tags: [deadline]
+
+# ---------------------------------------------------------------- 回答できない（規程に記載がない）
+- id: R039
+  q: 社員食堂の今日のメニューは？
+  answerable: false
+  tags: [no-answer]
+- id: R040
+  q: 会社の駐車場は月いくらで借りられますか？
+  answerable: false
+  tags: [no-answer]
+- id: R041
+  q: 来年のボーナスは何か月分出ますか？
+  answerable: false
+  tags: [no-answer]
+- id: R042
+  q: 社内の部活動に補助金はありますか？
+  answerable: false
+  tags: [no-answer]
