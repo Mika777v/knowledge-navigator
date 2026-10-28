@@ -43,6 +43,7 @@ GitHub Codespaces でもそのまま動きます。準備・確認の順番・�
 
 ```bash
 make up      # .env が無ければ .env.example から作成し、ビルドして起動
+make up-ai   # 意味検索も使う（ai-service・Ollama も起動。初回は bge-m3 の取り寄せに数分）
 make seed    # ダミーデータを投入（デモユーザーでログインできるようになる）
 make eval    # 検索品質の評価（評価用質問100問）
 make test    # テスト（backend・frontend）
@@ -119,10 +120,11 @@ flowchart LR
 |---|---|
 | frontend | Next.js 16（App Router）/ React 19 / Tailwind CSS 4 / TanStack Query / openapi-typescript |
 | backend | Spring Boot 4 / Java 21 / Spring Modulith / Spring Security / Flyway |
-| DB | PostgreSQL 17 + pg_bigm（日本語の部分一致検索）+ pgvector（Phase4 の意味検索用） |
-| 検索 | pg_bigm の部分一致 + Sudachi（形態素解析・正規化形）+ キーワード辞書・類義語辞書（[ADR-0002](docs/adr/0002-japanese-search-pg-bigm.md)・[ADR-0011](docs/adr/0011-sudachi-normalized-search.md)） |
+| DB | PostgreSQL 17 + pg_bigm（日本語の部分一致検索）+ pgvector（意味検索のベクトル） |
+| 検索 | pg_bigm の部分一致 + Sudachi（形態素解析・正規化形）+ キーワード辞書・類義語辞書（[ADR-0002](docs/adr/0002-japanese-search-pg-bigm.md)・[ADR-0011](docs/adr/0011-sudachi-normalized-search.md)）。意味検索と RRF で合わせるハイブリッド検索（[ADR-0007](docs/adr/0007-pgvector.md)） |
+| AI | ai-service（FastAPI / Python 3.12 / uv）。Embedding は Ollama の bge-m3（既定）・OpenAI・Azure OpenAI を切り替え（[ADR-0006](docs/adr/0006-ai-service-stateless.md)・[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)） |
 | CI | GitHub Actions（変更に応じて backend・frontend・DB・compose・データ・検索品質を実行。リリースのタグでイメージを ghcr.io に公開） |
-| 今後 | FastAPI（PDF 取り込み）/ Ollama・Azure OpenAI・OpenAI（意味検索・根拠付き回答） |
+| 今後 | 根拠付きの回答（RAG）の生成モデル |
 
 ## ドキュメント
 
@@ -135,7 +137,7 @@ flowchart LR
 
 ## ステータス
 
-[v0.3.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.3.0)（検索のナレッジ強化）をリリースしました。v0.2.0 までの検索・閲覧・管理・PDF の取り込みに加え、類義語辞書・形態素解析（Sudachi）による表記ゆれの吸収・入力補完・制度の推薦・ゼロヒットの改善の流れがあります（[変更履歴](CHANGELOG.md)）。次は意味検索（Embedding とキーワード検索の組み合わせ。v0.4.0）、その後に根拠付きの回答です（[ROADMAP](docs/ROADMAP.md)）。
+[v0.4.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.4.0)（意味検索）をリリースしました。v0.3.0 までの検索・閲覧・管理・PDF の取り込み・辞書による検索の強化に加え、意味の近い制度・条・FAQ も探すハイブリッド検索と、似た条の表示があります（`make up-ai` で起動したとき。[変更履歴](CHANGELOG.md)）。次は根拠付きの回答（RAG。v0.5.0）です（[ROADMAP](docs/ROADMAP.md)）。
 
 ## ライセンス
 
