@@ -57,6 +57,29 @@ class EvaluateRagQuestionTest(unittest.TestCase):
         self.assertFalse(result.citation_ok)
 
 
+class SpacingAndContextTest(unittest.TestCase):
+    def test_spaces_between_numbers_and_units_still_match_the_facts(self):
+        stream = STREAM.replace("３０，０００円", "30,000 円")
+        self.assertTrue(evaluate_rag_question(QUESTION, parse_sse(stream), 1.0, TITLES).facts_ok)
+
+    def test_context_hit_follows_the_backend_order_and_limit(self):
+        def results(sections):
+            return {"programs": [], "documents": [{"title": "慶弔見舞金規程", "sections": sections}]}
+
+        within = [{"articleNo": f"第{n}条"} for n in (1, 2, 3, 4, 5)]
+        beyond = [{"articleNo": f"第{n}条"} for n in (1, 2, 3, 4, 6, 7, 5)]
+        for sections, hit in ((within, True), (beyond, False)):
+            events = [("results", results(sections)), ("unanswerable", {"reason": "NOT_IN_CONTEXT"})]
+            self.assertEqual(evaluate_rag_question(QUESTION, events, 1.0, TITLES).context_hit, hit)
+
+    def test_program_basis_comes_first(self):
+        results = {
+            "programs": [{"basis": [{"documentTitle": "慶弔見舞金規程", "articleNo": "第5条", "sectionId": "s5"}]}],
+            "documents": [{"title": "就業規則", "sections": [{"articleNo": f"第{n}条"} for n in range(1, 10)]}],
+        }
+        self.assertTrue(evaluate_rag_question(QUESTION, [("results", results)], 1.0, TITLES).context_hit)
+
+
 class SummarizeRagTest(unittest.TestCase):
     def test_rates_count_only_the_relevant_questions(self):
         ok = evaluate_rag_question(QUESTION, parse_sse(STREAM), 10.0, TITLES)

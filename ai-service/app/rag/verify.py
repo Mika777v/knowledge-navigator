@@ -28,9 +28,10 @@ class Verification:
 
 
 def normalize(text: str) -> str:
-    """全角・半角をそろえ、桁区切りのカンマと「ヶ月・カ月」の書き方のちがいをなくす"""
+    """全角・半角をそろえ、桁区切りのカンマ、数字と単位の間の空白（28 日）、「ヶ月・カ月」の書き方のちがいをなくす"""
     value = unicodedata.normalize("NFKC", text)
     value = re.sub(r"(?<=\d),(?=\d{3})", "", value)
+    value = re.sub(r"(?<=\d)[ \t]+(?=[^\s\d\[])", "", value)
     return re.sub(r"(?<=\d)[ヶケカヵ]月", "か月", value)
 
 

@@ -70,6 +70,7 @@ def markdown_report(summary: dict, results: list[RagResult]) -> str:
         "|---|---|---|",
         f"| 引用正確性 | {percent(summary['citation_accuracy'])} | 95% 以上 |",
         f"| 要点の正答率 | {percent(summary['facts_rate'])} | — |",
+        f"| 文脈の再現率（正解の条を AI に渡せた割合） | {percent(summary['context_recall'])} | — |",
         f"| 回答率 | {percent(summary['answer_rate'])} | — |",
         f"| 回答不能の適切さ | {percent(summary['abstain_rate'])} | — |",
         f"| 回答までの時間（中央値 / 最大） | {summary['seconds_median']} 秒 / {summary['seconds_max']} 秒 | — |",
@@ -80,7 +81,7 @@ def markdown_report(summary: dict, results: list[RagResult]) -> str:
     misses = [r for r in results if (r.answerable and not (r.answered and r.citation_ok and r.facts_ok))]
     misses += [r for r in results if not r.answerable and r.answered]
     if misses:
-        lines += ["### 外れた質問", "", "| ID | 質問 | 結果 | 引用 |", "|---|---|---|---|"]
+        lines += ["### 外れた質問", "", "| ID | 質問 | 結果 | 文脈に正解 | 引用 |", "|---|---|---|---|---|"]
         for r in misses:
             if not r.answered:
                 got = f"回答できない（{r.reason}）"
@@ -88,7 +89,8 @@ def markdown_report(summary: dict, results: list[RagResult]) -> str:
                 got = "記載がないのに回答した"
             else:
                 got = ("引用ちがい " if not r.citation_ok else "") + ("要点ちがい" if not r.facts_ok else "")
-            lines.append(f"| {r.id} | {r.q} | {got.strip()} | {'、'.join(r.cited) or '—'} |")
+            hit = "—" if not r.answerable else ("あり" if r.context_hit else "なし")
+            lines.append(f"| {r.id} | {r.q} | {got.strip()} | {hit} | {'、'.join(r.cited) or '—'} |")
     return "\n".join(lines) + "\n"
 
 

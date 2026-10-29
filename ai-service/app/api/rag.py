@@ -78,7 +78,8 @@ async def answer(
     result = verify(text, sources)
     if not result.ok:
         # 回答文の中身はログに出さない（社内文書のため）
-        log.info("answer rejected by verification: %s", result.failed_check)
+        # 照合の調整に使うため、通らなかった検査の名前は既定の設定でも出る重さで残す
+        log.warning("answer rejected by verification: %s", result.failed_check)
         return AnswerResponse(
             answerable=False,
             reason="VERIFICATION_FAILED",
