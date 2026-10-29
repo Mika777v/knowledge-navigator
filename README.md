@@ -16,6 +16,7 @@
 | 社員 | 「結婚したら何か制度ある？」「PC壊れた」のような言い方で検索し、**制度・規程・FAQ・窓口の4ブロック**で案内を受ける。制度名を知らなくても、きっかけ（結婚・出産・引越し・介護など）から探せる |
 | 社員 | 制度の詳細（対象者・金額・期限・申請方法・根拠の条文・窓口）、規程の全文（目次・条文へのリンク・検索語の強調・過去の版）、FAQ を読む。PDF から取り込んだ規程は、**原本の該当ページ**まで開ける |
 | 社員 | 略語・言い換え・表記ゆれ（「育休」「マイカー通勤」「引越／引っ越し」「振り込まれる」）でも見つかる。検索欄で制度名・きっかけの**入力補完**、制度の詳細で「**この制度を見た人はこちらも**」 |
+| 社員 | 検索結果の「AI に根拠付きで答えてもらう」から、検索結果の条文をもとに AI が短い答えを書き、**根拠の条（番号付き・条文へのリンク）と窓口**を添える。規程に書かれていないことには答えず、窓口を案内する（`make up-ai` で起動したとき） |
 | 社員 | 規程の一覧をタグ（対象者・話題）で、よくある質問の一覧をカテゴリで絞り込む |
 | 社員 | 部署ごとの問い合わせ先の一覧から窓口を探す。検索結果が役に立ったかを送る（検索の改善に使う）。自分のパスワードを変える |
 | コンテンツ担当者 | 自部署が所管する規程（版の作成・改定・公開）・制度（根拠の条・窓口）・FAQ と、きっかけを画面から作成・編集・公開する。**規程の PDF を取り込む**と、条ごと・原本のページ付きの下書きの版ができる |
@@ -110,6 +111,15 @@ flowchart LR
 | 窓口正答率 | 100% |
 | ゼロヒット率 | 0% |
 
+根拠付きの回答は、評価用質問42問を `eval-rag`（GitHub Actions の手動実行、または `make eval-rag`）で測ります。
+
+| 指標（42問） | 現在の値 |
+|---|---|
+| 引用の正確さ | 97.2%（目標 95%） |
+| 要点の正答率 | 86.1% |
+| 回答率 | 94.7% |
+| 回答不能の適切さ | 100% |
+
 - backend: JUnit + Testcontainers（実際の PostgreSQL + pg_bigm）、Spring Modulith のモジュール境界テスト、権限マトリクステスト
 - frontend: Vitest + Testing Library、E2E は Playwright（`make up` した環境をブラウザで操作し、CI でも実行）
 - セキュリティ: CSRF 対策、CSP などのセキュリティヘッダー、Markdown は HTML を描画しない、監査ログは追記専用（DB のトリガーで更新・削除を拒否）、CodeQL によるスキャン
@@ -122,9 +132,8 @@ flowchart LR
 | backend | Spring Boot 4 / Java 21 / Spring Modulith / Spring Security / Flyway |
 | DB | PostgreSQL 17 + pg_bigm（日本語の部分一致検索）+ pgvector（意味検索のベクトル） |
 | 検索 | pg_bigm の部分一致 + Sudachi（形態素解析・正規化形）+ キーワード辞書・類義語辞書（[ADR-0002](docs/adr/0002-japanese-search-pg-bigm.md)・[ADR-0011](docs/adr/0011-sudachi-normalized-search.md)）。意味検索と RRF で合わせるハイブリッド検索（[ADR-0007](docs/adr/0007-pgvector.md)） |
-| AI | ai-service（FastAPI / Python 3.12 / uv）。Embedding は Ollama の bge-m3（既定）・OpenAI・Azure OpenAI を切り替え（[ADR-0006](docs/adr/0006-ai-service-stateless.md)・[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)） |
+| AI | ai-service（FastAPI / Python 3.12 / uv）。Embedding は Ollama の bge-m3（既定）・OpenAI・Azure OpenAI を切り替え。回答文の生成は Ollama の qwen3.5:4b（既定）（[ADR-0006](docs/adr/0006-ai-service-stateless.md)・[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)・[ADR-0013](docs/adr/0013-rag-generation-model-and-delivery.md)） |
 | CI | GitHub Actions（変更に応じて backend・frontend・DB・compose・データ・検索品質を実行。リリースのタグでイメージを ghcr.io に公開） |
-| 今後 | 根拠付きの回答（RAG）の生成モデル |
 
 ## ドキュメント
 
@@ -137,7 +146,7 @@ flowchart LR
 
 ## ステータス
 
-[v0.4.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.4.0)（意味検索）をリリースしました。v0.3.0 までの検索・閲覧・管理・PDF の取り込み・辞書による検索の強化に加え、意味の近い制度・条・FAQ も探すハイブリッド検索と、似た条の表示があります（`make up-ai` で起動したとき。[変更履歴](CHANGELOG.md)）。次は根拠付きの回答（RAG。v0.5.0）です（[ROADMAP](docs/ROADMAP.md)）。
+[v0.5.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.5.0)（根拠付きの回答）をリリースしました。v0.4.0 までの検索・閲覧・管理・PDF の取り込み・辞書と意味検索による検索に加え、検索結果の条文をもとに AI が答えを書き、根拠の条と窓口を添える回答の画面があります（`make up-ai` で起動したとき。[変更履歴](CHANGELOG.md)）。次は AI アシスタントの試作（v0.6.0）です（[ROADMAP](docs/ROADMAP.md)）。
 
 ## ライセンス
 
