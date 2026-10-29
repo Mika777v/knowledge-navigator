@@ -23,6 +23,7 @@ def test_a_faithful_answer_passes_and_keeps_the_citation_order() -> None:
         "申請は入籍日から6カ月以内です。[1]",
         "結婚休暇は5日です[2]。",  # 引用が文末の記号の前
         "第5条によると、結婚祝金は30,000円です。[1]",  # 条番号は文書名・条にある
+        "結婚祝金は 30,000 円です [1]。申請は入籍日から 6 か月以内です [1]。",  # 数字と単位の間の空白
     ],
 )
 def test_notation_differences_are_tolerated(answer: str) -> None:
@@ -54,3 +55,11 @@ def test_a_short_lead_without_citation_is_allowed() -> None:
 
 def test_normalize_unifies_width_commas_and_month_notation() -> None:
     assert normalize("３０，０００円・6ヶ月・12,345,678") == "30000円・6か月・12345678"
+
+
+def test_normalize_removes_spaces_between_numbers_and_units_but_keeps_citations() -> None:
+    assert normalize("28 日間・6 時間・1 か月以内・10 [1]") == "28日間・6時間・1か月以内・10 [1]"
+
+
+def test_a_spaced_wrong_unit_is_still_rejected() -> None:
+    assert verify("結婚休暇は連続 5 年です [2]。", SOURCES).failed_check == "NUMBER_NOT_IN_SOURCE"
