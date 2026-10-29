@@ -156,7 +156,8 @@ make eval-rag ARGS="--context-only"        # AI を使わず、文脈の条の�
 ```
 
 - 評価バッチは `scripts/eval/run_rag_eval.py`（指標の計算は `rag_metrics.py`）。質問ごとに `as` のユーザーでログインし、`POST /api/v1/assistant/answers` の SSE を最後まで読む
-- 本物のモデルの速さ・品質は手元の環境で変わるため、CI では動かさない（指標の計算の単体テストだけ CI で動かす）。既定では指標が低くても失敗にしない
+- 本物のモデルの速さ・品質は環境で変わり、全体で 40 分〜1 時間かかるため、PR ごとの CI では動かさない（指標の計算の単体テストだけ CI で動かす）。既定では指標が低くても失敗にしない
+- 手元で待たずに測るときは、GitHub の **Actions** タブ → 左の一覧の **eval-rag** → **Run workflow** で、選んだブランチを GitHub Actions の上で評価できる（`.github/workflows/eval-rag.yml`）。終わったら、その実行の画面のサマリーに結果の表が出て、下の **Artifacts** の `eval-rag` に `report.md`・`result.json`（回答文を含む）が残る
 - 根拠は文書名と条で返るので、`expect.sections` の文書のコードは `data/seed/documents` の文書名に読み替えて比べる
 - 回答文の忠実さ（言い換えた内容が根拠と合っているか）は、機械では測りきれないため、抜き取りで人が確かめる（docs/ARCHITECTURE.md §5.7）
 - `validate_seed.py` は、条が存在することと、`expect.facts` が条の本文にあることを検査する
