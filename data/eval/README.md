@@ -152,6 +152,7 @@ make eval-tune ARGS="--grid heading=1.0,1.5,2.0 --grid synonym=0.6,0.8,1.0"   # 
 make up-ai && make seed   # ai-service（Ollama）も起動してダミーデータを投入
 make eval-rag             # ベクトルの合わせを待ってから評価する（build/eval-rag/report.md・result.json にも出力）
 make eval-rag ARGS="--min-citation 0.95"   # 引用正確性が 95% を下回ったら失敗にする
+make eval-rag ARGS="--context-only"        # AI を使わず、文脈の条の選び方ごとの再現率だけを数秒で比べる（build/eval-rag/context.md）
 ```
 
 - 評価バッチは `scripts/eval/run_rag_eval.py`（指標の計算は `rag_metrics.py`）。質問ごとに `as` のユーザーでログインし、`POST /api/v1/assistant/answers` の SSE を最後まで読む

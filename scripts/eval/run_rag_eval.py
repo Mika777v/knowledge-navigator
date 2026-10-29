@@ -27,7 +27,14 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from rag_metrics import RagResult, evaluate_rag_question, parse_sse, summarize_rag  # noqa: E402
+from rag_metrics import (  # noqa: E402
+    ORDERS,
+    RagResult,
+    context_rank,
+    evaluate_rag_question,
+    parse_sse,
+    summarize_rag,
+)
 from run_eval import DEFAULT_USER, ROOT, Client, demo_password, display_path, percent  # noqa: E402
 
 # 回答文の生成を待つ時間（backend は 150 秒で SSE を閉じる）
@@ -94,6 +101,32 @@ def markdown_report(summary: dict, results: list[RagResult]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def context_report(client: RagClient, questions: list[dict], titles: dict[str, str]) -> str:
+    """AI を使わず、ナビゲーション検索の結果だけで、文脈の条の選び方ごとの再現率を比べる（数秒で終わる）"""
+    answerable = [q for q in questions if q.get("answerable", True)]
+    ranks: dict[str, list[tuple[dict, int | None]]] = {order: [] for order in ORDERS}
+    for q in answerable:
+        results = client.navigate(q.get("as", DEFAULT_USER), q["q"])
+        for order in ORDERS:
+            ranks[order].append((q, context_rank(results, q, titles, order)))
+    limits = (6, 8, 10)
+    lines = [
+        "## 文脈の条の選び方ごとの再現率（正解の条を AI に渡せる割合）",
+        "",
+        "| 選び方 | " + " | ".join(f"上位{n}件" for n in limits) + " |",
+        "|---|" + "---|" * len(limits),
+    ]
+    for order in ORDERS:
+        cells = [percent(sum(1 for _, r in ranks[order] if r is not None and r <= n) / len(answerable)) for n in limits]
+        label = order + ("（今の backend）" if order == "programs-first" else "")
+        lines.append(f"| {label} | " + " | ".join(cells) + " |")
+    lines += ["", "### 今の選び方（programs-first・上位6件）で外れた質問", "", "| ID | 質問 | 正解の順位 |", "|---|---|---|"]
+    for q, rank in ranks["programs-first"]:
+        if rank is None or rank > 6:
+            lines.append(f"| {q['id']} | {q['q']} | {rank if rank else '候補になし'} |")
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base-url", default=os.environ.get("EVAL_BASE_URL", "http://localhost:8080"))
@@ -101,11 +134,21 @@ def main() -> int:
     parser.add_argument("--seed", type=Path, default=ROOT / "data/seed")
     parser.add_argument("--output", type=Path, default=ROOT / "build/eval-rag", help="結果（result.json・report.md）の出力先")
     parser.add_argument("--min-citation", type=float, default=None, help="引用正確性の下限（下回ったら失敗）")
+    parser.add_argument(
+        "--context-only", action="store_true", help="AI を使わず、文脈の条の選び方ごとの再現率だけを比べる（数秒）"
+    )
     args = parser.parse_args()
 
     questions = yaml.safe_load(args.questions.read_text(encoding="utf-8"))
     titles = document_titles(args.seed)
     client = RagClient(args.base_url, demo_password(ROOT / ".env"))
+    if args.context_only:
+        report = context_report(client, questions, titles)
+        args.output.mkdir(parents=True, exist_ok=True)
+        (args.output / "context.md").write_text(report, encoding="utf-8")
+        print(report)
+        print(f"結果: {display_path(args.output / 'context.md')}")
+        return 0
     results: list[RagResult] = []
     for q in questions:
         started = time.monotonic()
