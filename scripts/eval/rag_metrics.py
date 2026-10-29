@@ -7,7 +7,6 @@ import re
 import statistics
 import unicodedata
 from dataclasses import dataclass, field
-from itertools import zip_longest
 
 
 @dataclass
@@ -27,8 +26,6 @@ class RagResult:
     # expect.facts がすべて回答文に含まれる（回答できたときだけ意味がある）
     facts_ok: bool
     seconds: float
-    # 正解の条が、AI に渡した条（文脈）の候補に入っていた
-    context_hit: bool = False
     answer: str | None = None
     cited: list[str] = field(default_factory=list)
 
@@ -56,51 +53,6 @@ def normalize(text: str) -> str:
     return re.sub(r"(?<=\d)[ヶケカヵ]月", "か月", value)
 
 
-# backend（AnswerService）が文脈にする条の数の上限（knavi.assistant.max-passages）と、根拠を見る上位の制度の数
-MAX_PASSAGES = 6
-TOP_PROGRAMS = 3
-
-
-# 文脈の条の選び方（--context-only で比べる）。programs-first が今の backend（AnswerService）
-ORDERS = ("programs-first", "documents-first", "interleave")
-
-
-def context_candidates(
-    results: dict | None, order: str = "programs-first", limit: int | None = MAX_PASSAGES
-) -> list[tuple[str, str]]:
-    """4ブロックの結果から、文脈にする条を選ぶ（既定は backend と同じ: 上位の制度の根拠 → 上位の文書の条）"""
-    if not results:
-        return []
-    basis = [
-        (b.get("documentTitle"), b.get("articleNo"))
-        for program in (results.get("programs") or [])[:TOP_PROGRAMS]
-        for b in program.get("basis") or []
-        if b.get("sectionId")
-    ]
-    sections = [
-        (document.get("title"), section.get("articleNo"))
-        for document in results.get("documents") or []
-        for section in document.get("sections") or []
-    ]
-    if order == "documents-first":
-        candidates = sections + basis
-    elif order == "interleave":
-        candidates = [c for pair in zip_longest(sections, basis) for c in pair if c is not None]
-    else:
-        candidates = basis + sections
-    unique = list(dict.fromkeys(candidates))
-    return unique if limit is None else unique[:limit]
-
-
-def context_rank(results: dict | None, q: dict, document_titles: dict[str, str], order: str) -> int | None:
-    """正解の条が、上限なしで並べたときに何番目に来るか（1〜。候補になければ None）"""
-    expected = _expected_sections(q, document_titles)
-    for i, candidate in enumerate(context_candidates(results, order, None), start=1):
-        if candidate in expected:
-            return i
-    return None
-
-
 def _expected_sections(q: dict, document_titles: dict[str, str]) -> set[tuple[str, str]]:
     sections = (q.get("expect") or {}).get("sections") or []
     return {(document_titles.get(s["document"], s["document"]), s["article"]) for s in sections}
@@ -112,7 +64,6 @@ def evaluate_rag_question(
     """
     :param document_titles: 文書のコード → 文書名（回答の根拠は文書名と条で返るため）
     """
-    results = next((data for name, data in events if name == "results"), None)
     answer = next((data for name, data in events if name == "answer"), None)
     unanswerable = next((data for name, data in events if name == "unanswerable"), None)
     expect = q.get("expect") or {}
@@ -129,7 +80,6 @@ def evaluate_rag_question(
         citation_ok=answer is not None and any(c in expected for c in cited),
         facts_ok=answer is not None and all(normalize(f) in text for f in expect.get("facts") or []),
         seconds=seconds,
-        context_hit=any(c in expected for c in context_candidates(results)),
         answer=(answer or {}).get("answer"),
         cited=[f"{title} {article}" for title, article in cited],
     )
@@ -144,8 +94,6 @@ def summarize_rag(results: list[RagResult]) -> dict:
         "questions": len(results),
         # 回答できた質問のうち、正しい条を引用した割合（目標 95% 以上、docs/ROADMAP.md M6）
         "citation_accuracy": _ratio(sum(r.citation_ok for r in answered), len(answered)),
-        # 回答できるはずの質問のうち、正解の条を AI に渡せた割合（検索の Recall@6。低ければ文脈の選び方を直す）
-        "context_recall": _ratio(sum(r.context_hit for r in answerable), len(answerable)),
         "facts_rate": _ratio(sum(r.facts_ok for r in answered), len(answered)),
         "answer_rate": _ratio(len(answered), len(answerable)),
         # 規程に記載がない質問で、回答文を出さなかった割合
