@@ -12,7 +12,9 @@ import static org.mockito.Mockito.when;
 import com.example.knavi.intelligence.AnswerGenerator;
 import com.example.knavi.intelligence.AnswerGenerator.GeneratedAnswer;
 import com.example.knavi.intelligence.AnswerGenerator.Passage;
+import com.example.knavi.navigation.application.NavigationResult.BasisRef;
 import com.example.knavi.navigation.application.NavigationResult.DocumentHit;
+import com.example.knavi.navigation.application.NavigationResult.ProgramHit;
 import com.example.knavi.navigation.application.NavigationResult.QueryInfo;
 import com.example.knavi.navigation.application.NavigationResult.SectionRef;
 import com.example.knavi.navigation.infrastructure.NavigationQueries;
@@ -49,7 +51,7 @@ class AnswerServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(navigation.navigate(anyString(), any())).thenReturn(result(false, first, second));
+        when(navigation.navigateWithSections(anyString(), any())).thenReturn(navigated(result(false, first, second)));
         when(generator.sendableVisibilities()).thenReturn(LOCAL);
         when(queries.passages(any(), any()))
                 .thenReturn(List.of(
@@ -113,7 +115,7 @@ class AnswerServiceTest {
 
     @Test
     void nothingFoundMeansNoEvidenceWithoutCallingTheModel() {
-        when(navigation.navigate(anyString(), any())).thenReturn(result(true));
+        when(navigation.navigateWithSections(anyString(), any())).thenReturn(navigated(result(true)));
 
         service(true).answer("社員食堂のメニュー", user, sink);
 
@@ -128,10 +130,11 @@ class AnswerServiceTest {
                         row(first, "MANAGERS", "第5条", "結婚祝金", "管理職向けの本文"),
                         row(second, "INTERNAL", "第6条", "出産祝金", "社内向けの本文")));
 
-        List<PassageRow> rows = service(true).passages(result(false, first, second), user, Set.of("INTERNAL"));
+        List<PassageRow> rows =
+                service(true).passages(navigated(result(false, first, second)), user, Set.of("INTERNAL"));
 
         assertThat(rows).extracting(PassageRow::sectionId).containsExactly(second);
-        assertThat(service(true).passages(result(false, first, second), user, Set.of()))
+        assertThat(service(true).passages(navigated(result(false, first, second)), user, Set.of()))
                 .isEmpty();
     }
 
@@ -139,9 +142,46 @@ class AnswerServiceTest {
     void sectionsThatCanNoLongerBeReadAreDropped() {
         when(queries.passages(any(), any())).thenReturn(List.of(row(second, "INTERNAL", "第6条", "出産祝金", "本文")));
 
-        assertThat(service(true).passages(result(false, first, second), user, LOCAL))
+        assertThat(service(true).passages(navigated(result(false, first, second)), user, LOCAL))
                 .extracting(PassageRow::sectionId)
                 .containsExactly(second);
+    }
+
+    @Test
+    void sectionsTheSearchFoundBeyondTheShownOnesAreCandidatesAfterTheProgramBasis() {
+        UUID basis = UUID.randomUUID();
+        UUID hidden = UUID.randomUUID();
+        NavigationResult result = withProgramBasis(result(false, first, second), basis);
+        when(queries.passages(any(), any()))
+                .thenReturn(List.of(
+                        row(first, "INTERNAL", "第5条", "結婚祝金", "本文"),
+                        row(second, "INTERNAL", "第6条", "出産祝金", "本文"),
+                        row(hidden, "INTERNAL", "第9条", "弔慰金", "本文"),
+                        row(basis, "INTERNAL", "第2条", "対象", "本文")));
+
+        // 検索が拾った条（スコア順）: 画面に出ていない hidden が先、first が次
+        List<PassageRow> rows =
+                service(true).passages(new NavigationService.Navigation(result, List.of(hidden, first)), user, LOCAL);
+
+        // 制度の根拠 → 検索のスコア順 → 結果に出した文書の残りの条
+        assertThat(rows).extracting(PassageRow::sectionId).containsExactly(basis, hidden, first, second);
+    }
+
+    @Test
+    void theNumberOfPassagesIsCapped() {
+        List<UUID> found = new ArrayList<>();
+        List<PassageRow> readable = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            UUID id = UUID.randomUUID();
+            found.add(id);
+            readable.add(row(id, "INTERNAL", "第" + i + "条", "見出し", "本文"));
+        }
+        when(queries.passages(any(), any())).thenReturn(readable);
+
+        List<PassageRow> rows =
+                service(true).passages(new NavigationService.Navigation(result(false), found), user, LOCAL);
+
+        assertThat(rows).extracting(PassageRow::sectionId).containsExactlyElementsOf(found.subList(0, 6));
     }
 
     @Test
@@ -173,6 +213,32 @@ class AnswerServiceTest {
                 List.of(),
                 List.of(),
                 fallback);
+    }
+
+    NavigationService.Navigation navigated(NavigationResult result) {
+        return new NavigationService.Navigation(result, List.of());
+    }
+
+    NavigationResult withProgramBasis(NavigationResult result, UUID basisSection) {
+        ProgramHit program = new ProgramHit(
+                UUID.randomUUID(),
+                "PRG-001",
+                "慶弔見舞金",
+                null,
+                null,
+                null,
+                List.of(new BasisRef(document, "慶弔見舞金規程", "v2.1", basisSection, "第2条")),
+                1.0,
+                List.of());
+        return new NavigationResult(
+                result.searchLogId(),
+                result.query(),
+                List.of(program),
+                result.documents(),
+                result.faqs(),
+                result.contacts(),
+                result.relatedPrograms(),
+                result.fallback());
     }
 
     PassageRow row(UUID section, String visibility, String articleNo, String heading, String content) {

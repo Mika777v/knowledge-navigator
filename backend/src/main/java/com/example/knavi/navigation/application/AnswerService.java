@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
  *
  * <ol>
  *   <li>ナビゲーション検索で4ブロックの結果を作り、すぐに返す（窓口は DB の値。ADR-0009）
- *   <li>上位の制度の根拠の条と、上位の文書の条を、検索の順に文脈の候補にする
+ *   <li>上位の制度の根拠の条 → 全文検索が拾った条（スコア順）→ 結果に出した文書の条の順に、文脈の候補にする
  *   <li>候補を、検索と同じ権限（SEARCH）で読み直し、生成のプロバイダに送ってよい公開範囲だけに絞る（ADR-0004・0008）
  *   <li>番号を付けて回答文を作らせ、引用された番号を、こちらで持っている条に戻して根拠にする
  * </ol>
@@ -80,7 +80,8 @@ public class AnswerService {
     }
 
     public void answer(String question, AuthenticatedUser user, AnswerSink sink) {
-        NavigationResult result = navigation.navigate(question, user);
+        NavigationService.Navigation navigated = navigation.navigateWithSections(question, user);
+        NavigationResult result = navigated.result();
         sink.results(result);
         if (!properties.enabled()) {
             sink.unanswerable(new AssistantUnanswerable("DISABLED"));
@@ -90,7 +91,7 @@ public class AnswerService {
             sink.unanswerable(new AssistantUnanswerable("NO_EVIDENCE"));
             return;
         }
-        List<PassageRow> rows = passages(result, user, generator.sendableVisibilities());
+        List<PassageRow> rows = passages(navigated, user, generator.sendableVisibilities());
         if (rows.isEmpty()) {
             sink.unanswerable(new AssistantUnanswerable("NO_EVIDENCE"));
             return;
@@ -120,11 +121,16 @@ public class AnswerService {
         sink.answer(new AssistantAnswer(generated.answer(), evidence, generated.model()));
     }
 
-    /** 文脈にする条。検索の順（上位の制度の根拠 → 上位の文書の条）に、権限と送ってよい公開範囲で絞って並べる */
-    List<PassageRow> passages(NavigationResult result, AuthenticatedUser user, Set<String> sendable) {
+    /**
+     * 文脈にする条。上位の制度の根拠 → 全文検索が拾った条（スコア順）→ 結果に出した文書の条の順に、権限と送ってよい公開範囲で絞って並べる。
+     *
+     * <p>画面の文書ブロックは1文書あたり条を3件までに絞っているため、そこからだけ選ぶと、答えの条が候補に入らないことがある。
+     */
+    List<PassageRow> passages(NavigationService.Navigation navigated, AuthenticatedUser user, Set<String> sendable) {
         if (sendable.isEmpty()) {
             return List.of();
         }
+        NavigationResult result = navigated.result();
         Set<UUID> candidates = new LinkedHashSet<>();
         result.programs().stream()
                 .limit(NavigationService.TOP_PROGRAMS_FOR_LINKS)
@@ -133,6 +139,7 @@ public class AnswerService {
                 .map(BasisRef::sectionId)
                 .filter(Objects::nonNull)
                 .forEach(candidates::add);
+        candidates.addAll(navigated.rankedSections());
         result.documents().stream()
                 .map(DocumentHit::sections)
                 .flatMap(List::stream)
