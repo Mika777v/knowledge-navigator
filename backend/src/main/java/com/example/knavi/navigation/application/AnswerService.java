@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
  *
  * <ol>
  *   <li>ナビゲーション検索で4ブロックの結果を作り、すぐに返す（窓口は DB の値。ADR-0009）
- *   <li>上位の制度の根拠の条 → 全文検索が拾った条（スコア順）→ 結果に出した文書の条の順に、文脈の候補にする
+ *   <li>全文検索が拾った条（スコア順）と上位の制度の根拠の条を交互に並べ、結果に出した文書の条を続けて、文脈の候補にする
  *   <li>候補を、検索と同じ権限（SEARCH）で読み直し、生成のプロバイダに送ってよい公開範囲だけに絞る（ADR-0004・0008）
  *   <li>番号を付けて回答文を作らせ、引用された番号を、こちらで持っている条に戻して根拠にする
  * </ol>
@@ -122,24 +122,33 @@ public class AnswerService {
     }
 
     /**
-     * 文脈にする条。上位の制度の根拠 → 全文検索が拾った条（スコア順）→ 結果に出した文書の条の順に、権限と送ってよい公開範囲で絞って並べる。
+     * 文脈にする条。全文検索が拾った条（スコア順）と上位の制度の根拠を交互に並べ、結果に出した文書の条を続ける。権限と送ってよい公開範囲で絞る。
      *
      * <p>画面の文書ブロックは1文書あたり条を3件までに絞っているため、そこからだけ選ぶと、答えの条が候補に入らないことがある。
+     * 制度の根拠を先にまとめて並べると、根拠の多い制度だけで上限が埋まり、質問の語に合う条が入らないため、交互にする。
      */
     List<PassageRow> passages(NavigationService.Navigation navigated, AuthenticatedUser user, Set<String> sendable) {
         if (sendable.isEmpty()) {
             return List.of();
         }
         NavigationResult result = navigated.result();
-        Set<UUID> candidates = new LinkedHashSet<>();
-        result.programs().stream()
+        List<UUID> basis = result.programs().stream()
                 .limit(NavigationService.TOP_PROGRAMS_FOR_LINKS)
                 .map(ProgramHit::basis)
                 .flatMap(List::stream)
                 .map(BasisRef::sectionId)
                 .filter(Objects::nonNull)
-                .forEach(candidates::add);
-        candidates.addAll(navigated.rankedSections());
+                .toList();
+        List<UUID> found = navigated.rankedSections();
+        Set<UUID> candidates = new LinkedHashSet<>();
+        for (int i = 0; i < Math.max(found.size(), basis.size()); i++) {
+            if (i < found.size()) {
+                candidates.add(found.get(i));
+            }
+            if (i < basis.size()) {
+                candidates.add(basis.get(i));
+            }
+        }
         result.documents().stream()
                 .map(DocumentHit::sections)
                 .flatMap(List::stream)
