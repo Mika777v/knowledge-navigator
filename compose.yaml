@@ -30,7 +30,10 @@ services:
   storage:
     # 原本ファイル（PDF）の置き場所。S3 互換の SeaweedFS（ADR-0010）
     image: chrislusf/seaweedfs:4.48
-    command: ["server", "-s3", "-dir=/data", "-ip.bind=0.0.0.0", "-volume.max=0"]
+    # -volume.max=0 は「空き容量 ÷ 1ボリュームの上限」個までボリュームを作る。上限の既定 30GB のままだと、
+    # 空きが 30GB を切った環境（make up-ai の後の Codespaces など）で1つも作れず、保存が 500 になる。
+    # ダミーの PDF は小さいので、上限を 512MB にする
+    command: ["server", "-s3", "-dir=/data", "-ip.bind=0.0.0.0", "-volume.max=0", "-master.volumeSizeLimitMB=512"]
     environment:
       # S3 API の認証情報（.env の STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY。古い .env でも動くよう既定値を持つ）
       AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:-knavi}
