@@ -1,0 +1,60 @@
+name: eval-rag
+
+# 根拠付き回答の品質（data/eval/rag.yaml）を、本物のモデル（Ollama の qwen3.5:4b。ADR-0013）で測る。
+# 1問に数十秒かかり、全体で 40 分〜1 時間ほどかかるため、PR ごとには動かさず、Actions の画面から手動で動かす。
+# 結果はジョブのサマリーに出し、result.json（回答文を含む）と report.md を成果物に残す。指標が低くても失敗にしない
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-rag-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  eval-rag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - name: Free disk space
+        # モデル（bge-m3 と qwen3.5:4b で数 GB）とイメージを置く場所を空ける。この評価で使わないツールを消す
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - name: Start all services with ai-service
+        # 初回はモデルの取り寄せに時間がかかる（ollama-pull が終わるまで ai-service は起動しない）
+        run: make up-ai
+      - name: Load seed data
+        run: make seed
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: RAG evaluation
+        run: |
+          pip install pyyaml
+          make eval-rag
+      - name: Write the report to the job summary
+        if: ${{ !cancelled() && hashFiles('build/eval-rag/report.md') != '' }}
+        run: cat build/eval-rag/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the report
+        if: ${{ !cancelled() && hashFiles('build/eval-rag/report.md') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: eval-rag
+          path: |
+            build/eval-rag/report.md
+            build/eval-rag/result.json
+          retention-days: 30
+      - name: Show ai-service logs
+        # 回答できなかった理由（引用の照合で落ちた文・生成の失敗）は ai-service のログに出る
+        if: ${{ !cancelled() }}
+        run: docker compose --profile ai logs ai-service | grep -E "WARNING|ERROR" || true
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose --profile ai logs
+      - name: Stop services
+        if: always()
+        run: docker compose --profile ai down -v
