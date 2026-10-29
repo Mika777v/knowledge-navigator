@@ -96,6 +96,16 @@ public class NavigationService {
     }
 
     public NavigationResult navigate(String q, AuthenticatedUser user) {
+        return navigateWithSections(q, user).result();
+    }
+
+    /**
+     * 4ブロックの結果と、全文検索が拾った条（スコアの高い順。文書ごとの件数で絞る前）。
+     *
+     * <p>根拠付き回答の文脈の候補に使う（画面に出す条は1文書あたり {@value #SECTIONS_PER_DOCUMENT} 件までのため）。
+     * 条は検索と同じ権限（SEARCH）で絞り込み済み。
+     */
+    public Navigation navigateWithSections(String q, AuthenticatedUser user) {
         if (q == null || q.isBlank()) {
             throw ApiErrors.badRequest("知りたいことを入力してください。");
         }
@@ -276,16 +286,26 @@ public class NavigationService {
                         candidates.hybrid() ? Mode.HYBRID : Mode.KEYWORD))
                 .orElse(null);
 
-        return new NavigationResult(
-                searchLogId,
-                new QueryInfo(query.raw(), query.cleaned(), allTerms, List.copyOf(matchedLifeEvents.values())),
-                programHits,
-                documentHits,
-                faqHits,
-                contacts,
-                related,
-                fallback);
+        List<UUID> rankedSections = candidates.sections().stream()
+                .sorted(Comparator.comparingDouble(SearchPort.SectionHit::score).reversed())
+                .map(SearchPort.SectionHit::sectionId)
+                .distinct()
+                .toList();
+        return new Navigation(
+                new NavigationResult(
+                        searchLogId,
+                        new QueryInfo(query.raw(), query.cleaned(), allTerms, List.copyOf(matchedLifeEvents.values())),
+                        programHits,
+                        documentHits,
+                        faqHits,
+                        contacts,
+                        related,
+                        fallback),
+                rankedSections);
     }
+
+    /** {@link #navigateWithSections} の結果 */
+    public record Navigation(NavigationResult result, List<UUID> rankedSections) {}
 
     /** 検索ログに残す上位の結果（ブロックごとに上位3件） */
     private static List<TopHit> topHits(List<ProgramHit> programs, List<DocumentHit> documents, List<FaqHit> faqs) {
