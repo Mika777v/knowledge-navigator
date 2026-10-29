@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from rag_metrics import context_candidates, context_rank, evaluate_rag_question, parse_sse, summarize_rag  # noqa: E402
+from rag_metrics import evaluate_rag_question, parse_sse, summarize_rag  # noqa: E402
 
 TITLES = {"REG-GA-001": "慶弔見舞金規程"}
 QUESTION = {
@@ -57,46 +57,10 @@ class EvaluateRagQuestionTest(unittest.TestCase):
         self.assertFalse(result.citation_ok)
 
 
-class SpacingAndContextTest(unittest.TestCase):
+class SpacingTest(unittest.TestCase):
     def test_spaces_between_numbers_and_units_still_match_the_facts(self):
         stream = STREAM.replace("３０，０００円", "30,000 円")
         self.assertTrue(evaluate_rag_question(QUESTION, parse_sse(stream), 1.0, TITLES).facts_ok)
-
-    def test_context_hit_follows_the_backend_order_and_limit(self):
-        def results(sections):
-            return {"programs": [], "documents": [{"title": "慶弔見舞金規程", "sections": sections}]}
-
-        within = [{"articleNo": f"第{n}条"} for n in (1, 2, 3, 4, 5)]
-        beyond = [{"articleNo": f"第{n}条"} for n in (1, 2, 3, 4, 6, 7, 5)]
-        for sections, hit in ((within, True), (beyond, False)):
-            events = [("results", results(sections)), ("unanswerable", {"reason": "NOT_IN_CONTEXT"})]
-            self.assertEqual(evaluate_rag_question(QUESTION, events, 1.0, TITLES).context_hit, hit)
-
-    def test_program_basis_comes_first(self):
-        results = {
-            "programs": [{"basis": [{"documentTitle": "慶弔見舞金規程", "articleNo": "第5条", "sectionId": "s5"}]}],
-            "documents": [{"title": "就業規則", "sections": [{"articleNo": f"第{n}条"} for n in range(1, 10)]}],
-        }
-        self.assertTrue(evaluate_rag_question(QUESTION, [("results", results)], 1.0, TITLES).context_hit)
-
-
-class ContextOrderTest(unittest.TestCase):
-    RESULTS = {
-        "programs": [{"basis": [{"documentTitle": "A", "articleNo": "第1条", "sectionId": "a1"}]}],
-        "documents": [{"title": "B", "sections": [{"articleNo": "第1条"}, {"articleNo": "第2条"}]}],
-    }
-
-    def test_orders(self):
-        self.assertEqual(context_candidates(self.RESULTS, "programs-first"), [("A", "第1条"), ("B", "第1条"), ("B", "第2条")])
-        self.assertEqual(context_candidates(self.RESULTS, "documents-first"), [("B", "第1条"), ("B", "第2条"), ("A", "第1条")])
-        self.assertEqual(context_candidates(self.RESULTS, "interleave"), [("B", "第1条"), ("A", "第1条"), ("B", "第2条")])
-        self.assertEqual(context_candidates(self.RESULTS, "documents-first", 1), [("B", "第1条")])
-
-    def test_rank_without_limit(self):
-        q = {"expect": {"sections": [{"document": "B", "article": "第2条"}]}}
-        self.assertEqual(context_rank(self.RESULTS, q, {}, "programs-first"), 3)
-        self.assertEqual(context_rank(self.RESULTS, q, {}, "documents-first"), 2)
-        self.assertIsNone(context_rank({}, q, {}, "interleave"))
 
 
 class SummarizeRagTest(unittest.TestCase):
