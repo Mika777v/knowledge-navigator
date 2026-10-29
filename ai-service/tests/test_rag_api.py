@@ -62,7 +62,7 @@ def test_answers_with_citations_from_the_passages(client: TestClient) -> None:
     assert response.json() == {
         "answerable": True,
         "reason": "ANSWERED",
-        "answer": "結婚祝金として30,000円を支給する。[1]",
+        "answer": "結婚祝金として30,000円を支給する[1]。",
         "citations": [1],
         "model": "fake-chat",
         "failed_check": None,

@@ -7,6 +7,7 @@ import re
 import statistics
 import unicodedata
 from dataclasses import dataclass, field
+from itertools import zip_longest
 
 
 @dataclass
@@ -60,19 +61,49 @@ MAX_PASSAGES = 6
 TOP_PROGRAMS = 3
 
 
-def context_candidates(results: dict | None) -> list[tuple[str, str]]:
-    """4ブロックの結果から、backend が文脈にする条を同じ順で選ぶ（上位の制度の根拠 → 上位の文書の条）"""
+# 文脈の条の選び方（--context-only で比べる）。programs-first が今の backend（AnswerService）
+ORDERS = ("programs-first", "documents-first", "interleave")
+
+
+def context_candidates(
+    results: dict | None, order: str = "programs-first", limit: int | None = MAX_PASSAGES
+) -> list[tuple[str, str]]:
+    """4ブロックの結果から、文脈にする条を選ぶ（既定は backend と同じ: 上位の制度の根拠 → 上位の文書の条）"""
     if not results:
         return []
-    candidates: list[tuple[str, str]] = []
-    for program in (results.get("programs") or [])[:TOP_PROGRAMS]:
-        for basis in program.get("basis") or []:
-            if basis.get("sectionId"):
-                candidates.append((basis.get("documentTitle"), basis.get("articleNo")))
-    for document in results.get("documents") or []:
-        for section in document.get("sections") or []:
-            candidates.append((document.get("title"), section.get("articleNo")))
-    return list(dict.fromkeys(candidates))[:MAX_PASSAGES]
+    basis = [
+        (b.get("documentTitle"), b.get("articleNo"))
+        for program in (results.get("programs") or [])[:TOP_PROGRAMS]
+        for b in program.get("basis") or []
+        if b.get("sectionId")
+    ]
+    sections = [
+        (document.get("title"), section.get("articleNo"))
+        for document in results.get("documents") or []
+        for section in document.get("sections") or []
+    ]
+    if order == "documents-first":
+        candidates = sections + basis
+    elif order == "interleave":
+        candidates = [c for pair in zip_longest(sections, basis) for c in pair if c is not None]
+    else:
+        candidates = basis + sections
+    unique = list(dict.fromkeys(candidates))
+    return unique if limit is None else unique[:limit]
+
+
+def context_rank(results: dict | None, q: dict, document_titles: dict[str, str], order: str) -> int | None:
+    """正解の条が、上限なしで並べたときに何番目に来るか（1〜。候補になければ None）"""
+    expected = _expected_sections(q, document_titles)
+    for i, candidate in enumerate(context_candidates(results, order, None), start=1):
+        if candidate in expected:
+            return i
+    return None
+
+
+def _expected_sections(q: dict, document_titles: dict[str, str]) -> set[tuple[str, str]]:
+    sections = (q.get("expect") or {}).get("sections") or []
+    return {(document_titles.get(s["document"], s["document"]), s["article"]) for s in sections}
 
 
 def evaluate_rag_question(
@@ -85,7 +116,7 @@ def evaluate_rag_question(
     answer = next((data for name, data in events if name == "answer"), None)
     unanswerable = next((data for name, data in events if name == "unanswerable"), None)
     expect = q.get("expect") or {}
-    expected = {(document_titles.get(s["document"], s["document"]), s["article"]) for s in expect.get("sections") or []}
+    expected = _expected_sections(q, document_titles)
     cited = [(e.get("documentTitle"), e.get("articleNo")) for e in (answer or {}).get("evidence", [])]
     text = normalize((answer or {}).get("answer") or "")
     return RagResult(

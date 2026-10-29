@@ -88,4 +88,9 @@ async def answer(
             model=chat.model,
             failed_check=result.failed_check,
         )
-    return AnswerResponse(answerable=True, reason="ANSWERED", answer=text, citations=result.citations, model=chat.model)
+    if result.dropped:
+        # 取り除いた文の数と理由だけを残す（回答文の中身は出さない）
+        log.warning("sentences dropped by verification: %s", ",".join(result.dropped))
+    return AnswerResponse(
+        answerable=True, reason="ANSWERED", answer=result.answer, citations=result.citations, model=chat.model
+    )

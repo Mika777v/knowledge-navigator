@@ -38,7 +38,6 @@ def test_notation_differences_are_tolerated(answer: str) -> None:
         ("結婚休暇は連続5年です。[2]", "NUMBER_NOT_IN_SOURCE"),  # 単位がちがう
         ("結婚祝金は30,000円です。[9]", "UNKNOWN_CITATION"),
         ("結婚祝金は30,000円です。", "NO_CITATION"),
-        ("結婚祝金は30,000円です。[1] 申請は社内ポータルから行い、承認を受けてください。", "UNCITED_SENTENCE"),
         ("結婚祝金は30,000円です。[1] 総務部（内線 1234）へ。[1]", "CONTACT_IN_ANSWER"),
         ("結婚祝金は30,000円です。[1] 03-1234-5678 へ。[1]", "CONTACT_IN_ANSWER"),
     ],
@@ -63,3 +62,26 @@ def test_normalize_removes_spaces_between_numbers_and_units_but_keeps_citations(
 
 def test_a_spaced_wrong_unit_is_still_rejected() -> None:
     assert verify("結婚休暇は連続 5 年です [2]。", SOURCES).failed_check == "NUMBER_NOT_IN_SOURCE"
+
+
+def test_unsupported_sentences_are_dropped_and_the_rest_is_kept_as_written() -> None:
+    answer = (
+        "結婚祝金は30,000円です。[1] 申請は社内ポータルから行い、承認を受けてください。"
+        "結婚休暇は連続7日です。[2] 結婚休暇は連続5日です。[2]"
+    )
+    result = verify(answer, SOURCES)
+    assert result.ok
+    assert result.answer == "結婚祝金は30,000円です[1]。結婚休暇は連続5日です[2]。"
+    assert result.citations == [1, 2]
+    assert result.dropped == ["UNCITED_SENTENCE", "NUMBER_NOT_IN_SOURCE"]
+
+
+def test_nothing_left_after_dropping_is_rejected_with_the_first_reason() -> None:
+    result = verify("結婚祝金は35,000円です。[1] 詳しくは社内ポータルの申請画面を確認してください。", SOURCES)
+    assert not result.ok
+    assert result.failed_check == "NUMBER_NOT_IN_SOURCE"
+    assert result.answer is None
+
+
+def test_a_short_lead_alone_is_not_an_answer() -> None:
+    assert verify("お答えします。", SOURCES).failed_check == "NO_CITATION"
