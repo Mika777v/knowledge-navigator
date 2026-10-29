@@ -51,7 +51,7 @@ jobs:
       - name: Show ai-service logs
         # 回答できなかった理由（引用の照合で落ちた文・生成の失敗）は ai-service のログに出る
         if: ${{ !cancelled() }}
-        run: docker compose --profile ai logs ai-service | grep -E "WARNING|ERROR" || true
+        run: docker compose --profile ai logs ai-service | grep -E "chat failed|by verification" || true
       - name: Show logs on failure
         if: failure()
         run: docker compose --profile ai logs

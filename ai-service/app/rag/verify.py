@@ -2,6 +2,9 @@
 
 番号・連絡先の検査に通らなければ、回答文を捨てて「回答できない」にする。引用のない文・引用した条にない数値を含む文は、
 その文だけを取り除く（根拠のない内容は画面に出さない）。根拠のある文が1つも残らなければ「回答できない」にする。
+
+引用のない文でも、数値を含み、その数値がすべて同じ段落の前後の引用した条にあれば残す。モデルは段落の最後の文にだけ
+引用を付けることがあり、答えの数値を書いた文ほど取り除かれてしまうため。数値のない文は引用がなければ取り除く。
 """
 
 import re
@@ -62,19 +65,19 @@ def verify(answer: str, sources: dict[int, str]) -> Verification:
     normalized_sources = {ref: normalize(source) for ref, source in sources.items()}
     kept: list[str] = []
     dropped: list[str] = []
-    for sentence in _sentences(display):
-        refs = [int(n) for n in _CITATION.findall(sentence)]
+    sentences = _sentences(display)
+    refs_of = [[int(n) for n in _CITATION.findall(sentence)] for _, sentence in sentences]
+    for i, (paragraph, sentence) in enumerate(sentences):
+        refs = refs_of[i]
         body = _CITATION.sub("", normalize(sentence)).strip()
+        numbers = _NUMBER.findall(body)
         if not refs and len(body) >= SHORT_SENTENCE:
-            dropped.append("UNCITED_SENTENCE")
-            continue
+            neighbors = _neighbor_refs(sentences, refs_of, i, paragraph)
+            if not numbers or not neighbors or not _all_in(numbers, neighbors, normalized_sources):
+                dropped.append("UNCITED_SENTENCE")
+                continue
         # 短い前置きの数値は、引用されたどれかの根拠にあればよい
-        cited = "\n".join(normalized_sources[ref] for ref in (refs or citations))
-        # 前後に数字が続く別の数値（30 と 30000 など）と取りちがえない
-        if any(
-            not re.search(rf"(?<![\d.]){re.escape(number + unit)}(?![\d.])", cited)
-            for number, unit in _NUMBER.findall(body)
-        ):
+        elif not _all_in(numbers, refs or citations, normalized_sources):
             dropped.append("NUMBER_NOT_IN_SOURCE")
             continue
         kept.append(sentence)
@@ -85,6 +88,35 @@ def verify(answer: str, sources: dict[int, str]) -> Verification:
     return Verification(True, None, kept_citations, answer="".join(kept), dropped=dropped)
 
 
-def _sentences(text: str) -> list[str]:
+def _all_in(numbers: list[tuple[str, str]], refs: list[int], sources: dict[int, str]) -> bool:
+    cited = "\n".join(sources[ref] for ref in refs)
+    # 前後に数字が続く別の数値（30 と 30000 など）と取りちがえない
+    return all(re.search(rf"(?<![\d.]){re.escape(number + unit)}(?![\d.])", cited) for number, unit in numbers)
+
+
+def _neighbor_refs(sentences: list[tuple[int, str]], refs_of: list[list[int]], i: int, paragraph: int) -> list[int]:
+    """同じ段落で、前と後ろのいちばん近い引用のある文の番号"""
+    refs: list[int] = []
+    for step in (-1, 1):
+        j = i + step
+        while 0 <= j < len(sentences) and sentences[j][0] == paragraph:
+            if refs_of[j]:
+                refs += refs_of[j]
+                break
+            j += step
+    return list(dict.fromkeys(refs))
+
+
+def _sentences(text: str) -> list[tuple[int, str]]:
+    """文に分け、段落の番号と組にする。引用だけの行（「[1]」）は前の段落に含める"""
     moved = _TRAILING_CITATIONS.sub(lambda m: m.group(2).strip() + m.group(1), text)
-    return [s.strip() for s in _SENTENCE_END.split(moved) if s.strip()]
+    result: list[tuple[int, str]] = []
+    paragraph = -1
+    for line in moved.split("\n"):
+        parts = [s.strip() for s in _SENTENCE_END.split(line) if s.strip()]
+        if not parts:
+            continue
+        if paragraph < 0 or _CITATION.sub("", line).strip():
+            paragraph += 1
+        result += [(paragraph, part) for part in parts]
+    return result

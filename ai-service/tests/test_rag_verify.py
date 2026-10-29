@@ -85,3 +85,35 @@ def test_nothing_left_after_dropping_is_rejected_with_the_first_reason() -> None
 
 def test_a_short_lead_alone_is_not_an_answer() -> None:
     assert verify("お答えします。", SOURCES).failed_check == "NO_CITATION"
+
+
+# 引用がなくてもよい短い文（15 文字未満）にならない長さにする
+LONG = "社員が婚姻したときの結婚祝金は30,000円です。"
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        LONG + "これは第5条に定められています。[1]",  # 引用は段落の最後の文だけ
+        "申請は入籍日から1年以内です[2]。" + LONG + "申請は6か月以内に行います[1]。",  # 前後の引用
+        LONG + "\n[1]",  # 引用だけの行
+    ],
+)
+def test_an_uncited_sentence_is_kept_when_its_numbers_are_in_a_neighboring_citation(answer: str) -> None:
+    result = verify(answer, SOURCES)
+    assert result.ok
+    assert "30,000円" in result.answer
+    assert result.dropped == []
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        LONG.replace("30,000", "35,000") + "これは第5条に定められています。[1]",  # 数値が根拠にない
+        LONG + "結婚休暇は連続5日です。[2]",  # 30,000円は後ろの引用（[2]）にない
+        LONG + "\n結婚休暇は連続5日です。[2]",  # 段落がちがう
+        "申請は社内ポータルから行い、承認を受けてください。" + LONG + "[1]",  # 数値のない文
+    ],
+)
+def test_an_uncited_sentence_without_supported_numbers_is_still_dropped(answer: str) -> None:
+    assert "UNCITED_SENTENCE" in verify(answer, SOURCES).dropped
