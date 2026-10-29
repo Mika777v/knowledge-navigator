@@ -148,7 +148,7 @@ class AnswerServiceTest {
     }
 
     @Test
-    void sectionsTheSearchFoundBeyondTheShownOnesAreCandidatesAfterTheProgramBasis() {
+    void sectionsTheSearchFoundAndTheProgramBasisTakeTurns() {
         UUID basis = UUID.randomUUID();
         UUID hidden = UUID.randomUUID();
         NavigationResult result = withProgramBasis(result(false, first, second), basis);
@@ -163,8 +163,8 @@ class AnswerServiceTest {
         List<PassageRow> rows =
                 service(true).passages(new NavigationService.Navigation(result, List.of(hidden, first)), user, LOCAL);
 
-        // 制度の根拠 → 検索のスコア順 → 結果に出した文書の残りの条
-        assertThat(rows).extracting(PassageRow::sectionId).containsExactly(basis, hidden, first, second);
+        // 検索のスコア順と制度の根拠を交互に → 結果に出した文書の残りの条
+        assertThat(rows).extracting(PassageRow::sectionId).containsExactly(hidden, basis, first, second);
     }
 
     @Test
