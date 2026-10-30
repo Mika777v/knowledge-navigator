@@ -62,6 +62,7 @@
 - ai-service: `make test-ai`（ruff と pytest。uv が必要）
 - 画面に関わる変更は E2E（`frontend/e2e/`）を追加し、手元で起動して全件流す
 - 検索に関わる変更は `make eval`（基準値は `data/eval/baseline.json`）
+- 根拠付き回答（AnswerService・ai-service の生成・照合）に関わる変更は、マージ後に GitHub Actions の `eval-rag` を手動で動かして確かめる（1回40分ほど。温度 0 なので結果は毎回同じ。Codespaces で `make eval-rag` を流す必要はない）
 - ダミーデータを変えたら `python3 scripts/data/validate_seed.py`
 
 ## トークンの使い方（2026-10 にオーナーと決めたこと）
