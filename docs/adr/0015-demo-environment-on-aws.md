@@ -1,6 +1,6 @@
 # ADR-0015: デモ環境は AWS の EC2 1台 + RDS for PostgreSQL + S3 に置き、接続できる IP を絞り、NAT ゲートウェイは置かない
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-30
 - 関連 Issue / PR: #20（E16-T3 デモ環境デプロイ）、#198
 - 関連ドキュメント: [ARCHITECTURE.md §7](../ARCHITECTURE.md)、[ADR-0002](./0002-japanese-search-pg-bigm.md)、[ADR-0005](./0005-nextjs-as-bff.md)、[ADR-0007](./0007-pgvector.md)、[ADR-0010](./0010-pdf-ingestion.md)
@@ -38,6 +38,13 @@
 6. 秘密の値（DB のパスワード・HMAC の鍵など）は **SSM Parameter Store**（SecureString）に置き、EC2 の起動時に `.env` へ書き出す。リポジトリには `.env.demo.example`（値は空）だけを置く
 7. AWS の資源（VPC・サブネット・セキュリティグループ・EC2・RDS・S3・IAM）は、手で画面から作らず、**Terraform で `infra/terraform/demo/` に書く**（ARCHITECTURE §7「IaC は Phase4 以降に infra/terraform/」）。作る・消すをコマンド1つで行え、使わない期間は消して費用を止められる
 8. 使わない期間は、EC2 と RDS を**止める**か、Terraform で**消す**。止めている間は EC2・RDS の時間の課金がかからない（ディスクとバックアップの分だけ残る）
+
+### 公開の前に決めること（この ADR では決めない）
+
+この ADR は形だけを決め、次の2つは実際に公開するときに決める。決まるまでは Terraform・compose の変数として受け取り、リポジトリには書かない。
+
+- **許可する IP**（`allowed_cidrs`）: 会社のネットワークから使うなら、その出口の IP が固定かを情シスに確かめる。固定でなければ、使うときだけ自分の今の IP を足す（変わったら足し直す）
+- **ドメイン**: 証明書（DNS-01）に要る。Route 53 で新しく取るか、持っているものの一部（`demo.example.jp` など）を使う
 
 ## 検討した選択肢（Options）
 
