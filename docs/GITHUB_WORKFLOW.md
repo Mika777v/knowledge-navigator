@@ -263,6 +263,7 @@ PR / main への push
 | `ci-db.yml` | ゲートから / 手動 | pg_bigm のチェックサム検証 → DB イメージのスモークテスト |
 | `ci-compose.yml` | ゲートから / 手動 | `make up` → DB 設定・backend・frontend（BFF 経由）の疎通確認 |
 | `ci-data.yml` | ゲートから / 手動 | ダミーデータ（seed・規程）の整合性検査 |
+| `ci-terraform.yml` | ゲートから / 手動 | デモ環境の AWS 構成（`infra/terraform/demo`）の書式・文法・セキュリティ設定の検査（AWS には接続しない） |
 | `labels.yml` | push(main) で labels.yml 変更時 | ラベル同期 |
 | `search-eval.yml` | （#39 で追加） | 評価セット実行 → PR に結果コメント |
 | `release-please.yml` | push(main) | リリースの準備の PR を作る・更新する。マージされたらタグ・Release を作り、`release-images.yml` を呼ぶ |

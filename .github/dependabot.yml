@@ -118,3 +118,15 @@ updates:
       # Python は 3.12 に固定する（pyproject.toml の requires-python と合わせる）。上げるときは手動で行う
       - dependency-name: python
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: terraform
+    directory: /infra/terraform/demo
+    schedule:
+      interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:infra", "dependencies"]

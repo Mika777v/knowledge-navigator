@@ -14,6 +14,7 @@
 | [TECH_STACK_COMPARISON.md](./TECH_STACK_COMPARISON.md) | 技術比較表、目的別推奨構成 |
 | [TECH_STACK_DECISION.md](./TECH_STACK_DECISION.md) | 採用技術と判断理由、ADR一覧 |
 | [GITHUB_WORKFLOW.md](./GITHUB_WORKFLOW.md) | ブランチ・コミット・PR・リリース・Issue/PRテンプレート・Projects |
+| [DEMO_AWS.md](./DEMO_AWS.md) | デモ環境の AWS 構成（EC2・RDS・S3）と、Terraform での作り方・止め方・消し方 |
 | [REPOSITORY_SETUP.md](./REPOSITORY_SETUP.md) | 上記ルールを GitHub に設定する方法（ファイル・スクリプト・手動手順） |
 | [ROADMAP.md](./ROADMAP.md) | 6か月ロードマップ、スプリント計画 |
 | [TASKS.md](./TASKS.md) | Epic / Story / Task 分解、初期Issue 20件 |

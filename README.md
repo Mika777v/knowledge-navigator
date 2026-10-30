@@ -149,6 +149,7 @@ flowchart LR
 - [Product Vision](docs/PRODUCT_VISION.md) / [PRD](docs/PRD_KNOWLEDGE_NAVIGATOR.md) / [Architecture](docs/ARCHITECTURE.md) / [ADR](docs/adr/)
 - [ロードマップ](docs/ROADMAP.md) / [タスク分解](docs/TASKS.md)
 - [GitHub 運用ルール](docs/GITHUB_WORKFLOW.md) / [リポジトリ初期設定の手順](docs/REPOSITORY_SETUP.md)
+- [デモ環境の AWS 構成](docs/DEMO_AWS.md)
 - [ダミーデータ](data/README.md) / [評価用質問](data/eval/README.md)
 - [変更履歴](CHANGELOG.md)
 

@@ -26,6 +26,7 @@ jobs:
       compose: ${{ steps.filter.outputs.compose }}
       data: ${{ steps.filter.outputs.data }}
       ai-service: ${{ steps.filter.outputs.ai-service }}
+      terraform: ${{ steps.filter.outputs.terraform }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -72,6 +73,10 @@ jobs:
               - scripts/data/**
               - scripts/eval/**
               - .github/workflows/ci-data.yml
+            terraform:
+              - *gate
+              - infra/terraform/**
+              - .github/workflows/ci-terraform.yml
 
   backend:
     needs: changes
@@ -103,10 +108,15 @@ jobs:
     if: needs.changes.outputs.ai-service == 'true'
     uses: ./.github/workflows/ci-ai-service.yml
 
+  terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    uses: ./.github/workflows/ci-terraform.yml
+
   # 必須チェック。スキップされた CI は成功扱い、失敗・キャンセルがあれば失敗にする
   ci-ok:
     if: always()
-    needs: [changes, backend, frontend, db, compose, data, ai-service]
+    needs: [changes, backend, frontend, db, compose, data, ai-service, terraform]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

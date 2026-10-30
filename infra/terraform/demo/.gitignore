@@ -1,0 +1,6 @@
+# 状態ファイルには DB のパスワードなどの秘密が入る。オーナーの PC にだけ置く
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+crash.log
