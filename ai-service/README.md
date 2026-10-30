@@ -6,6 +6,7 @@
 - `/v1/...` は backend との共有のトークン（環境変数 `AI_SERVICE_TOKEN`）を `Authorization: Bearer` で送らないと 401 になる。`/healthz` だけはトークンなしで呼べる
 - `POST /v1/embeddings`（`{"texts": [...]}` → 文章ごとの 1024 次元のベクトル）。1回に 64 件・1件 8000 文字まで
 - `POST /v1/rag/answer`（質問と、backend が番号を付けた条 → 根拠付きの回答文。下の「回答文の生成」）
+- `POST /v1/assistant/extract`（利用者が書いた文と確認質問 → 読み取れた答え `{質問のコード: 選択肢の value}`。ADR-0014）。決まった質問・選択肢に無い出力は捨てる。読み取った答えは画面で選んだ状態にするだけで、本人が確かめてから判定に使う。`fake` は、文に選択肢の label がそのまま含まれていればそれを選ぶ
 - `GET /v1/info` で、今のプロバイダ・モデル・次元・社外に送るか（`external`）を、Embedding と生成（`chat`）それぞれについて返す。backend はこれを見て送る文章を絞る（ADR-0008）
 
 ## プロバイダ（[ADR-0008](../docs/adr/0008-llm-provider-abstraction.md)）
