@@ -56,7 +56,7 @@ backend/src/main/java/com/example/knavi/
 ├── insight/          # 検索ログ・フィードバック・評価
 ├── audit/            # 監査ログ
 ├── intelligence/     # Phase4: ai-service クライアント、ベクトルの差分合わせ（ADR-0006・0012）
-└── assistant/        # Phase6: 会話の履歴（ADR-0014）。根拠付き回答の生成は navigation（下の注）
+└── assistant/        # Phase6: 会話の履歴・案内（確認質問・制度の判定・チェックリスト。ADR-0014）。根拠付き回答の生成は navigation（下の注）
     各モジュール: api/ (Controller, DTO) / application/ (UseCase) / domain/ / infrastructure/ (JPA, jOOQ)
 ```
 
