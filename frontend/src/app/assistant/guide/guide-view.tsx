@@ -66,9 +66,11 @@ function Guide({ event }: { event: string }) {
             <QuestionField
               key={q.code}
               question={q}
+              // 選んだ答えは、判定し直す前からすぐに出す
+              selected={answers[q.code] ?? q.answer}
               onChange={(value) =>
                 // 画面に出ている答え（プロフィールから選んだものを含む）を、そのまま利用者の答えとして送る
-                setAnswers({ ...currentAnswers(data.questions), [q.code]: value })
+                setAnswers({ ...currentAnswers(data.questions), ...answers, [q.code]: value })
               }
             />
           ))}
@@ -103,7 +105,15 @@ function currentAnswers(questions: readonly GuideQuestion[]): Record<string, str
   return Object.fromEntries(questions.flatMap((q) => (q.answer ? [[q.code, q.answer]] : [])));
 }
 
-function QuestionField({ question, onChange }: { question: GuideQuestion; onChange: (value: string) => void }) {
+function QuestionField({
+  question,
+  selected,
+  onChange,
+}: {
+  question: GuideQuestion;
+  selected: string | undefined;
+  onChange: (value: string) => void;
+}) {
   return (
     <fieldset className="flex flex-col gap-1">
       <legend className="font-medium">{question.text}</legend>
@@ -114,14 +124,14 @@ function QuestionField({ question, onChange }: { question: GuideQuestion; onChan
               type="radio"
               name={question.code}
               value={c.value}
-              checked={question.answer === c.value}
+              checked={selected === c.value}
               onChange={() => onChange(c.value)}
             />
             {c.label}
           </label>
         ))}
       </div>
-      {question.answerSource === "PROFILE" && (
+      {question.answerSource === "PROFILE" && selected === question.answer && (
         <p className="text-xs text-muted-foreground">登録されている情報から選んでいます。違う場合は選び直してください。</p>
       )}
     </fieldset>
