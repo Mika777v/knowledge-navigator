@@ -98,7 +98,44 @@ terraform output                               # URL・EC2 の ID などが表�
 
 ### 3. アプリを起動する
 
-EC2 の上で、公開済みのイメージを使って frontend・backend・Caddy を起動し、ダミーデータを入れる。手順と `compose.demo.yaml` は次の PR で追加する。
+EC2 の上で、ghcr.io に公開した版のイメージを使って frontend・backend・Caddy を起動し（[`compose.demo.yaml`](../compose.demo.yaml)）、ダミーデータを入れる。
+
+**はじめに一度だけ（GitHub の画面）**: ghcr.io のイメージは非公開のままだと EC2 から取得できない。イメージには秘密の値を入れていないので、公開にする。
+
+1. GitHub の自分のページ（右上のアイコン →「Your profile」）→ 上のタブの「Packages」
+2. `knowledge-navigator-backend` を開き、右下の「Package settings」→ いちばん下の「Change visibility」→「Public」
+3. `knowledge-navigator-frontend`・`knowledge-navigator-postgres`・`knowledge-navigator-caddy` も同じようにする（`caddy` は、デモ環境を入れた版のリリースで初めてできる）
+
+**EC2 に入る（AWS の画面）**: 「EC2」→「インスタンス」→ `knavi-demo-web` を選ぶ →「接続」→「Session Manager」タブ →「接続」。ブラウザの中に黒い画面（ターミナル）が開く。
+
+**起動する（その黒い画面で）**: `v0.7.0` は起動したい版に読み替える。
+
+```bash
+sudo -i
+cd /opt/knavi
+git clone --branch v0.7.0 --depth 1 https://github.com/Mika777v/knowledge-navigator.git app
+cd app
+scripts/demo/up.sh v0.7.0      # イメージを取得 → DB の拡張を作る → 起動（初回は数分）
+scripts/demo/reset.sh          # ダミーデータを入れる
+```
+
+- `up.sh` は、Terraform が置いた値（`/opt/knavi/demo.env`）と SSM の秘密の値から `.env.demo` を作り、`docker compose` で起動する
+- ブラウザで `terraform output url` の URL を開く（許可した IP の場所から）。デモユーザーのパスワードは、自分の PC で `terraform output -raw demo_user_password`
+- ドメインを使わないときは、Caddy が自分で作った証明書のため、ブラウザに警告が出る（「詳細設定」→ 進む）
+
+**毎日の初期化を入れる（一度だけ）**: 日本時間の毎日 4 時（UTC の 19 時）にデータを入れ直す。
+
+```bash
+echo '0 19 * * * root cd /opt/knavi/app && scripts/demo/reset.sh >> /var/log/knavi-reset.log 2>&1' > /etc/cron.d/knavi-reset
+```
+
+**版を上げる**:
+
+```bash
+cd /opt/knavi/app
+git fetch --depth 1 origin tag v0.8.0 && git checkout v0.8.0
+scripts/demo/up.sh v0.8.0
+```
 
 ## 止める・消す
 
@@ -107,6 +144,8 @@ EC2 の上で、公開済みのイメージを使って frontend・backend・Cad
 | しばらく使わない（数日） | AWS の画面で EC2 を「インスタンスを停止」、RDS を「一時的に停止」。起動するときは逆の順番（RDS → EC2） |
 | 長く使わない | `terraform destroy`（全部消える。作り直しは `terraform apply` からやり直し） |
 | 許可する IP を変える | `terraform.tfvars` の `allowed_cidrs` を直して `terraform apply` |
+| データをすぐ入れ直す | EC2 に入り、`cd /opt/knavi/app && scripts/demo/reset.sh` |
+| アプリだけ止める | EC2 に入り、`cd /opt/knavi/app && docker compose -f compose.demo.yaml --env-file .env.demo down` |
 
 ## 見えてはいけないものを守るしくみ
 
