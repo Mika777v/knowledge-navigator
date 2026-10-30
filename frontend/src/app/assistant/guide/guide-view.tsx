@@ -1,13 +1,22 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { BasisLink } from "@/components/basis-link";
 import { ContactCard } from "@/components/contact-card";
 import { apiFetch } from "@/lib/api/http";
-import type { GuideChecklistItem, GuideProgram, GuideQuestion, GuideResult } from "@/lib/api/types";
+import type {
+  GuideChecklistItem,
+  GuideExtraction,
+  GuideProgram,
+  GuideQuestion,
+  GuideResult,
+} from "@/lib/api/types";
+
+/** 書いた状況の長さの上限（backend の GuideService.MAX_TEXT_LENGTH） */
+const MAX_STATEMENT_LENGTH = 200;
 
 export const STATUS_LABELS: Record<GuideProgram["status"], string> = {
   ELIGIBLE: "対象",
@@ -37,6 +46,8 @@ export function GuideView() {
 function Guide({ event }: { event: string }) {
   // 利用者が選んだ答えだけを持つ。選んでいない質問は、backend がプロフィールから選ぶか未回答にする
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  // AI が書いた状況から選んだ質問（本人が選び直すまで、その旨を出す）
+  const [extracted, setExtracted] = useState<Set<string>>(new Set());
   const { data, error, isFetching } = useQuery({
     queryKey: ["assistant-guide", event, answers],
     queryFn: () =>
@@ -62,16 +73,29 @@ function Guide({ event }: { event: string }) {
           <h2 id="questions-heading" className="text-lg font-semibold">
             確認の質問
           </h2>
+          <ExtractForm
+            event={event}
+            onExtracted={(read) => {
+              setAnswers({ ...currentAnswers(data.questions), ...answers, ...read });
+              setExtracted(new Set(Object.keys(read)));
+            }}
+          />
           {data.questions.map((q) => (
             <QuestionField
               key={q.code}
               question={q}
               // 選んだ答えは、判定し直す前からすぐに出す
               selected={answers[q.code] ?? q.answer}
-              onChange={(value) =>
+              extracted={extracted.has(q.code)}
+              onChange={(value) => {
                 // 画面に出ている答え（プロフィールから選んだものを含む）を、そのまま利用者の答えとして送る
-                setAnswers({ ...currentAnswers(data.questions), ...answers, [q.code]: value })
-              }
+                setAnswers({ ...currentAnswers(data.questions), ...answers, [q.code]: value });
+                setExtracted((prev) => {
+                  const next = new Set(prev);
+                  next.delete(q.code);
+                  return next;
+                });
+              }}
             />
           ))}
           {isFetching && (
@@ -105,13 +129,76 @@ function currentAnswers(questions: readonly GuideQuestion[]): Record<string, str
   return Object.fromEntries(questions.flatMap((q) => (q.answer ? [[q.code, q.answer]] : [])));
 }
 
+/** 書いた状況から、AI に質問の答えを選んでもらう（ADR-0014 の決定 2）。選んだ状態にするだけで、判定は答えを送り直して行う */
+function ExtractForm({ event, onExtracted }: { event: string; onExtracted: (answers: Record<string, string>) => void }) {
+  const [text, setText] = useState("");
+  const extract = useMutation({
+    mutationFn: () =>
+      apiFetch<GuideExtraction>("/api/v1/assistant/guides/extract", {
+        method: "POST",
+        json: { lifeEvent: event, text: text.trim() },
+      }),
+    onSuccess: (result) => {
+      if (Object.keys(result.answers).length > 0) onExtracted(result.answers);
+    },
+  });
+  const result = extract.data;
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim()) extract.mutate();
+      }}
+    >
+      <label htmlFor="guide-statement" className="text-sm">
+        状況を書くと、AI が下の質問の答えを選びます（任意）
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="guide-statement"
+          value={text}
+          maxLength={MAX_STATEMENT_LENGTH}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="例: 契約社員で、去年入社しました"
+          className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim() || extract.isPending}
+          className="rounded-md border border-border px-3 py-2 whitespace-nowrap hover:bg-foreground/5 disabled:opacity-60"
+        >
+          AI に読み取ってもらう
+        </button>
+      </div>
+      {extract.isPending && (
+        <p role="status" className="text-sm text-muted-foreground">
+          読み取っています。数十秒かかることがあります…
+        </p>
+      )}
+      {extract.error && <p role="alert">{extract.error.message}</p>}
+      {result && (
+        <p role="status" className="text-sm">
+          {!result.available
+            ? "AI による読み取りは、いまは使えない設定になっています。下の質問に直接答えてください。"
+            : Object.keys(result.answers).length === 0
+              ? "書いた内容からは答えを選べませんでした。下の質問に直接答えてください。"
+              : `書いた内容から ${Object.keys(result.answers).length} 件の答えを選びました。合っているか確かめてください。`}
+        </p>
+      )}
+    </form>
+  );
+}
+
 function QuestionField({
   question,
   selected,
+  extracted,
   onChange,
 }: {
   question: GuideQuestion;
   selected: string | undefined;
+  extracted: boolean;
   onChange: (value: string) => void;
 }) {
   return (
@@ -131,7 +218,8 @@ function QuestionField({
           </label>
         ))}
       </div>
-      {question.answerSource === "PROFILE" && selected === question.answer && (
+      {extracted && <p className="text-xs text-muted-foreground">AI が書いた内容から選びました。違う場合は選び直してください。</p>}
+      {!extracted && question.answerSource === "PROFILE" && selected === question.answer && (
         <p className="text-xs text-muted-foreground">登録されている情報から選んでいます。違う場合は選び直してください。</p>
       )}
     </fieldset>
