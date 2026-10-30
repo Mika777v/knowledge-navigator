@@ -52,8 +52,11 @@ class ConversationRecordTests {
 
     @Test
     void startsAConversationAndContinuesIt() {
-        UUID id = service.record(sato, null, "結婚祝金はいくら？", Reply.answered(
-                        "30,000円です。[1]", List.of(new Citation(1, null)), "qwen3.5:4b"))
+        UUID id = service.record(
+                        sato,
+                        null,
+                        "結婚祝金はいくら？",
+                        Reply.answered("30,000円です。[1]", List.of(new Citation(1, null)), "qwen3.5:4b"))
                 .orElseThrow();
         Optional<UUID> continued = service.record(sato, id, "申請先は？", Reply.unanswerable("NO_EVIDENCE"));
 

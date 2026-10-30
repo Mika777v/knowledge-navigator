@@ -127,8 +127,7 @@ class AssistantApiTests {
                 .when(service)
                 .answer(eq("結婚祝金はいくら？"), any(), any());
         Reply reply = Reply.answered("30,000円です。[1]", List.of(new Citation(1, section)), "qwen3.5:4b");
-        when(conversations.record(employee.id(), null, "結婚祝金はいくら？", reply))
-                .thenReturn(Optional.of(conversation));
+        when(conversations.record(employee.id(), null, "結婚祝金はいくら？", reply)).thenReturn(Optional.of(conversation));
 
         String body = stream("{\"question\":\"結婚祝金はいくら？\"}");
 

@@ -92,7 +92,8 @@ public class ConversationService implements ConversationRecorder {
     @Override
     public Optional<UUID> record(UUID userId, UUID conversationId, String question, Reply reply) {
         try {
-            return Optional.ofNullable(newTransaction.execute(status -> insert(userId, conversationId, question, reply)));
+            return Optional.ofNullable(
+                    newTransaction.execute(status -> insert(userId, conversationId, question, reply)));
         } catch (RuntimeException e) {
             log.warn("会話の履歴を記録できませんでした: {}", e.toString());
             return Optional.empty();
@@ -218,7 +219,9 @@ public class ConversationService implements ConversationRecorder {
                         + " JOIN chat_messages m ON m.id = c.message_id WHERE m.session_id = :id ORDER BY c.ref")
                 .param("id", conversationId)
                 .query((rs, i) -> new CitationRow(
-                        rs.getObject("message_id", UUID.class), rs.getInt("ref"), rs.getObject("section_id", UUID.class)))
+                        rs.getObject("message_id", UUID.class),
+                        rs.getInt("ref"),
+                        rs.getObject("section_id", UUID.class)))
                 .list();
         Map<UUID, SectionRow> visible = visibleSections(
                 citations.stream()
@@ -307,7 +310,16 @@ public class ConversationService implements ConversationRecorder {
 
         ConversationEvidence toEvidence(int ref) {
             return new ConversationEvidence(
-                    ref, documentId, documentTitle, versionLabel, current, sectionId, articleNo, heading, pageFrom, pageTo);
+                    ref,
+                    documentId,
+                    documentTitle,
+                    versionLabel,
+                    current,
+                    sectionId,
+                    articleNo,
+                    heading,
+                    pageFrom,
+                    pageTo);
         }
     }
 
@@ -317,7 +329,8 @@ public class ConversationService implements ConversationRecorder {
             return Map.of();
         }
         SqlPredicate visible = accessPolicy.readPredicate(scope, "documents", "d", Purpose.VIEW);
-        return jdbc.sql("SELECT s.id, d.id AS document_id, d.title, sv.version_label,"
+        return jdbc
+                .sql("SELECT s.id, d.id AS document_id, d.title, sv.version_label,"
                         + " (sv.id = d.current_version_id) AS is_current, s.article_no, s.heading, s.page_from, s.page_to"
                         + " FROM sections s JOIN document_versions sv ON sv.id = s.document_version_id"
                         + " JOIN documents d ON d.id = sv.document_id WHERE s.id IN (:ids) AND "

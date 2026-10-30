@@ -43,8 +43,8 @@ class ConversationApiTests {
                 .param("c", "CHAT-" + UUID.randomUUID().toString().substring(0, 8))
                 .query(UUID.class)
                 .single();
-        sato = user("sato", "EMPLOYEE");
-        admin = user("admin", "SYSTEM_ADMIN");
+        sato = newUser("sato", "EMPLOYEE");
+        admin = newUser("admin", "SYSTEM_ADMIN");
     }
 
     @Test
@@ -63,7 +63,9 @@ class ConversationApiTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.messages[0].content").value("結婚祝金はいくら？"))
                 .andExpect(jsonPath("$.expiresAt").exists());
-        mockMvc.perform(delete("/api/v1/assistant/conversations/{id}", mine).with(user(sato)).with(csrf()))
+        mockMvc.perform(delete("/api/v1/assistant/conversations/{id}", mine)
+                        .with(user(sato))
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
         mockMvc.perform(get("/api/v1/assistant/conversations/{id}", mine).with(user(sato)))
                 .andExpect(status().isNotFound());
@@ -78,7 +80,9 @@ class ConversationApiTests {
                 .andExpect(jsonPath("$.length()").value(0));
         mockMvc.perform(get("/api/v1/assistant/conversations/{id}", theirs).with(user(admin)))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(delete("/api/v1/assistant/conversations/{id}", theirs).with(user(admin)).with(csrf()))
+        mockMvc.perform(delete("/api/v1/assistant/conversations/{id}", theirs)
+                        .with(user(admin))
+                        .with(csrf()))
                 .andExpect(status().isNotFound());
     }
 
@@ -91,7 +95,7 @@ class ConversationApiTests {
                 .andExpect(status().isForbidden());
     }
 
-    private KnaviUserDetails user(String name, String role) {
+    private KnaviUserDetails newUser(String name, String role) {
         String email = name + "-" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
         UUID id = jdbc.sql("INSERT INTO users (email, display_name, department_id, role)"
                         + " VALUES (:e, :n, :d, :r) RETURNING id")

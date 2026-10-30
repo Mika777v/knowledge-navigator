@@ -95,7 +95,9 @@ class ConversationServiceTests {
         UUID expired = conversation(sato, "古い質問", "91 days");
         UUID kept = conversation(sato, "新しい質問", "89 days");
 
-        assertThat(service.list(sato)).extracting(ConversationViews.ConversationSummary::id).containsExactly(kept);
+        assertThat(service.list(sato))
+                .extracting(ConversationViews.ConversationSummary::id)
+                .containsExactly(kept);
         assertThat(service.isOwnedBy(expired, sato.id())).isFalse();
         assertThatThrownBy(() -> service.get(expired, sato)).isInstanceOf(ErrorResponseException.class);
 
