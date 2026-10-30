@@ -1,6 +1,6 @@
 # ADR-0014: AI アシスタントの確認質問・制度の判定・チェックリストは DB の条件から決まった手順で作り、LLM は上乗せとしてサーバの設定で切り替え、会話の履歴は本人だけが見られる形で保持期間つきで残す
 
-- ステータス: Proposed
+- ステータス: Accepted
 - 日付: 2026-10-30
 - 関連 Issue / PR: #19（Epic E15）、E15-T1〜T4（TASKS.md）
 - 関連ドキュメント: [PRD §3 Phase6](../PRD_KNOWLEDGE_NAVIGATOR.md)、[ARCHITECTURE.md §5.1](../ARCHITECTURE.md)、[DOMAIN_MODEL.md](../DOMAIN_MODEL.md)、[ADR-0004](./0004-permission-prefilter.md)、[ADR-0009](./0009-contacts-and-evidence-from-db.md)、[ADR-0013](./0013-rag-generation-model-and-delivery.md)
