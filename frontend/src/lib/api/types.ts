@@ -43,3 +43,6 @@ export type GuideResult = Schemas["GuideResult"];
 export type GuideQuestion = Schemas["GuideQuestion"];
 export type GuideProgram = Schemas["GuideProgram"];
 export type GuideChecklistItem = Schemas["GuideChecklistItem"];
+export type ConversationSummary = Schemas["ConversationSummary"];
+export type ConversationDetail = Schemas["ConversationDetail"];
+export type ConversationMessage = Schemas["ConversationMessage"];
