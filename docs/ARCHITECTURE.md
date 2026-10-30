@@ -56,13 +56,13 @@ backend/src/main/java/com/example/knavi/
 ├── insight/          # 検索ログ・フィードバック・評価
 ├── audit/            # 監査ログ
 ├── intelligence/     # Phase4: ai-service クライアント、ベクトルの差分合わせ（ADR-0006・0012）
-└── assistant/        # Phase5: 会話（RAG）。v0.5.0 の根拠付き回答は navigation に置いた（下の注）
+└── assistant/        # Phase6: 会話の履歴（ADR-0014）。根拠付き回答の生成は navigation（下の注）
     各モジュール: api/ (Controller, DTO) / application/ (UseCase) / domain/ / infrastructure/ (JPA, jOOQ)
 ```
 
 モジュール間依存は **Spring Modulith** で検証（循環依存をテストで検出）。
 
-> 根拠付き回答（`POST /assistant/answers`、E14-T4）は、4ブロックの結果と、権限で絞った条の読み直しを検索と共有するため、navigation モジュールに置いた（`AnswerService`・`AssistantController`）。ai-service の呼び出しは intelligence の `AnswerGenerator` を入口にする。会話（確認の質問など、v0.6.0）で処理が大きくなったら assistant モジュールに分ける。
+> 根拠付き回答（`POST /assistant/answers`、E14-T4）は、4ブロックの結果と、権限で絞った条の読み直しを検索と共有するため、navigation モジュールに置いた（`AnswerService`・`AssistantController`）。ai-service の呼び出しは intelligence の `AnswerGenerator` を入口にする。会話の履歴（v0.6.0・ADR-0014）は assistant モジュールに置き、`AssistantController` が回答を送り終えたら公開 API の `ConversationRecorder` で記録する（navigation → assistant の向きだけ。assistant は navigation を使わない）。
 
 ---
 
@@ -353,7 +353,7 @@ class EmbeddingModel(Protocol):
 | ファイル | MIME/拡張子/マジックバイト検証、サイズ上限、ウイルススキャン（ClamAV）フック、署名付きURLで配信 |
 | 秘密情報 | `.env` は git 管理外、`.env.example` のみコミット。GitHub は Secret scanning / Push protection 有効化 |
 | 依存関係 | Dependabot（Actions・Gradle・npm・Docker）、CodeQL（Java・TypeScript、`security-extended`、PR と毎週）、Secret scanning / Push protection（有効化済み）。Trivy（コンテナイメージ）は、Action をコミット SHA で固定して導入する予定 |
-| ログ | 検索ログはユーザーIDをHMACで仮名化。保存期間（既定180日、`knavi.insight.retention-days`）を過ぎた検索ログは毎日 3:17（日本時間）に削除し、クリック・フィードバックも一緒に消える。チャット本文は保持期間後に削除 |
+| ログ | 検索ログはユーザーIDをHMACで仮名化。保存期間（既定180日、`knavi.insight.retention-days`）を過ぎた検索ログは毎日 3:17（日本時間）に削除し、クリック・フィードバックも一緒に消える。会話の履歴（質問・回答文）は本人だけが見られ、最後に話した日から保持期間（既定90日、`knavi.assistant.retention-days`）を過ぎたら毎日 3:23（日本時間）に削除する（ADR-0014） |
 | 監査 | 公開・改定・権限変更・機密文書閲覧を `audit_logs` に追記専用で記録 |
 | LLM送信 | プロバイダごとに「外部送信可能な公開範囲」を設定（例: OpenAI は INTERNAL のみ、Ollama は全て） |
 | ヘッダ | CSP（ナンスなし。スクリプト・接続先・フォーム送信先を自オリジンに限定、`frame-ancestors 'none'`）、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy、HSTS（HTTPS 公開時に `HTTPS_ONLY=true` でビルド）。設定は `frontend/src/lib/security-headers.ts`。ナンス方式は全ページの動的描画が必要で PPR と両立しないため採用しない |

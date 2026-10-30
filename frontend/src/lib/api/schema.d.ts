@@ -275,7 +275,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 根拠付きの回答（SSE。results → answer か unanswerable → done の順に送る） */
+        /** 根拠付きの回答（SSE。results → answer か unanswerable → conversation → done の順に送る） */
         post: operations["answer"];
         delete?: never;
         options?: never;
@@ -923,6 +923,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 自分の会話の一覧（新しい順・50件まで。保持期間を過ぎたものは出さない） */
+        get: operations["list_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assistant/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 自分の会話（根拠は開いた時点の権限で読み直す） */
+        get: operations["get_5"];
+        put?: never;
+        post?: never;
+        /** 自分の会話を削除する */
+        delete: operations["delete_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/navigation-keywords/targets": {
         parameters: {
             query?: never;
@@ -948,7 +983,7 @@ export interface paths {
             cookie?: never;
         };
         /** 取り込みの状況 */
-        get: operations["get_5"];
+        get: operations["get_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -965,7 +1000,7 @@ export interface paths {
             cookie?: never;
         };
         /** ファイルの情報 */
-        get: operations["get_6"];
+        get: operations["get_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1087,7 +1122,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** キーワードを削除する */
-        delete: operations["delete_1"];
+        delete: operations["delete_2"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1434,6 +1469,8 @@ export interface components {
         };
         AssistantQuestion: {
             question: string;
+            /** Format: uuid */
+            conversationId?: string;
         };
         BasisRef: {
             /** Format: uuid */
@@ -1551,6 +1588,10 @@ export interface components {
         };
         AssistantUnanswerable: {
             reason: string;
+        };
+        AssistantConversation: {
+            /** Format: uuid */
+            conversationId: string;
         };
         CreateOrgUserRequest: {
             /** Format: email */
@@ -1869,6 +1910,52 @@ export interface components {
             parameterName: string;
             token: string;
             headerName: string;
+        };
+        ConversationSummary: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** Format: date-time */
+            lastMessageAt: string;
+        };
+        ConversationDetail: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** Format: date-time */
+            lastMessageAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            messages: components["schemas"]["ConversationMessage"][];
+        };
+        ConversationEvidence: {
+            /** Format: int32 */
+            ref: number;
+            /** Format: uuid */
+            documentId: string;
+            documentTitle: string;
+            versionLabel: string;
+            current: boolean;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+            heading: string;
+            /** Format: int32 */
+            pageFrom: number;
+            /** Format: int32 */
+            pageTo: number;
+        };
+        ConversationMessage: {
+            role: string;
+            content: string;
+            answerable: boolean;
+            unanswerableReason: string;
+            model: string;
+            /** Format: date-time */
+            createdAt: string;
+            evidence: components["schemas"]["ConversationEvidence"][];
+            /** Format: int32 */
+            hiddenEvidenceCount: number;
         };
         Target: {
             /** Format: uuid */
@@ -2547,13 +2634,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description イベントのデータは、results が NavigationResult、answer が AssistantAnswer、unanswerable が AssistantUnanswerable */
+            /** @description イベントのデータは、results が NavigationResult、answer が AssistantAnswer、unanswerable が AssistantUnanswerable、conversation が AssistantConversation */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["NavigationResult"] | components["schemas"]["AssistantAnswer"] | components["schemas"]["AssistantUnanswerable"];
+                    "text/event-stream": components["schemas"]["NavigationResult"] | components["schemas"]["AssistantAnswer"] | components["schemas"]["AssistantUnanswerable"] | components["schemas"]["AssistantConversation"];
                 };
             };
         };
@@ -3648,6 +3735,68 @@ export interface operations {
             };
         };
     };
+    list_7: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConversationSummary"][];
+                };
+            };
+        };
+    };
+    get_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConversationDetail"];
+                };
+            };
+        };
+    };
+    delete_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     targets: {
         parameters: {
             query: {
@@ -3670,7 +3819,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -3692,7 +3841,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -3859,7 +4008,7 @@ export interface operations {
             };
         };
     };
-    delete_1: {
+    delete_2: {
         parameters: {
             query?: never;
             header?: never;

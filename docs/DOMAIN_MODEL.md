@@ -181,7 +181,7 @@ classDiagram
 | audit_logs | actor_id, action, resource_type, resource_id, before(jsonb), after(jsonb), ip, occurred_at | 追記専用 |
 | evaluation_questions / evaluation_runs | question, expected_targets(jsonb) / metrics(jsonb), git_sha | 検索品質評価 |
 | section_embeddings | section_id, model, dims, embedding, content_hash | Phase4 |
-| chat_sessions / chat_messages / answer_citations | | Phase5-6 |
+| chat_sessions / chat_messages / chat_citations | user_id, title, last_message_at / seq, role, content, answerable / ref, section_id | Phase6（ADR-0014）。本人だけが見る。保持期間を過ぎたら削除 |
 
 ---
 
@@ -509,37 +509,36 @@ CREATE TABLE embeddings (
 CREATE INDEX idx_embeddings_hnsw ON embeddings
   USING hnsw (embedding vector_cosine_ops) WHERE model = 'bge-m3';
 
-CREATE TABLE chat_sessions (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid NOT NULL REFERENCES users(id),
-  title       varchar(200),
-  expires_at  timestamptz NOT NULL,          -- 保持期間（例: 90日）
-  created_at  timestamptz NOT NULL DEFAULT now()
+CREATE TABLE chat_sessions (               -- ADR-0014。本人だけが見る
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title            varchar(200) NOT NULL,         -- 最初の質問
+  last_message_at  timestamptz NOT NULL DEFAULT now(),  -- 保持期間（既定90日）はここから数える
+  created_at       timestamptz NOT NULL DEFAULT now()
 );
 CREATE TABLE chat_messages (
-  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id     uuid NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
-  role           varchar(10) NOT NULL,     -- USER / ASSISTANT
-  content        text NOT NULL,
-  model          varchar(100),
-  prompt_tokens  int,
-  output_tokens  int,
-  answerable     boolean,                  -- 回答不能判定の結果
-  created_at     timestamptz NOT NULL DEFAULT now()
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id          uuid NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  seq                 int NOT NULL,             -- 会話の中の順番
+  role                varchar(10) NOT NULL,     -- USER / ASSISTANT
+  content             text NOT NULL,
+  answerable          boolean,                  -- 回答不能判定の結果（ASSISTANT のみ）
+  unanswerable_reason varchar(40),
+  model               varchar(100),
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (session_id, seq)
 );
-CREATE TABLE answer_citations (
+CREATE TABLE chat_citations (
   message_id   uuid REFERENCES chat_messages(id) ON DELETE CASCADE,
-  marker       int NOT NULL,               -- [1]
-  section_id   uuid NOT NULL REFERENCES sections(id),
-  version_id   uuid NOT NULL REFERENCES document_versions(id),  -- どの版を根拠にしたか固定
-  quote        text,
-  PRIMARY KEY (message_id, marker)
+  ref          int NOT NULL,               -- [1]
+  section_id   uuid REFERENCES sections(id) ON DELETE SET NULL,  -- 条は版にぶら下がるので、どの版を根拠にしたかも決まる
+  PRIMARY KEY (message_id, ref)
 );
 ```
 
 ### 5.2 設計上のポイント
 
-1. **セクションは版にぶら下げる**: 改定後も過去のAI回答の引用（`answer_citations.version_id`）が検証可能。
+1. **セクションは版にぶら下げる**: 改定後も過去のAI回答の引用（`chat_citations.section_id` → 版）が検証可能。履歴を開くときは、その時点の権限で読み直す（ADR-0014）。
 2. **`search_text` 列の分離**: 原文 `content` と、正規化（NFKC・見出し連結・Phase3で形態素正規化形）済みの検索用テキストを分ける。正規化ロジック変更時は再計算バッチで追随。
 3. **Embedding はソース非依存の汎用テーブル**: モデル名と `content_hash` を持ち、モデル切替・差分再計算に対応。
 4. **公開範囲は行ごと + 例外は access_rules**: 大半は enum だけで判定でき、検索SQLが単純になる。

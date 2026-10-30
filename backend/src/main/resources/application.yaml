@@ -106,6 +106,8 @@ knavi:
     enabled: ${KNAVI_ASSISTANT_ENABLED:false}
     # 回答の文脈に入れる条の数の上限（検索の上位から）
     max-passages: 6
+    # 会話の履歴の保持期間（ADR-0014）。最後に話した日から数え、過ぎた会話は毎日 3:23（日本時間）に削除する
+    retention-days: ${KNAVI_ASSISTANT_RETENTION_DAYS:90}
   embedding:
     # 「今あるべきベクトル」と embeddings 表を見比べる間隔（ADR-0012）
     sync-interval: PT5M
