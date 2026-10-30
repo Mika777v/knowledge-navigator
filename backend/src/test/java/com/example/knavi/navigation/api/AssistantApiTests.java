@@ -16,9 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.knavi.TestcontainersConfiguration;
-import com.example.knavi.assistant.ConversationRecorder;
 import com.example.knavi.assistant.ConversationRecorder.Citation;
 import com.example.knavi.assistant.ConversationRecorder.Reply;
+import com.example.knavi.assistant.application.ConversationService;
 import com.example.knavi.navigation.application.AnswerService;
 import com.example.knavi.navigation.application.AnswerService.AnswerSink;
 import com.example.knavi.navigation.application.AssistantAnswer;
@@ -59,8 +59,9 @@ class AssistantApiTests {
     @MockitoBean
     AnswerService service;
 
+    /** 会話の記録（ConversationRecorder の実装）。一覧などの API も同じ Bean を使うため、実装の型で差し替える */
     @MockitoBean
-    ConversationRecorder conversations;
+    ConversationService conversations;
 
     KnaviUserDetails employee;
 
