@@ -1,0 +1,43 @@
+name: release-please
+
+# main に入った Conventional Commits から、次の版のリリースの準備の PR（chore: release x.y.z）を作り・更新する（E16-T2）。
+# その PR をマージすると、タグ（vX.Y.Z）と GitHub Release を作り、GHCR にイメージを公開する。
+# この PR は GITHUB_TOKEN で作るため CI が動かない。オーナーが内容を確かめ、管理者の権限でマージする（docs/GITHUB_WORKFLOW.md §7.1）
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # サードパーティの action は、タグの付け替えに影響されないようコミットのハッシュで固定する
+      - id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # GITHUB_TOKEN で作ったタグの push では、ほかのワークフローが動かない。ここから直接呼ぶ
+  images:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/release-images.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}

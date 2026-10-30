@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "include-component-in-tag": false,
+  "bump-minor-pre-major": true,
+  "skip-changelog": true,
+  "pull-request-title-pattern": "chore: release ${version}",
+  "pull-request-header": "リリースの準備の PR です（release-please が作りました）。マージすると、タグと GitHub Release ができ、GHCR にイメージを公開します。マージの前に、CHANGELOG.md の版の節を別の PR で書いておきます。",
+  "packages": {
+    ".": {
+      "extra-files": [
+        { "type": "json", "path": "frontend/package.json", "jsonpath": "$.version" },
+        { "type": "generic", "path": "backend/build.gradle.kts" }
+      ]
+    }
+  }
+}

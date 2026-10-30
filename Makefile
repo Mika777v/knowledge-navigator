@@ -106,4 +106,4 @@ eval-tune: .env check-pyyaml ## 検索スコアの重みをグリッド探索す
 	@set -a; . ./.env; set +a; \
 	DB_URL=jdbc:postgresql://localhost:$${POSTGRES_PORT:-5432}/$${POSTGRES_DB} \
 	KNAVI_SUDACHI_DICTIONARY=$$(ls $$HOME/.gradle/caches/knavi-sudachi/*.dic 2>/dev/null | head -1) \
-	python3 scripts/eval/tune_weights.py --jar backend/build/libs/knowledge-navigator-backend-0.0.1-SNAPSHOT.jar $(ARGS)
+	python3 scripts/eval/tune_weights.py --jar $$(ls backend/build/libs/knowledge-navigator-backend-*.jar | head -1) $(ARGS)
