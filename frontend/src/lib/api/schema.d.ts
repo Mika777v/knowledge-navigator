@@ -266,6 +266,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/guides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** きっかけの案内（確認質問・制度の一覧・チェックリスト） */
+        post: operations["guide"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assistant/answers": {
         parameters: {
             query?: never;
@@ -1467,6 +1484,78 @@ export interface components {
             /** Format: date */
             joinedOn: string;
         };
+        GuideRequest: {
+            lifeEvent: string;
+            answers?: {
+                [key: string]: string;
+            };
+        };
+        GuideBasis: {
+            /** Format: uuid */
+            documentId: string;
+            documentTitle: string;
+            /** Format: uuid */
+            sectionId: string;
+            articleNo: string;
+            heading: string;
+        };
+        GuideChecklistItem: {
+            /** Format: uuid */
+            programId: string;
+            programName: string;
+            /** @enum {string} */
+            status: "ELIGIBLE" | "NOT_ELIGIBLE" | "UNKNOWN";
+            requiredDocuments: string;
+            deadlineNote: string;
+            howToApply: string;
+        };
+        GuideChoice: {
+            value: string;
+            label: string;
+        };
+        GuideContact: {
+            code: string;
+            name: string;
+            department: string;
+            email: string;
+            phoneExt: string;
+            chatUrl: string;
+            officeHours: string;
+            role: string;
+        };
+        GuideLifeEvent: {
+            code: string;
+            name: string;
+            description: string;
+        };
+        GuideProgram: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            name: string;
+            summary: string;
+            relation: string;
+            eligibility: string;
+            /** @enum {string} */
+            status: "ELIGIBLE" | "NOT_ELIGIBLE" | "UNKNOWN";
+            unmetQuestions: string[];
+            unansweredQuestions: string[];
+            basis: components["schemas"]["GuideBasis"][];
+            contacts: components["schemas"]["GuideContact"][];
+        };
+        GuideQuestion: {
+            code: string;
+            text: string;
+            choices: components["schemas"]["GuideChoice"][];
+            answer: string;
+            answerSource: string;
+        };
+        GuideResult: {
+            lifeEvent: components["schemas"]["GuideLifeEvent"];
+            questions: components["schemas"]["GuideQuestion"][];
+            programs: components["schemas"]["GuideProgram"][];
+            checklist: components["schemas"]["GuideChecklistItem"][];
+        };
         AssistantQuestion: {
             question: string;
             /** Format: uuid */
@@ -2617,6 +2706,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MeResponse"];
+                };
+            };
+        };
+    };
+    guide: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GuideResult"];
                 };
             };
         };
