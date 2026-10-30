@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.knavi.intelligence.application.AiChatInfo;
+import com.example.knavi.intelligence.application.AiClient;
 import com.example.knavi.intelligence.application.AiClient.AiServiceException;
 import com.example.knavi.intelligence.application.AiClient.RagAnswer;
 import com.example.knavi.intelligence.application.AiClient.RagPassage;
@@ -50,6 +51,12 @@ class HttpAiClientTest {
                      "model":"qwen3.5:4b"}
                     """);
         });
+        server.createContext("/v1/assistant/extract", exchange -> {
+            seen.put("extract", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            respond(exchange, 200, """
+                    {"answers":{"EMPLOYMENT_TYPE":"CONTRACT"},"model":"qwen3.5:4b"}
+                    """);
+        });
         server.createContext("/v1/embeddings", exchange -> {
             seen.put("body", new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             respond(exchange, 200, """
@@ -91,6 +98,25 @@ class HttpAiClientTest {
                 .contains("\"question\":\"結婚祝金はいくら？\"")
                 .contains("\"ref\":1")
                 .contains("\"title\":\"規程 第5条\"");
+    }
+
+    @Test
+    void postsTheTextAndQuestionsAndReadsTheExtractedAnswers() {
+        var answers = client("")
+                .extract(
+                        "契約社員です",
+                        List.of(new AiClient.ExtractQuestion(
+                                "EMPLOYMENT_TYPE",
+                                "雇用形態を教えてください。",
+                                List.of(
+                                        new AiClient.ExtractChoice("REGULAR", "正社員"),
+                                        new AiClient.ExtractChoice("CONTRACT", "契約社員")))));
+
+        assertThat(answers).containsExactly(Map.entry("EMPLOYMENT_TYPE", "CONTRACT"));
+        assertThat(seen.get("extract"))
+                .contains("\"text\":\"契約社員です\"")
+                .contains("\"code\":\"EMPLOYMENT_TYPE\"")
+                .contains("\"label\":\"契約社員\"");
     }
 
     @Test

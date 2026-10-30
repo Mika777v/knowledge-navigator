@@ -145,6 +145,15 @@ class GuideServiceTests {
                 .isInstanceOf(ErrorResponseException.class);
     }
 
+    @Test
+    void extractionIsUnavailableWhenTheLlmIsTurnedOff() {
+        GuideViews.GuideExtraction extraction = service.extract(lifeEvent, "入社して2年です", employee);
+
+        assertThat(extraction.available()).isFalse();
+        assertThat(extraction.answers()).isEmpty();
+        assertThatThrownBy(() -> service.extract(lifeEvent, " ", employee)).isInstanceOf(ErrorResponseException.class);
+    }
+
     private String code(String prefix) {
         return prefix + lifeEvent.substring(3);
     }
