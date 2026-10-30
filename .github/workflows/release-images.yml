@@ -1,11 +1,18 @@
 name: release-images
 
 # リリースのタグ（v0.2.0 など）を作ったら、backend・frontend・postgres・ai-service のイメージを
-# GitHub Container Registry（ghcr.io）に公開する（E16-T2）。タグは GitHub の画面の Release から作る。
+# GitHub Container Registry（ghcr.io）に公開する（E16-T2）。タグは release-please.yml が作り、ここを直接呼ぶ。
+# GitHub の画面の Release から手でタグを作ったときは、タグの push で動く。
 # 公開したイメージは、ghcr.io/<owner>/knowledge-navigator-<サービス>:<版> で取得できる
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_call:
+    inputs:
+      tag:
+        description: 公開する版のタグ（v0.7.0 など）
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -39,13 +46,19 @@ jobs:
             description: 社内規程ナビの ai-service（FastAPI。Embedding。DB には接続しない）
     steps:
       - uses: actions/checkout@v7
+        with:
+          # release-please.yml から呼ばれたときは main の push が起点なので、タグを明示して取り出す
+          ref: ${{ inputs.tag || github.ref }}
       - name: Image name
         id: image
         # ghcr.io のイメージ名は小文字だけ
         env:
           OWNER: ${{ github.repository_owner }}
           SERVICE: ${{ matrix.service }}
-        run: echo "name=ghcr.io/${OWNER,,}/knowledge-navigator-${SERVICE}" >> "$GITHUB_OUTPUT"
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          echo "name=ghcr.io/${OWNER,,}/knowledge-navigator-${SERVICE}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
       # サードパーティの action は、タグの付け替えに影響されないようコミットのハッシュで固定する
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -59,8 +72,8 @@ jobs:
           images: ${{ steps.image.outputs.name }}
           # v0.2.0 → 0.2.0・0.2・latest
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},value=${{ steps.image.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.image.outputs.tag }}
             type=raw,value=latest
           labels: |
             org.opencontainers.image.description=${{ matrix.description }}

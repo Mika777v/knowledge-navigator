@@ -21,7 +21,7 @@
 4. **区切りまで進めたら止まって報告する。** 目安は**マージ 10〜20 件**、理想は**リリースタグ1つ分**（ROADMAP の版の単位）。報告は、マージした PR の一覧（リンク付き）・それぞれの要点・確認待ちの PR・次にやることを日本語でまとめる
 5. **前の PR に依存する作業は、そのマージを確認してから始める。** 待つ間は依存しない作業を先に進める
 6. **同時に開いている PR どうしが衝突しないようにする。** 同じファイル・同じ箇所を触らないよう分け、まとめて重ねてマージできるか確かめる（`git checkout --detach main` してから順に `git merge`）。`frontend/src/lib/api/schema.d.ts` の作り直しは、同時に開いている PR のうち1件だけにする
-7. **タグ・GitHub Release は、作る前に必ず確認する。** この開発環境からはタグの push と Release の作成ができないため、オーナーが GitHub の画面で作る（手順と本文を用意して渡す）
+7. **タグ・GitHub Release は、作る前に必ず確認する。** この開発環境からはタグの push と Release の作成ができない。release-please が作るリリースの準備の PR（`chore: release x.y.z`）を、オーナーが管理者の権限でマージするとタグと Release ができる（2026-10 にオーナーと決めた。手順は `docs/GITHUB_WORKFLOW.md` §7.1。リリースノートは用意して渡す）
 8. PR の本文は `.github/pull_request_template.md` の見出しに沿って書く。タイトルは Conventional Commits（`pr-title.yml` の type・scope だけを使う。`e2e` などは scope にない）
 9. `gh pr create` はこの環境では使えないため、`gh api repos/Mika777v/knowledge-navigator/pulls` で作る
 10. **force push（ブランチの強制上書き）はしない。** 許可していない。push 済みのブランチの履歴は書き換えない（rebase・amend・`reset` してからの push をしない）

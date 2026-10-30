@@ -202,25 +202,25 @@ body:
 |---|---|
 | バージョニング | SemVer。`0.x` の間は minor = フェーズ到達 |
 | タグ | `v0.1.0`（MVP）, `v0.2.0`（Phase2）, … `v1.0.0`（RAG + アシスタント公開） |
-| 自動化 | （予定・E16）**release-please** が Conventional Commits から Release PR と CHANGELOG を生成 → マージでタグ・GitHub Release 作成。**今は手動**（下の §7.1） |
+| 自動化 | **release-please**（`release-please.yml`）が Conventional Commits から次の版を決め、リリースの準備の PR（`chore: release x.y.z`）を作る → オーナーがマージするとタグ・GitHub Release を作る（下の §7.1）。CHANGELOG.md は手で書く（release-please には書かせない） |
 | 成果物 | GitHub Release にリリースノート、スクリーンショット、評価レポート（Hit@5 推移）を添付 |
-| コンテナ | タグ push で GHCR に `backend` / `frontend` / `postgres` / `ai-service` イメージを発行（`release-images.yml`） |
+| コンテナ | release-please がタグを作ったら、同じワークフローから `release-images.yml` を呼び、GHCR に `backend` / `frontend` / `postgres` / `ai-service` イメージを発行する（手でタグを push したときも動く） |
 | デモ環境 | Release 公開時にデモ環境へデプロイ（手動承認付き environment） |
 
-### 7.1 今の運用（手動でのリリース）
+### 7.1 リリースの手順（release-please）
 
-開発環境（Claude Code のセッション）からはタグの push と Release の作成ができないため、オーナーが GitHub の画面で作る（CLAUDE.md の PR の進め方 7）。
+開発環境（Claude Code のセッション）からはタグの push と Release の作成ができない。タグと Release は、オーナーがリリースの準備の PR をマージしたときに GitHub Actions が作る（CLAUDE.md の PR の進め方 7）。
 
-1. **リリース準備の PR**（CHANGELOG の版の節と README の更新。例: #133）を Claude が作る。自動マージは予約しない
-2. オーナーが内容を確かめてマージする
-3. オーナーが GitHub の画面で Release を作る
-   1. リポジトリの右側の「Releases」→「Draft a new release」
-   2. 「Choose a tag」に `vX.Y.Z` を入力し「Create new tag」を選ぶ（対象は `main`）
-   3. タイトルは `vX.Y.Z（版の名前）`（例: `v0.3.0（検索のナレッジ強化）`）
-   4. 本文は、Claude が渡すリリースノート（CHANGELOG の該当の版の節をもとに、アップグレードの注意を足したもの）を貼る
-   5. 「Publish release」
-4. タグができると `release-images.yml` が動き、GHCR にイメージを公開する。終わったら Actions の画面で成功を確かめる（GHCR のパッケージは非公開のまま。公開する場合はパッケージの設定で変える）
-5. 新しいセッションで次の版を始める（CLAUDE.md の「トークンの使い方」）
+はじめに一度だけ: リポジトリの「Settings」→「Actions」→「General」→ いちばん下の「Workflow permissions」で、**「Allow GitHub Actions to create and approve pull requests」にチェック**を入れて「Save」。これが無いと release-please が PR を作れない。
+
+1. main に PR がマージされるたびに、release-please が**リリースの準備の PR**（タイトル `chore: release x.y.z`）を作る・更新する。版の番号は、前の版からの PR のタイトルで決まる（`feat` があれば minor、`fix` だけなら patch。`0.x` の間は破壊的な変更でも minor）。この PR は `.release-please-manifest.json`・`frontend/package.json`・`backend/build.gradle.kts` の版の番号だけを変える
+2. Claude が **CHANGELOG の版の節と README の更新の PR**（例: #195）を作る。自動マージは予約しない。オーナーが確かめてマージする
+3. オーナーがリリースの準備の PR をマージする。この PR は GitHub Actions が作ったため CI が動かず、必須のチェックが付かない。**PR の下の「Merge without waiting for requirements to be met (bypass rules)」にチェックを入れて**「Squash and merge」する（管理者の権限）
+4. マージすると、`release-please.yml` がタグ（`vX.Y.Z`）と GitHub Release を作り、続けて GHCR にイメージを公開する。Actions の画面で成功を確かめる（GHCR のパッケージは非公開のまま。公開する場合はパッケージの設定で変える）
+5. Release の本文は PR のタイトルの一覧から自動で作られる。CHANGELOG の版の節に差し替えたいときは、Release の画面の「Edit」で、Claude が渡すリリースノートを貼る。タイトルは `vX.Y.Z（版の名前）`（例: `v0.3.0（検索のナレッジ強化）`）に直す
+6. 新しいセッションで次の版を始める（CLAUDE.md の「トークンの使い方」）
+
+release-please が動かないときは、これまでどおり GitHub の画面の「Releases」→「Draft a new release」から手でタグと Release を作れる（タグの push で `release-images.yml` が動く）。
 
 | バージョン | 内容 |
 |---|---|
@@ -265,7 +265,7 @@ PR / main への push
 | `ci-data.yml` | ゲートから / 手動 | ダミーデータ（seed・規程）の整合性検査 |
 | `labels.yml` | push(main) で labels.yml 変更時 | ラベル同期 |
 | `search-eval.yml` | （#39 で追加） | 評価セット実行 → PR に結果コメント |
-| `release-please.yml` | （E16 で追加） | Release PR 生成 |
+| `release-please.yml` | push(main) | リリースの準備の PR を作る・更新する。マージされたらタグ・Release を作り、`release-images.yml` を呼ぶ |
 | `codeql.yml` / `trivy.yml` | （E16 で追加） | セキュリティスキャン |
 
 新しい CI を追加するときは、`workflow_call` で再利用ワークフローとして作り、`ci.yml` の `changes` と `ci-ok` の `needs` に加える。
