@@ -21,7 +21,7 @@
 | [0012](./0012-embedding-reconciliation.md) | ベクトルは、変更のたびのジョブではなく、定期的な差分合わせで作る | Proposed |
 | [0013](./0013-rag-generation-model-and-delivery.md) | 回答文の生成は既定でローカルの Ollama（qwen3.5:4b）を使い、引用を確かめてから画面に出す | Accepted |
 | [0014](./0014-assistant-rule-based-hearing-and-history.md) | AI アシスタントの確認質問・制度の判定・チェックリストは DB の条件から決まった手順で作り、LLM は上乗せとしてサーバの設定で切り替え、会話の履歴は本人だけが見られる形で保持期間つきで残す | Accepted |
-| [0015](./0015-demo-environment-on-aws.md) | デモ環境は AWS の EC2 1台 + RDS for PostgreSQL + S3 で公開し、NAT ゲートウェイは置かない | Proposed |
+| [0015](./0015-demo-environment-on-aws.md) | デモ環境は AWS の EC2 1台 + RDS for PostgreSQL + S3 に置き、接続できる IP を絞り、NAT ゲートウェイは置かない | Proposed |
 
 0006〜0009 は予定で番号を確保していたため、v0.2.0 の PDF 取り込みは 0010 にした。予約していた 0009 は v0.5.0 で書いた。
 
