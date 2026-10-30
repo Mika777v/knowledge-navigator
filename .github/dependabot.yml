@@ -65,6 +65,10 @@ updates:
       prefix: build
       include: scope
     labels: ["area:frontend", "dependencies"]
+    ignore:
+      # @types/node は実行環境の Node.js（22 の LTS。Dockerfile・CI）と同じメジャー版に合わせる。Node.js を上げるときに手動で上げる
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       next-react:
         patterns: ["next", "eslint-config-next", "react", "react-dom", "@types/react*"]
