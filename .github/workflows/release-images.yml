@@ -41,6 +41,9 @@ jobs:
           - service: postgres
             context: ./infra/docker/postgres
             description: 社内規程ナビ用の PostgreSQL（pg_bigm・pgvector 入り）
+          - service: caddy
+            context: ./infra/docker/caddy
+            description: 社内規程ナビのデモ環境の入口（Caddy。Route 53 で証明書を取るモジュール入り。ADR-0015）
           - service: ai-service
             context: ./ai-service
             description: 社内規程ナビの ai-service（FastAPI。Embedding。DB には接続しない）

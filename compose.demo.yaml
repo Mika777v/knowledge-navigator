@@ -1,0 +1,85 @@
+# デモ環境（ADR-0015・docs/DEMO_AWS.md）。EC2 の上で、ghcr.io に公開した版のイメージを使って動かす。
+# DB は RDS、原本は S3（EC2 の IAM ロールで接続）。外に出すのは Caddy の 443 だけ。AI はオフ。
+# 起動は scripts/demo/up.sh、毎日の初期化は scripts/demo/reset.sh（.env.demo を作ってから compose を呼ぶ）
+name: knavi-demo
+
+services:
+  caddy:
+    image: ${KNAVI_CADDY_IMAGE:-ghcr.io/mika777v/knowledge-navigator-caddy:${KNAVI_VERSION}}
+    environment:
+      KNAVI_SITE: ${KNAVI_SITE:?}
+      KNAVI_TLS_MODE: ${KNAVI_TLS_MODE:-internal}
+      AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+    ports:
+      - "443:443"
+    volumes:
+      # 証明書を残す（起動のたびに取り直さない）
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: ${KNAVI_FRONTEND_IMAGE:-ghcr.io/mika777v/knowledge-navigator-frontend:${KNAVI_VERSION}}
+    environment:
+      BACKEND_URL: http://backend:8080
+      TZ: Asia/Tokyo
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    image: ${KNAVI_BACKEND_IMAGE:-ghcr.io/mika777v/knowledge-navigator-backend:${KNAVI_VERSION}}
+    environment:
+      DB_URL: jdbc:postgresql://${DB_HOST:?}:5432/knavi?sslmode=${DB_SSLMODE:-require}
+      # HTTPS で開くため、セッションの Cookie に Secure を付ける
+      SESSION_COOKIE_SECURE: "true"
+      POSTGRES_USER: knavi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      KNAVI_SEED_DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:?}
+      KNAVI_USER_HASH_SECRET: ${KNAVI_USER_HASH_SECRET:?}
+      # S3 そのものを使う（接続先・アクセスキーは空 = EC2 の IAM ロール）
+      KNAVI_STORAGE_ENDPOINT: ${KNAVI_STORAGE_ENDPOINT:-}
+      KNAVI_STORAGE_REGION: ${AWS_REGION:-ap-northeast-1}
+      KNAVI_STORAGE_BUCKET: ${KNAVI_STORAGE_BUCKET:?}
+      KNAVI_STORAGE_ACCESS_KEY: ${KNAVI_STORAGE_ACCESS_KEY:-}
+      KNAVI_STORAGE_SECRET_KEY: ${KNAVI_STORAGE_SECRET_KEY:-}
+      KNAVI_STORAGE_PATH_STYLE: ${KNAVI_STORAGE_PATH_STYLE:-false}
+      KNAVI_STORAGE_CREATE_BUCKET: ${KNAVI_STORAGE_CREATE_BUCKET:-false}
+      AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+      # AI はオフ（ADR-0015 決定 3）
+      KNAVI_SEARCH_VECTOR_ENABLED: "false"
+      KNAVI_ASSISTANT_ENABLED: "false"
+      TZ: Asia/Tokyo
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  # DB の準備・初期化に使う psql（scripts/demo/up.sh・reset.sh から呼ぶ。ふだんは起動しない）
+  psql:
+    profiles: ["tools"]
+    image: ${KNAVI_POSTGRES_IMAGE:-ghcr.io/mika777v/knowledge-navigator-postgres:${KNAVI_VERSION}}
+    environment:
+      PGHOST: ${DB_HOST:?}
+      PGUSER: knavi
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+      PGDATABASE: knavi
+      PGSSLMODE: ${DB_SSLMODE:-require}
+    entrypoint: ["psql", "-v", "ON_ERROR_STOP=1"]
+
+volumes:
+  caddy-data:
+  caddy-config:

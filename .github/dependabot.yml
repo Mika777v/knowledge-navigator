@@ -23,6 +23,18 @@ updates:
       include: scope
     labels: ["area:db", "dependencies"]
 
+  - package-ecosystem: docker
+    directory: /infra/docker/caddy
+    schedule:
+      interval: weekly
+    # 公開から2週間以上たった版だけを提案させる（CLAUDE.md）
+    cooldown:
+      default-days: 14
+    commit-message:
+      prefix: build
+      include: scope
+    labels: ["area:infra", "dependencies"]
+
   - package-ecosystem: gradle
     directory: /backend
     schedule:
