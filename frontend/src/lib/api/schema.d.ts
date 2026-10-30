@@ -283,6 +283,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/guides/extract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 書いた状況から確認質問の答えを読み取る（AI。選んだ状態にするだけで、判定は答えを送り直して行う） */
+        post: operations["extract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/assistant/answers": {
         parameters: {
             query?: never;
@@ -1556,6 +1573,16 @@ export interface components {
             programs: components["schemas"]["GuideProgram"][];
             checklist: components["schemas"]["GuideChecklistItem"][];
         };
+        GuideExtractRequest: {
+            lifeEvent: string;
+            text: string;
+        };
+        GuideExtraction: {
+            answers: {
+                [key: string]: string;
+            };
+            available: boolean;
+        };
         AssistantQuestion: {
             question: string;
             /** Format: uuid */
@@ -2730,6 +2757,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["GuideResult"];
+                };
+            };
+        };
+    };
+    extract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideExtractRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GuideExtraction"];
                 };
             };
         };
