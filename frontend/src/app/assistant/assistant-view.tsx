@@ -116,6 +116,13 @@ function AnswerStream({ question }: { question: string }) {
         <p className="text-xs text-muted-foreground">
           AI による要約です。誤りを含むことがあります。最終的な判断は、根拠の規程と担当部署に確認してください。
         </p>
+        <p className="text-xs text-muted-foreground">
+          質問と回答は、あなただけが見られる
+          <Link href="/assistant/history" className="underline">
+            履歴
+          </Link>
+          に一定の期間残ります。
+        </p>
       </section>
       {results && <Results result={results} />}
       <Link href={`/search?q=${encodeURIComponent(question)}`} className="self-start text-sm underline">

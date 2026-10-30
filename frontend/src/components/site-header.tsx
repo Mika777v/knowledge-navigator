@@ -42,6 +42,9 @@ function SignedInHeader() {
               </span>
             </span>
           )}
+          <Link href="/assistant/history" className="whitespace-nowrap underline">
+            AI の履歴
+          </Link>
           <Link href="/account" className="whitespace-nowrap underline">
             アカウント
           </Link>
