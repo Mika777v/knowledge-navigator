@@ -68,7 +68,12 @@ class AssistantController {
      * @param question 知りたいこと（200文字まで）
      * @param conversationId 続きを話す会話（自分の会話だけ）。省くと新しい会話にする
      */
-    record AssistantQuestion(String question, UUID conversationId) {}
+    record AssistantQuestion(
+            // 形の確認は AnswerService#validate で行う（SSE を始める前に、決まった文言の 400 を返すため）。ここは型の生成用の印
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+            String question,
+
+            UUID conversationId) {}
 
     /** @param conversationId 質問と回答を記録した会話 */
     record AssistantConversation(UUID conversationId) {}
