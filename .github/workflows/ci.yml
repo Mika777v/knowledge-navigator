@@ -53,6 +53,10 @@ jobs:
             compose:
               - *gate
               - compose.yaml
+              - compose.demo.yaml
+              - compose.demo.ci.yaml
+              - infra/docker/caddy/**
+              - scripts/demo/**
               - .env.example
               - Makefile
               - backend/**

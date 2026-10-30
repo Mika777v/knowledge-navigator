@@ -1,0 +1,25 @@
+# KNAVI_SITE: ドメイン（demo.example.jp）か、ドメインを使わないときは EC2 の IP
+# KNAVI_TLS_MODE: acme（Let's Encrypt。Route 53 の DNS で確かめる）か internal（Caddy が自分で作る。ブラウザに警告が出る）
+{
+	# 80 番は開けないため、http から https への転送は作らない
+	auto_https disable_redirects
+	# コンテナの中なので、自分で作った証明書の元（ルート証明書）を OS に入れようとしない
+	skip_install_trust
+}
+
+(tls-acme) {
+	tls {
+		# 資格情報は EC2 の IAM ロールから取る（アクセスキーを作らない）
+		dns route53
+	}
+}
+
+(tls-internal) {
+	tls internal
+}
+
+{$KNAVI_SITE} {
+	import tls-{$KNAVI_TLS_MODE}
+	encode zstd gzip
+	reverse_proxy frontend:3000
+}

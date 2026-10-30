@@ -1,0 +1,33 @@
+# CI だけで使う（ci-compose.yml の demo-compose）。RDS・S3 の代わりに、手元と同じ postgres・SeaweedFS のコンテナにつなぐ。
+# docker compose -f compose.demo.yaml -f compose.demo.ci.yaml ...
+services:
+  postgres:
+    image: knowledge-navigator/postgres:local
+    environment:
+      POSTGRES_USER: knavi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: knavi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U knavi -d knavi"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  storage:
+    image: chrislusf/seaweedfs:4.48
+    command: ["server", "-s3", "-dir=/data", "-ip.bind=0.0.0.0", "-volume.max=0", "-master.volumeSizeLimitMB=512"]
+    environment:
+      AWS_ACCESS_KEY_ID: ${KNAVI_STORAGE_ACCESS_KEY:?}
+      AWS_SECRET_ACCESS_KEY: ${KNAVI_STORAGE_SECRET_KEY:?}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_healthy

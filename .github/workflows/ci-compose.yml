@@ -105,3 +105,67 @@ jobs:
       - name: Stop services
         if: always()
         run: make clean
+
+  # デモ環境（ADR-0015）の compose.demo.yaml が起動し、Caddy の HTTPS 経由でログインできるかを確かめる。
+  # RDS・S3 の代わりに postgres・SeaweedFS のコンテナにつなぎ（compose.demo.ci.yaml）、イメージはここでビルドしたものを使う
+  demo-compose:
+    runs-on: ubuntu-latest
+    env:
+      KNAVI_COMPOSE_FILES: -f compose.demo.yaml -f compose.demo.ci.yaml
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build images
+        run: |
+          cp .env.example .env
+          docker compose build postgres backend frontend
+          docker build -t knowledge-navigator/caddy:local infra/docker/caddy
+      - name: Write .env.demo
+        run: |
+          cat > .env.demo <<'ENV'
+          KNAVI_VERSION=ci
+          KNAVI_CADDY_IMAGE=knowledge-navigator/caddy:local
+          KNAVI_FRONTEND_IMAGE=knowledge-navigator/frontend:local
+          KNAVI_BACKEND_IMAGE=knowledge-navigator/backend:local
+          KNAVI_POSTGRES_IMAGE=knowledge-navigator/postgres:local
+          KNAVI_SITE=localhost
+          KNAVI_TLS_MODE=internal
+          DB_HOST=postgres
+          DB_SSLMODE=disable
+          POSTGRES_PASSWORD=ci-only-db
+          KNAVI_USER_HASH_SECRET=ci-only-hash
+          DEMO_USER_PASSWORD=ci-only-demo
+          KNAVI_STORAGE_ENDPOINT=http://storage:8333
+          KNAVI_STORAGE_ACCESS_KEY=knavi
+          KNAVI_STORAGE_SECRET_KEY=ci-only-storage
+          KNAVI_STORAGE_PATH_STYLE=true
+          KNAVI_STORAGE_CREATE_BUCKET=true
+          KNAVI_STORAGE_BUCKET=knavi-files
+          ENV
+      - name: Start the demo services
+        run: docker compose $KNAVI_COMPOSE_FILES --env-file .env.demo up -d --wait
+      - name: Reset and load seed data (scripts/demo/reset.sh)
+        run: scripts/demo/reset.sh
+      - name: Only Caddy's 443 is published
+        run: |
+          ! curl -sS --max-time 3 http://localhost:3000/ 2>/dev/null
+          ! curl -sS --max-time 3 http://localhost:8080/ 2>/dev/null
+          ! curl -sS --max-time 3 http://localhost/ 2>/dev/null
+      - name: Log in through Caddy (HTTPS)
+        run: |
+          base=https://localhost
+          jar="$RUNNER_TEMP/cookies.txt"
+          curl -kfsS "$base/api/health" | tee /dev/stderr | grep -q '"backend":"UP"'
+          curl -kfsS -c "$jar" -b "$jar" "$base/api/v1/auth/csrf" > /dev/null
+          token=$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$jar")
+          curl -kfsS -c "$jar" -b "$jar" -H "X-XSRF-TOKEN: $token" -H 'Content-Type: application/json' \
+            -d '{"email":"sato@example.com","password":"ci-only-demo"}' "$base/api/v1/auth/login" > /dev/null
+          curl -kfsS -b "$jar" "$base/api/v1/me" | tee /dev/stderr | grep -q '"email":"sato@example.com"'
+          curl -kfsS -b "$jar" "$base/" | grep -q '社内規程ナビ'
+      - name: Reset twice (the daily cron runs it on a running environment)
+        run: scripts/demo/reset.sh
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose $KNAVI_COMPOSE_FILES --env-file .env.demo logs
+      - name: Stop services
+        if: always()
+        run: docker compose $KNAVI_COMPOSE_FILES --env-file .env.demo down -v
