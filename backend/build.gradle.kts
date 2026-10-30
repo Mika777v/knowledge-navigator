@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "com.example"
-version = "0.6.0" // x-release-please-version
+version = "0.7.0" // x-release-please-version
 
 java {
     toolchain {
