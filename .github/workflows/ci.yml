@@ -57,6 +57,7 @@ jobs:
               - compose.demo.ci.yaml
               - infra/docker/caddy/**
               - scripts/demo/**
+              - infra/demo/**
               - .env.example
               - Makefile
               - backend/**

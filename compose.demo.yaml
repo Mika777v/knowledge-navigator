@@ -68,8 +68,8 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # 毎日の初期化で DB を空にする（scripts/demo/reset.sh から呼ぶ。ふだんは起動しない）
-  db-reset:
+  # DB の準備・初期化に使う psql（scripts/demo/up.sh・reset.sh から呼ぶ。ふだんは起動しない）
+  psql:
     profiles: ["tools"]
     image: ${KNAVI_POSTGRES_IMAGE:-ghcr.io/mika777v/knowledge-navigator-postgres:${KNAVI_VERSION}}
     environment:
@@ -78,7 +78,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD:?}
       PGDATABASE: knavi
       PGSSLMODE: ${DB_SSLMODE:-require}
-    entrypoint: ["psql", "-v", "ON_ERROR_STOP=1", "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"]
+    entrypoint: ["psql", "-v", "ON_ERROR_STOP=1"]
 
 volumes:
   caddy-data:

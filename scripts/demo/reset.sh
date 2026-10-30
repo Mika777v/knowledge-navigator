@@ -11,7 +11,9 @@ compose=(docker compose "${files[@]}" --env-file .env.demo)
 source .env.demo
 
 "${compose[@]}" stop frontend backend
-"${compose[@]}" run --rm db-reset
+"${compose[@]}" run --rm -T psql -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'
+# 拡張は public スキーマにあるため一緒に消える。Flyway は vector を作らない（ローカルは DB のイメージの初期化で作る）ので、ここで作る
+"${compose[@]}" run --rm -T psql -f /dev/stdin < infra/demo/extensions.sql
 # S3 そのもの（接続先が空）のときだけ、原本を消す。CI の SeaweedFS は使い捨て
 if [ -z "${KNAVI_STORAGE_ENDPOINT:-}" ]; then
   aws s3 rm "s3://$KNAVI_STORAGE_BUCKET" --recursive --region "$AWS_REGION" --only-show-errors
