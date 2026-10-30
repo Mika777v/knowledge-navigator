@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
@@ -13,14 +16,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.example.knavi.TestcontainersConfiguration;
+import com.example.knavi.assistant.ConversationRecorder;
+import com.example.knavi.assistant.ConversationRecorder.Citation;
+import com.example.knavi.assistant.ConversationRecorder.Reply;
 import com.example.knavi.navigation.application.AnswerService;
 import com.example.knavi.navigation.application.AnswerService.AnswerSink;
 import com.example.knavi.navigation.application.AssistantAnswer;
 import com.example.knavi.navigation.application.AssistantAnswer.AssistantEvidence;
+import com.example.knavi.navigation.application.AssistantUnanswerable;
 import com.example.knavi.navigation.application.NavigationResult;
 import com.example.knavi.navigation.application.NavigationResult.QueryInfo;
 import com.example.knavi.organization.infrastructure.KnaviUserDetails;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,6 +58,9 @@ class AssistantApiTests {
 
     @MockitoBean
     AnswerService service;
+
+    @MockitoBean
+    ConversationRecorder conversations;
 
     KnaviUserDetails employee;
 
@@ -98,6 +109,64 @@ class AssistantApiTests {
         assertThat(body.indexOf("event:answer")).isGreaterThan(body.indexOf("event:results"));
         assertThat(body.indexOf("event:done")).isGreaterThan(body.indexOf("event:answer"));
         assertThat(body).contains("\"answer\":\"30,000円です。[1]\"").contains(section.toString());
+    }
+
+    @Test
+    void recordsTheAnswerInANewConversationAndSendsItsIdBeforeDone() throws Exception {
+        UUID section = UUID.randomUUID();
+        UUID conversation = UUID.randomUUID();
+        doAnswer(invocation -> {
+                    AnswerSink sink = invocation.getArgument(2);
+                    sink.answer(new AssistantAnswer(
+                            "30,000円です。[1]",
+                            List.of(new AssistantEvidence(
+                                    1, UUID.randomUUID(), "慶弔見舞金規程", "v2.1", section, "第5条", "結婚祝金", null, null)),
+                            "qwen3.5:4b"));
+                    return null;
+                })
+                .when(service)
+                .answer(eq("結婚祝金はいくら？"), any(), any());
+        Reply reply = Reply.answered("30,000円です。[1]", List.of(new Citation(1, section)), "qwen3.5:4b");
+        when(conversations.record(employee.id(), null, "結婚祝金はいくら？", reply))
+                .thenReturn(Optional.of(conversation));
+
+        String body = stream("{\"question\":\"結婚祝金はいくら？\"}");
+
+        assertThat(body.indexOf("event:conversation")).isGreaterThan(body.indexOf("event:answer"));
+        assertThat(body.indexOf("event:done")).isGreaterThan(body.indexOf("event:conversation"));
+        assertThat(body).contains("\"conversationId\":\"" + conversation + "\"");
+    }
+
+    @Test
+    void continuesTheUsersOwnConversationAndRecordsUnanswerableReplies() throws Exception {
+        UUID conversation = UUID.randomUUID();
+        when(conversations.isOwnedBy(conversation, employee.id())).thenReturn(true);
+        doAnswer(invocation -> {
+                    AnswerSink sink = invocation.getArgument(2);
+                    sink.unanswerable(new AssistantUnanswerable("NO_EVIDENCE"));
+                    return null;
+                })
+                .when(service)
+                .answer(eq("申請先は？"), any(), any());
+        when(conversations.record(employee.id(), conversation, "申請先は？", Reply.unanswerable("NO_EVIDENCE")))
+                .thenReturn(Optional.of(conversation));
+
+        String body = stream("{\"question\":\"申請先は？\",\"conversationId\":\"" + conversation + "\"}");
+
+        assertThat(body).contains("event:conversation").contains(conversation.toString());
+    }
+
+    @Test
+    void someoneElsesConversationIsNotFoundBeforeStreaming() throws Exception {
+        UUID theirs = UUID.randomUUID();
+
+        mockMvc.perform(post("/api/v1/assistant/answers")
+                        .with(user(employee))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\":\"申請先は？\",\"conversationId\":\"" + theirs + "\"}"))
+                .andExpect(status().isNotFound());
+        verify(service, never()).answer(any(), any(), any());
     }
 
     @Test
