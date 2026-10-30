@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.yaml.snakeyaml.Yaml;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * data/seed を DB に取り込む。コード（code / slug / email）で既存の行を特定して上書きするため、何度実行してもよい。
@@ -43,11 +45,13 @@ class SeedLoader {
     private final JdbcClient jdbc;
     private final DocumentImport documentImport;
     private final PasswordEncoder passwordEncoder;
+    private final JsonMapper json;
 
-    SeedLoader(JdbcClient jdbc, DocumentImport documentImport, PasswordEncoder passwordEncoder) {
+    SeedLoader(JdbcClient jdbc, DocumentImport documentImport, PasswordEncoder passwordEncoder, JsonMapper json) {
         this.jdbc = jdbc;
         this.documentImport = documentImport;
         this.passwordEncoder = passwordEncoder;
+        this.json = json;
     }
 
     record Summary(
@@ -70,8 +74,9 @@ class SeedLoader {
         int users = loadUsers(list(dir, "users.yaml"), passwordEncoder.encode(demoUserPassword));
         loadTags(list(dir, "tags.yaml"));
         int documents = loadDocuments(dir.resolve("documents"));
+        Map<String, QuestionRef> questions = loadAssistantQuestions(list(dir, "assistant_questions.yaml"));
         List<Map<String, Object>> programs = list(dir, "programs.yaml");
-        loadPrograms(programs);
+        loadPrograms(programs, questions);
         List<Map<String, Object>> lifeEvents = list(dir, "life_events.yaml");
         loadLifeEvents(lifeEvents);
         int faqs = loadFaqs(list(dir, "faqs.yaml"));
@@ -242,7 +247,41 @@ class SeedLoader {
 
     // ------------------------------------------------------------------ 制度・きっかけ・FAQ
 
-    private void loadPrograms(List<Map<String, Object>> rows) {
+    /** 確認質問の ID と選択肢の value（制度の条件を確かめるため） */
+    private record QuestionRef(UUID id, List<String> values) {}
+
+    /** 確認質問（ADR-0014）。コードで上書きする。シードから消した質問は残す（条件ごと消すと管理の手間が増えるため） */
+    private Map<String, QuestionRef> loadAssistantQuestions(List<Map<String, Object>> rows) {
+        Map<String, QuestionRef> questions = new LinkedHashMap<>();
+        for (var q : rows) {
+            String code = str(q, "code");
+            List<Map<String, Object>> choices = maps(q.get("choices")).stream()
+                    .map(c -> Map.<String, Object>of("value", str(c, "value"), "label", str(c, "label")))
+                    .toList();
+            UUID id = jdbc.sql("""
+                            INSERT INTO assistant_questions (code, text, choices, profile_attribute, sort_order)
+                            VALUES (:code, :text, CAST(:choices AS jsonb), :profile, :sort)
+                            ON CONFLICT (code) DO UPDATE SET text = EXCLUDED.text, choices = EXCLUDED.choices,
+                              profile_attribute = EXCLUDED.profile_attribute, sort_order = EXCLUDED.sort_order
+                            RETURNING id
+                            """)
+                    .param("code", code)
+                    .param("text", str(q, "text"))
+                    .param("choices", json.writeValueAsString(choices))
+                    .param("profile", str(q, "profile_attribute"))
+                    .param("sort", intValue(q, "sort_order"))
+                    .query(UUID.class)
+                    .single();
+            questions.put(
+                    code,
+                    new QuestionRef(
+                            id,
+                            choices.stream().map(c -> (String) c.get("value")).toList()));
+        }
+        return questions;
+    }
+
+    private void loadPrograms(List<Map<String, Object>> rows, Map<String, QuestionRef> questions) {
         for (var p : rows) {
             String code = str(p, "code");
             String visibility = str(p, "visibility");
@@ -322,6 +361,29 @@ class SeedLoader {
                         .param("contact", contactId(str(contact, "contact")))
                         .param("role", str(contact, "role"))
                         .param("order", order++)
+                        .update();
+            }
+
+            jdbc.sql("DELETE FROM program_conditions WHERE program_id = :id")
+                    .param("id", id)
+                    .update();
+            for (var condition : conditions(p.get("conditions")).entrySet()) {
+                QuestionRef question = questions.get(condition.getKey());
+                if (question == null) {
+                    throw new IllegalStateException(code + ": 条件の質問 " + condition.getKey() + " がありません");
+                }
+                List<String> allowed = strings(condition.getValue());
+                if (allowed.isEmpty() || !question.values().containsAll(allowed)) {
+                    throw new IllegalStateException(code + ": 条件 " + condition.getKey() + " の選択肢が不正です: " + allowed);
+                }
+                jdbc.sql("""
+                                INSERT INTO program_conditions (program_id, question_id, allowed_values)
+                                VALUES (:program, :question,
+                                  ARRAY(SELECT jsonb_array_elements_text(CAST(:allowed AS jsonb))))
+                                """)
+                        .param("program", id)
+                        .param("question", question.id())
+                        .param("allowed", json.writeValueAsString(allowed))
                         .update();
             }
         }
@@ -616,6 +678,11 @@ class SeedLoader {
     @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> maps(Object value) {
         return value == null ? List.of() : (List<Map<String, Object>>) value;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> conditions(Object value) {
+        return value == null ? Map.of() : (Map<String, Object>) value;
     }
 
     private static List<String> strings(Object value) {
