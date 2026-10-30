@@ -6,7 +6,7 @@
 DB は起動中のもの（make up・make seed 済み）をそのまま使う。接続先などは環境変数で渡す（backend と同じ名前）。
 
     cd backend && ./gradlew bootJar
-    python3 scripts/eval/tune_weights.py --jar backend/build/libs/knowledge-navigator-backend-0.0.1-SNAPSHOT.jar \\
+    python3 scripts/eval/tune_weights.py --jar backend/build/libs/knowledge-navigator-backend-0.6.0.jar \\
         --grid program-name=2.0,2.5,3.0 --grid faq-question=1.5,2.0,2.5
 
 結果は build/eval/tuning.md・tuning.json に出す。重みを変えるときは、application.yaml を直して同じ PR に結果を書く。
