@@ -65,9 +65,18 @@ export function Results({ result }: { result: NavigationResult }) {
   return (
     <div className="flex flex-col gap-6">
       {query.matchedLifeEvents.length > 0 && (
-        <p className="text-sm">
-          「{query.matchedLifeEvents.map((e) => e.name).join("」「")}」のときに使える制度と手続きを表示しています。
-        </p>
+        <div className="flex flex-col gap-1 text-sm">
+          <p>「{query.matchedLifeEvents.map((e) => e.name).join("」「")}」のときに使える制度と手続きを表示しています。</p>
+          <ul className="flex flex-wrap gap-x-4">
+            {query.matchedLifeEvents.map((e) => (
+              <li key={e.code}>
+                <Link href={`/assistant/guide?event=${encodeURIComponent(e.code)}`} className="underline">
+                  {e.name}の手続きを、質問に答えて整理する
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {result.fallback && (
         <p role="status" className="rounded-md border border-border p-3">
