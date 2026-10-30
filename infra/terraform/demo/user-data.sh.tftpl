@@ -1,0 +1,18 @@
+#!/bin/bash
+# EC2 を作ったときに一度だけ動く（cloud-init）。Terraform が値を埋めてから渡す
+set -euxo pipefail
+
+apt-get update
+apt-get install -y docker.io docker-compose-v2 unattended-upgrades
+snap install aws-cli --classic
+systemctl enable --now docker
+
+# アプリの設定の置き場所。秘密でない値だけをここに書き、秘密の値は起動のたびに SSM から .env に書き出す
+install -d -m 0750 /opt/knavi
+cat > /opt/knavi/demo.env <<'ENV'
+AWS_REGION=${region}
+KNAVI_PARAMETER_PREFIX=${parameter_prefix}
+DB_HOST=${db_host}
+KNAVI_STORAGE_BUCKET=${bucket}
+KNAVI_DOMAIN=${domain_name}
+ENV

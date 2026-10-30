@@ -1,0 +1,11 @@
+# このファイルを terraform.tfvars という名前でコピーして、値を書き換える（terraform.tfvars はリポジトリに入れない）
+
+# 画面に接続してよい IP（会社の出口の固定 IP など。/32 は「その IP 1つだけ」）
+allowed_cidrs = ["203.0.113.10/32"]
+
+# 予算の通知を受け取るメールアドレス
+budget_email = "you@example.com"
+
+# ドメインを使うとき（使わないなら消すか空のままにする）
+# domain_name     = "demo.example.jp"
+# route53_zone_id = "Z0123456789ABCDEFGHIJ"
