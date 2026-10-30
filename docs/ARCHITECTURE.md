@@ -366,7 +366,7 @@ class EmbeddingModel(Protocol):
 |---|---|
 | ローカル | `docker compose up`（frontend / backend / postgres / minio / ollama[profile: ai]） |
 | CI | GitHub Actions（Testcontainers で PostgreSQL 実起動、評価セット実行） |
-| デモ公開 | 1台の VM で compose（ghcr.io の公開イメージ + Caddy で HTTPS）。AI はオフ、ダミーデータを毎日初期化、ログイン画面にデモアカウント表示（[ADR-0015](adr/0015-demo-environment-single-vm.md)） |
+| デモ公開 | AWS: EC2 1台（compose で frontend・backend、Caddy で HTTPS）+ RDS for PostgreSQL + S3。NAT は置かない。AI はオフ、ダミーデータを毎日初期化、ログイン画面にデモアカウント表示（[ADR-0015](adr/0015-demo-environment-on-aws.md)） |
 | 実務想定 | Azure: Container Apps + Azure Database for PostgreSQL + Blob Storage + Azure OpenAI + Entra ID、Private Endpoint |
 
 IaC は Phase4 以降に `infra/terraform/` で用意（MVPでは compose のみ）。

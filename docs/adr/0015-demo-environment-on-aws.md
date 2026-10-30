@@ -1,0 +1,79 @@
+# ADR-0015: デモ環境は AWS の EC2 1台 + RDS for PostgreSQL + S3 で公開し、NAT ゲートウェイは置かない
+
+- ステータス: Proposed
+- 日付: 2026-10-30
+- 関連 Issue / PR: #20（E16-T3 デモ環境デプロイ）、#198
+- 関連ドキュメント: [ARCHITECTURE.md §7](../ARCHITECTURE.md)、[ADR-0002](./0002-japanese-search-pg-bigm.md)、[ADR-0005](./0005-nextjs-as-bff.md)、[ADR-0007](./0007-pgvector.md)、[ADR-0010](./0010-pdf-ingestion.md)
+
+## 背景（Context）
+
+ポートフォリオとして、リポジトリを読む人が**URL を開くだけで画面を触れる**デモ環境がほしい（E16-T3）。ARCHITECTURE §7 には「単一VM or コンテナPaaS + マネージドPostgreSQL」とだけ書いてあり、どれにするかは決めていなかった。オーナーの希望は AWS か Google Cloud で、AWS なら EC2・RDS を使う形。公開するかどうか・いつ公開するかは、まだ決めていない。
+
+前提と制約:
+
+- アプリが頼る外部のものは **(1) コンテナを動かす場所、(2) pg_bigm と pgvector の入った PostgreSQL、(3) S3 互換のストレージ（PDF の原本。ADR-0010）** の3つだけ。DBMS は PostgreSQL のまま変えない
+- **RDS for PostgreSQL と Cloud SQL for PostgreSQL は、どちらも pg_bigm を入れられる**（各社の拡張機能の一覧に載っている。pgvector も同じ）。Flyway の `CREATE EXTENSION IF NOT EXISTS` は、RDS のマスターユーザーで動かせば通る
+- 画面と API は**同じオリジン**にする（ADR-0005）。Next.js が `/api/*` を backend に中継する今の形をそのまま使う
+- backend（JVM）と frontend を合わせてメモリ 1.5〜2GB ほど。AI（ai-service + Ollama の qwen3.5:4b）を足すと数 GB 増え、CPU だけでは回答に時間がかかる
+- イメージはリリースのタグで ghcr.io に公開済み（release-images.yml。amd64 だけ）
+- **誰でもデモユーザーでログインできる**。デモユーザーには規程を編集できるコンテンツ担当者・ユーザーを管理できるシステム管理者もいて、パスワードの変更もできる。見た人がデータを書き換えたり、パスワードを変えて他の人が入れなくしたりできる
+- **NAT ゲートウェイは、通信が無くても置いておくだけで東京リージョンで 1 時間 0.062 ドル（月 45 ドルほど）かかる**（2026 年 7 月時点の料金。契約前に AWS の料金ページで確かめる）。NAT は「外から入れない場所（プライベートサブネット）に置いたサーバが、外へ出ていく」ためのもので、デモの小さな構成では費用の大半になりうる
+- オーナーは運用に詳しくない前提。手間は「タグを作ったら上げ直す」程度に抑えたい
+
+## 決定（Decision）
+
+1. **AWS（東京リージョン）に、次の形で置く。**
+   - **EC2 1台**（amd64、メモリ 4GB。t3.medium 程度）: frontend・backend を Docker Compose（`compose.demo.yaml`）で動かし、前に **Caddy** を置いて HTTPS（Let's Encrypt の証明書を自動で取得・更新）で frontend だけを外に出す。ghcr.io に公開した版のイメージを、版を指定して取得する（EC2 の上でビルドしない）
+   - **RDS for PostgreSQL 17**（db.t4g.micro 程度、シングル AZ、自動バックアップあり）: pg_bigm・pgvector・pgcrypto を有効にする
+   - **S3 のバケット 1つ**: PDF の原本を置く。EC2 には、このバケットだけを読み書きできる IAM ロールを付ける（アクセスキーを作らない）
+2. **NAT ゲートウェイは置かない。**
+   - EC2 は**パブリックサブネット**に置き、セキュリティグループで 80・443 だけを開ける。SSH のポートは開けず、操作は Systems Manager の Session Manager で行う
+   - RDS は**プライベートサブネット**に置き、EC2 のセキュリティグループからの 5432 だけを受け付ける。RDS は外へ出ていく必要が無いので NAT は要らない
+   - S3 へは、無料の **S3 ゲートウェイエンドポイント**を通す
+3. **AI はオフ**にする（`KNAVI_SEARCH_VECTOR_ENABLED=false`・`KNAVI_ASSISTANT_ENABLED=false`。ai-service・Ollama は起動しない）。キーワード検索・閲覧・きっかけの案内（判定は DB の条件。ADR-0014）・管理画面は動く。根拠付きの回答は README の画像・動画で見せる
+4. **毎日1回、データを入れ直す**（EC2 の cron から、DB のスキーマと S3 の原本を消して、Flyway → `seed` を流す）。見た人が書き換えても翌日には戻る。画面の上部に「デモ環境です。データは毎日初期化されます」と出す
+5. デモで困る操作（パスワードの変更・ユーザーの無効化など、他の見る人を締め出せるもの）は、**デモ用の設定でオンのときだけ止める**。認証・権限まわりの変更になるため、別の PR でオーナーに確認してから入れる
+6. 秘密の値（DB のパスワード・HMAC の鍵など）は **SSM Parameter Store**（SecureString）に置き、EC2 の起動時に `.env` へ書き出す。リポジトリには `.env.demo.example`（値は空）だけを置く
+7. AWS の資源（VPC・サブネット・セキュリティグループ・EC2・RDS・S3・IAM）は、手で画面から作らず、**Terraform で `infra/terraform/demo/` に書く**（ARCHITECTURE §7「IaC は Phase4 以降に infra/terraform/」）。作る・消すをコマンド1つで行え、使わない期間は消して費用を止められる
+8. 使わない期間は、EC2 と RDS を**止める**か、Terraform で**消す**。止めている間は EC2・RDS の時間の課金がかからない（ディスクとバックアップの分だけ残る）
+
+## 検討した選択肢（Options）
+
+| 選択肢 | 長所 | 短所 |
+|---|---|---|
+| A. EC2 + RDS + S3、NAT なし（採用） | DB のバックアップ・更新を AWS に任せられ、実務に近い形を見せられる。アプリの設定を変えずに置ける（S3 互換・PostgreSQL）。NAT の固定費が無い | EC2 だけの形より、RDS の分だけ費用が増える。EC2 の OS の更新は自分で行う（自動更新を設定する） |
+| B. A + NAT（EC2 もプライベートサブネットに置き、ロードバランサー経由で公開） | 外から EC2 に直接届かない、より守りの固い形 | NAT（月 45 ドルほど）とロードバランサーの固定費が、デモの費用の大半になる。EC2 はセキュリティグループで 80・443 だけを開ければ、デモには十分 |
+| C. EC2 1台に DB もコンテナで置く | いちばん安い。手元の `make up` とまったく同じ形 | DB のバックアップ・更新を自分で見る。AWS を使う意味が薄く、ポートフォリオとして見せられることが少ない |
+| D. Google Cloud（Compute Engine + Cloud SQL + Cloud Storage） | A とほぼ同じ形で置ける（Cloud SQL も pg_bigm・pgvector に対応。Cloud Storage は S3 互換の API がある） | オーナーの希望の第一は AWS。形が同じなので、A の Terraform を書き換えれば移れる |
+| E. コンテナ PaaS（App Runner・ECS Fargate・Cloud Run）+ マネージド DB | サーバの OS を見なくてよい | サービスが2つになり、同じオリジンにするための経路（ロードバランサーなど）の設定と固定費が増える。App Runner は ghcr.io から直接取得できず、ECR への複製が要る。JVM の起動が遅く、利用が無いときに止める形（Cloud Run など）と合わない |
+| F. 常時公開しない（Codespaces で各自が起動 + README の画像・動画） | 費用・運用・公開による危険がゼロ。`.devcontainer` はすでにある | 見る人に GitHub のアカウントと数分の待ち時間が要る。→ **A と併せて README に「Codespaces で開く」も置く** |
+| AI もオンにする（A の上で） | 根拠付きの回答・状況の読み取りを触れる | CPU だけの EC2 では Ollama の回答に時間がかかり、メモリも足りない。GPU のインスタンスは高い。Bedrock・OpenAI などの API に切り替えると、誰でも呼べるため費用と乱用の心配がある |
+
+## 結果（Consequences）
+
+### 良い影響
+
+- README のリンクから、ログインして検索・閲覧・案内・管理画面まで触れる
+- EC2・RDS・S3・IAM ロール・Terraform という、実務でよく使う形を見せられる
+- アプリは手元と同じイメージ・同じ設定項目で動き、変えるのは接続先だけ
+- AI を使わないので、外部の API の費用・鍵の漏れ・乱用の心配が無い
+
+### 悪い影響・受け入れるリスク
+
+- 動かしている間は EC2・RDS の時間の課金がかかる（金額は、契約前に AWS の料金計算ツールで、選んだ大きさで確かめる）。使わない期間は止めるか消す
+- EC2 1台・RDS シングル AZ なので、止まるとデモも止まる。監視は外形監視（無料の死活監視サービスなど）だけにする
+- デモでは根拠付きの回答・状況の読み取りを触れない（README の画像・動画で補う）
+- 見た人が入れた内容は翌日の初期化まで残る。毎日の初期化と、締め出しにつながる操作の停止（決定 5）で抑える
+- AWS の操作（アカウント・料金の上限の通知・Terraform の実行）はオーナーが行う。この開発環境からは AWS に触れないため、手順書を用意して渡す
+
+## 検証方法（Compliance）
+
+- `compose.demo.yaml` を CI（ci-compose）で起動し、Caddy 経由でログイン・検索が通ることを確かめる（CI では RDS・S3 の代わりに、手元と同じ postgres・SeaweedFS のコンテナにつなぎ、証明書は自己署名にする）
+- Terraform は CI で `terraform fmt -check`・`terraform validate` を流す。セキュリティグループで外に開けるのが 80・443 だけで、RDS が外から届かない（publicly_accessible = false）ことを、Trivy の設定スキャンとレビューで確かめる
+- AWS の予算の通知（AWS Budgets）を作り、想定を超えたらオーナーにメールが届くようにする
+
+## 見直す条件（Revisit when）
+
+- Google Cloud に移す、または AWS の無料枠・クレジットの条件が変わったとき（D）
+- 見る人が増えて 1 台では足りない、または止まると困るようになったとき（B・E）
+- 費用の上限を掛けられる LLM の API を使えるようになり、デモで AI をオンにしたくなったとき
