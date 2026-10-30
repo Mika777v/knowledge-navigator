@@ -33,6 +33,10 @@
 <td><img src="docs/images/document-markdown.png" alt="規程の詳細" width="420"></td>
 </tr>
 <tr>
+<td valign="top"><img src="docs/images/assistant-guide.png" alt="結婚の手続きの案内（確認の質問・使える制度・チェックリスト）" width="420"></td>
+<td valign="top"><img src="docs/images/assistant-history.png" alt="AI の回答の履歴" width="420"></td>
+</tr>
+<tr>
 <td><img src="docs/images/admin-dictionary.png" alt="キーワード辞書" width="420"></td>
 <td><img src="docs/images/admin-analytics.png" alt="検索の分析" width="420"></td>
 </tr>
