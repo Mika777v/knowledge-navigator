@@ -17,6 +17,8 @@
 | 社員 | 制度の詳細（対象者・金額・期限・申請方法・根拠の条文・窓口）、規程の全文（目次・条文へのリンク・検索語の強調・過去の版）、FAQ を読む。PDF から取り込んだ規程は、**原本の該当ページ**まで開ける |
 | 社員 | 略語・言い換え・表記ゆれ（「育休」「マイカー通勤」「引越／引っ越し」「振り込まれる」）でも見つかる。検索欄で制度名・きっかけの**入力補完**、制度の詳細で「**この制度を見た人はこちらも**」 |
 | 社員 | 検索結果の「AI に根拠付きで答えてもらう」から、検索結果の条文をもとに AI が短い答えを書き、**根拠の条（番号付き・条文へのリンク）と窓口**を添える。規程に書かれていないことには答えず、窓口を案内する（`make up-ai` で起動したとき） |
+| 社員 | きっかけ（結婚など）の**案内**で、確認の質問（雇用形態・勤続）に答えると、使える制度を「対象・要確認・対象外」に分け、**手続きのチェックリスト**（必要書類・期限・申請先）を出す。判定は AI を使わず DB の条件で行う。状況を書くと AI が質問の答えを選ぶ（本人が確かめてから判定。`make up-ai` で起動したとき） |
+| 社員 | AI に質問した内容と回答の**履歴**を見る・消す（本人だけが見られ、90 日で自動で消える） |
 | 社員 | 規程の一覧をタグ（対象者・話題）で、よくある質問の一覧をカテゴリで絞り込む |
 | 社員 | 部署ごとの問い合わせ先の一覧から窓口を探す。検索結果が役に立ったかを送る（検索の改善に使う）。自分のパスワードを変える |
 | コンテンツ担当者 | 自部署が所管する規程（版の作成・改定・公開）・制度（根拠の条・窓口）・FAQ と、きっかけを画面から作成・編集・公開する。**規程の PDF を取り込む**と、条ごと・原本のページ付きの下書きの版ができる |
@@ -132,7 +134,7 @@ flowchart LR
 | backend | Spring Boot 4 / Java 21 / Spring Modulith / Spring Security / Flyway |
 | DB | PostgreSQL 17 + pg_bigm（日本語の部分一致検索）+ pgvector（意味検索のベクトル） |
 | 検索 | pg_bigm の部分一致 + Sudachi（形態素解析・正規化形）+ キーワード辞書・類義語辞書（[ADR-0002](docs/adr/0002-japanese-search-pg-bigm.md)・[ADR-0011](docs/adr/0011-sudachi-normalized-search.md)）。意味検索と RRF で合わせるハイブリッド検索（[ADR-0007](docs/adr/0007-pgvector.md)） |
-| AI | ai-service（FastAPI / Python 3.12 / uv）。Embedding は Ollama の bge-m3（既定）・OpenAI・Azure OpenAI を切り替え。回答文の生成は Ollama の qwen3.5:4b（既定）（[ADR-0006](docs/adr/0006-ai-service-stateless.md)・[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)・[ADR-0013](docs/adr/0013-rag-generation-model-and-delivery.md)） |
+| AI | ai-service（FastAPI / Python 3.12 / uv）。Embedding は Ollama の bge-m3（既定）・OpenAI・Azure OpenAI を切り替え。回答文の生成と、書いた状況からの読み取りは Ollama の qwen3.5:4b（既定）。AI の上乗せはサーバの設定 1 つでオン・オフ（[ADR-0006](docs/adr/0006-ai-service-stateless.md)・[ADR-0008](docs/adr/0008-llm-provider-abstraction.md)・[ADR-0013](docs/adr/0013-rag-generation-model-and-delivery.md)・[ADR-0014](docs/adr/0014-assistant-rule-based-hearing-and-history.md)） |
 | CI | GitHub Actions（変更に応じて backend・frontend・DB・compose・データ・検索品質を実行。リリースのタグでイメージを ghcr.io に公開） |
 
 ## ドキュメント
@@ -146,7 +148,7 @@ flowchart LR
 
 ## ステータス
 
-[v0.5.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.5.0)（根拠付きの回答）をリリースしました。v0.4.0 までの検索・閲覧・管理・PDF の取り込み・辞書と意味検索による検索に加え、検索結果の条文をもとに AI が答えを書き、根拠の条と窓口を添える回答の画面があります（`make up-ai` で起動したとき。[変更履歴](CHANGELOG.md)）。次は AI アシスタントの試作（v0.6.0）です（[ROADMAP](docs/ROADMAP.md)）。
+[v0.6.0](https://github.com/Mika777v/knowledge-navigator/releases/tag/v0.6.0)（AI アシスタントの試作）をリリースしました。v0.5.0 までの検索・閲覧・管理・PDF の取り込み・意味検索・根拠付きの回答に加え、きっかけから確認の質問に答えて制度と手続きを整理する案内と、AI に質問した内容の履歴があります（[変更履歴](CHANGELOG.md)）。ROADMAP の版はここまでです（[ROADMAP](docs/ROADMAP.md)）。
 
 ## ライセンス
 
