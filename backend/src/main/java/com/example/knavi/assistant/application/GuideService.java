@@ -4,6 +4,7 @@ import com.example.knavi.assistant.application.GuideViews.GuideBasis;
 import com.example.knavi.assistant.application.GuideViews.GuideChecklistItem;
 import com.example.knavi.assistant.application.GuideViews.GuideChoice;
 import com.example.knavi.assistant.application.GuideViews.GuideContact;
+import com.example.knavi.assistant.application.GuideViews.GuideExtraction;
 import com.example.knavi.assistant.application.GuideViews.GuideLifeEvent;
 import com.example.knavi.assistant.application.GuideViews.GuideProgram;
 import com.example.knavi.assistant.application.GuideViews.GuideQuestion;
@@ -12,6 +13,7 @@ import com.example.knavi.assistant.domain.Eligibility;
 import com.example.knavi.assistant.domain.Eligibility.Condition;
 import com.example.knavi.assistant.domain.Eligibility.Judgement;
 import com.example.knavi.assistant.domain.Eligibility.Status;
+import com.example.knavi.intelligence.AnswerExtractor;
 import com.example.knavi.shared.security.AccessPolicy;
 import com.example.knavi.shared.security.AccessPolicy.Purpose;
 import com.example.knavi.shared.security.AccessScope;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,12 +56,24 @@ public class GuideService {
     static final String SOURCE_PROFILE = "PROFILE";
     static final String SOURCE_NONE = "NONE";
 
+    /** 自由な文の長さの上限（検索の質問と同じ） */
+    public static final int MAX_TEXT_LENGTH = 200;
+
     private final JdbcClient jdbc;
     private final AccessPolicy accessPolicy;
+    private final AnswerExtractor extractor;
+    /** LLM の上乗せを使うか（ADR-0014 の決定 2。根拠付き回答と同じ設定） */
+    private final boolean llmEnabled;
 
-    GuideService(JdbcClient jdbc, AccessPolicy accessPolicy) {
+    GuideService(
+            JdbcClient jdbc,
+            AccessPolicy accessPolicy,
+            AnswerExtractor extractor,
+            @Value("${knavi.assistant.enabled:false}") boolean llmEnabled) {
         this.jdbc = jdbc;
         this.accessPolicy = accessPolicy;
+        this.extractor = extractor;
+        this.llmEnabled = llmEnabled;
     }
 
     private record ProgramRow(
@@ -77,21 +92,12 @@ public class GuideService {
     /** @param answers 質問のコード → 選んだ value。省いた質問は、利用者の属性から選べるものは選び、それ以外は未回答 */
     @Transactional(readOnly = true)
     public GuideResult guide(String lifeEventCode, Map<String, String> answers, AuthenticatedUser user) {
-        GuideLifeEvent lifeEvent = jdbc.sql("SELECT code, name, description FROM life_events WHERE code = :code")
-                .param("code", lifeEventCode)
-                .query((rs, i) ->
-                        new GuideLifeEvent(rs.getString("code"), rs.getString("name"), rs.getString("description")))
-                .optional()
-                .orElseThrow(() -> ApiErrors.notFound("きっかけが見つかりません: " + lifeEventCode));
-
+        GuideLifeEvent lifeEvent = lifeEvent(lifeEventCode);
         AccessScope scope = AccessScope.of(user);
         List<ProgramRow> programs = programs(lifeEventCode, scope);
         Set<UUID> programIds = programs.stream().map(ProgramRow::id).collect(Collectors.toSet());
         Map<UUID, List<Condition>> conditions = conditions(programIds);
-
-        Set<String> asked = new LinkedHashSet<>();
-        conditions.values().forEach(list -> list.forEach(c -> asked.add(c.questionCode())));
-        List<QuestionRow> questions = questions(asked);
+        List<QuestionRow> questions = askedQuestions(conditions);
 
         Map<String, String> given = answers == null ? Map.of() : answers;
         Map<String, String> effective = new HashMap<>();
@@ -138,6 +144,63 @@ public class GuideService {
             }
         }
         return new GuideResult(lifeEvent, questionViews, programViews, checklist);
+    }
+
+    /**
+     * 自由な文から、確認質問の答えを読み取る（ADR-0014 の決定 2）。送るのは、見られる制度の条件に出てくる質問だけ。
+     * 読み取った答えも、決まった選択肢にあるものだけを返す。答えも文も保存しない。
+     */
+    @Transactional(readOnly = true)
+    public GuideExtraction extract(String lifeEventCode, String text, AuthenticatedUser user) {
+        String statement = text == null ? "" : text.strip();
+        if (statement.isEmpty() || statement.length() > MAX_TEXT_LENGTH) {
+            throw ApiErrors.badRequest("状況は" + MAX_TEXT_LENGTH + "文字以内で入力してください。");
+        }
+        lifeEvent(lifeEventCode);
+        if (!llmEnabled) {
+            return new GuideExtraction(Map.of(), false);
+        }
+        Set<UUID> programIds = programs(lifeEventCode, AccessScope.of(user)).stream()
+                .map(ProgramRow::id)
+                .collect(Collectors.toSet());
+        List<QuestionRow> questions = askedQuestions(conditions(programIds));
+        if (questions.isEmpty()) {
+            return new GuideExtraction(Map.of(), true);
+        }
+        Map<String, String> read = extractor.extract(
+                statement,
+                questions.stream()
+                        .map(q -> new AnswerExtractor.Question(
+                                q.code(),
+                                q.text(),
+                                q.choices().stream()
+                                        .map(c -> new AnswerExtractor.Choice(c.value(), c.label()))
+                                        .toList()))
+                        .toList());
+        Map<String, String> answers = new LinkedHashMap<>();
+        for (QuestionRow q : questions) {
+            String value = read.get(q.code());
+            if (value != null && q.choices().stream().anyMatch(c -> c.value().equals(value))) {
+                answers.put(q.code(), value);
+            }
+        }
+        return new GuideExtraction(answers, true);
+    }
+
+    private GuideLifeEvent lifeEvent(String code) {
+        return jdbc.sql("SELECT code, name, description FROM life_events WHERE code = :code")
+                .param("code", code)
+                .query((rs, i) ->
+                        new GuideLifeEvent(rs.getString("code"), rs.getString("name"), rs.getString("description")))
+                .optional()
+                .orElseThrow(() -> ApiErrors.notFound("きっかけが見つかりません: " + code));
+    }
+
+    /** 見られる制度の条件に出てくる質問（ADR-0004。見られない制度の条件から質問を作らない） */
+    private List<QuestionRow> askedQuestions(Map<UUID, List<Condition>> conditions) {
+        Set<String> asked = new LinkedHashSet<>();
+        conditions.values().forEach(list -> list.forEach(c -> asked.add(c.questionCode())));
+        return questions(asked);
     }
 
     private String profileAnswer(QuestionRow question, AuthenticatedUser user) {

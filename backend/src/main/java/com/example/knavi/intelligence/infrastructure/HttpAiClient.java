@@ -6,6 +6,7 @@ import com.example.knavi.intelligence.application.AiProperties;
 import com.example.knavi.intelligence.application.AiServiceInfo;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -92,6 +93,26 @@ class HttpAiClient implements AiClient {
     }
 
     @Override
+    public Map<String, String> extract(String text, List<ExtractQuestion> questions) {
+        try {
+            ExtractResponse response = answerClient
+                    .post()
+                    .uri("/v1/assistant/extract")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new ExtractRequest(text, questions))
+                    .retrieve()
+                    .body(ExtractResponse.class);
+            if (response == null || response.answers() == null) {
+                throw new AiServiceException("ai-service の /v1/assistant/extract の応答が空です", null);
+            }
+            return response.answers();
+        } catch (RestClientException e) {
+            // 利用者の文はメッセージに入れない（個人の事情が書かれやすいため）
+            throw new AiServiceException("ai-service の /v1/assistant/extract に失敗しました: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public List<float[]> embed(List<String> texts) {
         return embed(client, texts);
     }
@@ -124,6 +145,10 @@ class HttpAiClient implements AiClient {
     record InfoResponse(String service, String version, AiServiceInfo embedding, AiChatInfo chat) {}
 
     record AnswerRequest(String question, List<RagPassage> passages) {}
+
+    record ExtractRequest(String text, List<ExtractQuestion> questions) {}
+
+    record ExtractResponse(Map<String, String> answers, String model) {}
 
     record EmbeddingRequest(List<String> texts) {}
 

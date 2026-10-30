@@ -2,6 +2,7 @@ package com.example.knavi.assistant.application;
 
 import com.example.knavi.assistant.domain.Eligibility.Status;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** 案内（きっかけ → 確認質問 → 制度の一覧 → チェックリスト）の応答（ADR-0014 の決定 1）。値はすべて DB から */
@@ -78,4 +79,12 @@ public final class GuideViews {
             String requiredDocuments,
             String deadlineNote,
             String howToApply) {}
+
+    /**
+     * 自由な文から読み取った答え（ADR-0014 の決定 2）。画面の選択肢を選んだ状態にするだけで、本人が確かめてから判定に使う。
+     *
+     * @param answers 質問のコード → 選択肢の value（読み取れた質問だけ）
+     * @param available 読み取りを使えるか（knavi.assistant.enabled が false なら false。画面はクリックで答えてもらう）
+     */
+    public record GuideExtraction(Map<String, String> answers, boolean available) {}
 }

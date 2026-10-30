@@ -1,6 +1,7 @@
 package com.example.knavi.assistant.api;
 
 import com.example.knavi.assistant.application.GuideService;
+import com.example.knavi.assistant.application.GuideViews.GuideExtraction;
 import com.example.knavi.assistant.application.GuideViews.GuideResult;
 import com.example.knavi.shared.security.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,5 +43,22 @@ class GuideController {
     @PostMapping
     GuideResult guide(@Valid @RequestBody GuideRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
         return service.guide(body.lifeEvent(), body.answers(), user);
+    }
+
+    /**
+     * @param lifeEvent きっかけのコード
+     * @param text 利用者が書いた状況（例: 契約社員で、去年入社しました）。保存しない
+     */
+    record GuideExtractRequest(
+            @NotBlank @Size(max = 32) String lifeEvent,
+
+            @NotBlank @Size(max = GuideService.MAX_TEXT_LENGTH)
+            String text) {}
+
+    @Operation(summary = "書いた状況から確認質問の答えを読み取る（AI。選んだ状態にするだけで、判定は答えを送り直して行う）")
+    @PostMapping("/extract")
+    GuideExtraction extract(
+            @Valid @RequestBody GuideExtractRequest body, @AuthenticationPrincipal AuthenticatedUser user) {
+        return service.extract(body.lifeEvent(), body.text(), user);
     }
 }

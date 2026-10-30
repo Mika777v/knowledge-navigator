@@ -1,6 +1,7 @@
 package com.example.knavi.intelligence.application;
 
 import java.util.List;
+import java.util.Map;
 
 /** ai-service の呼び出し（ADR-0006）。権限で絞り込んだ後の文章だけを渡す */
 public interface AiClient {
@@ -19,6 +20,17 @@ public interface AiClient {
 
     /** 根拠付きの回答文（{@code POST /v1/rag/answer}）。生成を待つため、長いタイムアウトで呼ぶ */
     RagAnswer answer(String question, List<RagPassage> passages);
+
+    /**
+     * 利用者が書いた文から、確認質問の答えを読み取る（{@code POST /v1/assistant/extract}。ADR-0014 の決定 2）。
+     *
+     * @return 質問のコード → 選択肢の value（読み取れた質問だけ）
+     */
+    Map<String, String> extract(String text, List<ExtractQuestion> questions);
+
+    record ExtractQuestion(String code, String text, List<ExtractChoice> choices) {}
+
+    record ExtractChoice(String value, String label) {}
 
     /** @param ref 根拠の番号（1〜） */
     record RagPassage(int ref, String title, String text) {}
