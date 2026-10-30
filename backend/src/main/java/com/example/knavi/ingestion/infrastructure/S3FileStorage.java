@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
@@ -17,6 +19,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
@@ -33,11 +36,13 @@ class S3FileStorage implements FileStorage {
     S3FileStorage(StorageProperties properties) {
         this.properties = properties;
         // 接続は最初の読み書きのときに行う（ストレージを使わない処理・テストは起動を待たない）
-        this.s3 = S3Client.builder()
-                .endpointOverride(URI.create(properties.endpoint()))
-                .region(Region.of(properties.region()))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(properties.accessKey(), properties.secretKey())))
+        S3ClientBuilder builder = S3Client.builder();
+        // 接続先が空なら AWS の S3 そのもの（リージョンから決まる）。SeaweedFS などはその URL を指定する
+        if (hasText(properties.endpoint())) {
+            builder.endpointOverride(URI.create(properties.endpoint()));
+        }
+        this.s3 = builder.region(Region.of(properties.region()))
+                .credentialsProvider(credentialsProvider(properties))
                 .forcePathStyle(properties.pathStyle())
                 // SDK 2.30 以降の既定（チェックサムを毎回付ける新しい形式）は、S3 互換の製品が受け付けないことがある。
                 // 必要な API のときだけ付ける従来の動きにする
@@ -45,6 +50,22 @@ class S3FileStorage implements FileStorage {
                 .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)
                 .httpClient(UrlConnectionHttpClient.create())
                 .build();
+    }
+
+    /**
+     * アクセスキーが空なら、AWS の標準の順番で資格情報を探す（EC2 の IAM ロールなど。デモ環境はアクセスキーを作らない。ADR-0015）。
+     * ローカル・CI の SeaweedFS では、設定したアクセスキーを使う。
+     */
+    static AwsCredentialsProvider credentialsProvider(StorageProperties properties) {
+        if (!hasText(properties.accessKey())) {
+            return DefaultCredentialsProvider.builder().build();
+        }
+        return StaticCredentialsProvider.create(
+                AwsBasicCredentials.create(properties.accessKey(), properties.secretKey()));
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     @EventListener(ApplicationReadyEvent.class)

@@ -57,13 +57,14 @@ knavi:
       dictionary: ${KNAVI_SUDACHI_DICTIONARY:}
   storage:
     # 原本ファイルの置き場所（S3 互換。ローカルは compose の SeaweedFS。ADR-0010）
+    # AWS の S3 を使うときは endpoint・access-key を空にし、path-style を false にする（EC2 の IAM ロールで接続。ADR-0015）
     endpoint: ${KNAVI_STORAGE_ENDPOINT:http://localhost:8333}
     region: ${KNAVI_STORAGE_REGION:us-east-1}
     bucket: ${KNAVI_STORAGE_BUCKET:knavi-files}
     access-key: ${KNAVI_STORAGE_ACCESS_KEY:knavi}
     secret-key: ${KNAVI_STORAGE_SECRET_KEY:knavi_local_only}
     # SeaweedFS・MinIO などは path-style（http://host/bucket/key）で呼ぶ
-    path-style: true
+    path-style: ${KNAVI_STORAGE_PATH_STYLE:true}
     # 起動時にバケットが無ければ作る（ローカル・CI 用。本番はインフラ側で作る）
     create-bucket: ${KNAVI_STORAGE_CREATE_BUCKET:false}
     max-upload-bytes: 20971520
