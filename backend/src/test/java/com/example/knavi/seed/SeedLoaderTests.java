@@ -101,6 +101,29 @@ class SeedLoaderTests {
     }
 
     @Test
+    void loadsAssistantQuestionsAndProgramConditions() {
+        loader.load(SEED, PASSWORD);
+        loader.load(SEED, PASSWORD);
+
+        assertThat(jdbc.sql("SELECT code FROM assistant_questions ORDER BY sort_order")
+                        .query(String.class)
+                        .list())
+                .containsExactly("EMPLOYMENT_TYPE", "TENURE_6M");
+        assertThat(jdbc.sql("""
+                        SELECT array_to_string(c.allowed_values, ',') FROM program_conditions c
+                        JOIN programs p ON p.id = c.program_id JOIN assistant_questions q ON q.id = c.question_id
+                        WHERE p.code = 'PRG-HOUSING-ALLOWANCE' AND q.code = 'EMPLOYMENT_TYPE'
+                        """).query(String.class).single()).isEqualTo("REGULAR");
+        assertThat(jdbc.sql("""
+                        SELECT array_to_string(c.allowed_values, ',') FROM program_conditions c
+                        JOIN programs p ON p.id = c.program_id JOIN assistant_questions q ON q.id = c.question_id
+                        WHERE p.code = 'PRG-MARRIAGE-GIFT' AND q.code = 'TENURE_6M'
+                        """).query(String.class).single()).isEqualTo("YES");
+        // 2回入れても条件は増えない
+        assertThat(count("SELECT count(*) FROM program_conditions")).isEqualTo(8);
+    }
+
+    @Test
     void keepsManagerOnlyContentRestricted() {
         loader.load(SEED, PASSWORD);
 

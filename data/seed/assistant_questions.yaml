@@ -1,0 +1,19 @@
+# AI アシスタントの確認質問（ADR-0014）。制度の条件（programs.yaml の conditions）はこのコードと選択肢の value で書く
+# profile_attribute: 利用者の属性から初めに選んでおく値（EMPLOYMENT_TYPE = users の employment_type）
+# 質問は、そのきっかけで利用者が見られる制度の条件に出てくるものだけを出す
+
+- code: EMPLOYMENT_TYPE
+  text: 雇用形態を教えてください。
+  profile_attribute: EMPLOYMENT_TYPE
+  sort_order: 1
+  choices:
+    - { value: REGULAR, label: 正社員 }
+    - { value: CONTRACT, label: 契約社員 }
+    - { value: PART_TIME, label: パートタイム社員 }
+
+- code: TENURE_6M
+  text: 入社から6か月以上たっていますか。
+  sort_order: 2
+  choices:
+    - { value: "YES", label: はい }
+    - { value: "NO", label: いいえ }

@@ -182,6 +182,7 @@ classDiagram
 | evaluation_questions / evaluation_runs | question, expected_targets(jsonb) / metrics(jsonb), git_sha | 検索品質評価 |
 | section_embeddings | section_id, model, dims, embedding, content_hash | Phase4 |
 | chat_sessions / chat_messages / chat_citations | user_id, title, last_message_at / seq, role, content, answerable / ref, section_id | Phase6（ADR-0014）。本人だけが見る。保持期間を過ぎたら削除 |
+| assistant_questions / program_conditions | code, text, choices(jsonb), profile_attribute / program_id, question_id, allowed_values(text[]) | Phase6（ADR-0014）。確認質問と制度の対象者の条件。判定は対象・対象外・要確認 |
 
 ---
 

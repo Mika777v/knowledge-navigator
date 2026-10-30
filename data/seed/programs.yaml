@@ -2,6 +2,8 @@
 # basis:     根拠の文書（documents の code）と条番号。同じ文書の複数の条を指定できる
 # contacts:  窓口（contacts の code）と役割  APPLY=申請先 / INQUIRY=問い合わせ先 / PAYMENT=支給担当
 # keywords:  利用者が使いそうな言葉（制度名を知らなくてもヒットさせるため）
+# conditions: 対象者の条件（ADR-0014）。assistant_questions.yaml の質問のコード → 当てはまる選択肢の value。
+#             判定できる条件だけを書き、それ以外（年齢・出勤率・半額など）は eligibility の文章で伝える
 # visibility は根拠文書の公開範囲より広くしてはいけない（INTERNAL が最も広い）
 
 # =====================================================================
@@ -12,6 +14,7 @@
   name_kana: けっこんいわいきん
   summary: 社員が結婚したときに会社から支給されるお祝い金。
   eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  conditions: { TENURE_6M: ["YES"] }
   benefit: 30,000円（社員同士の結婚はそれぞれに支給）
   how_to_apply: 社内ポータルの「慶弔申請」から、婚姻を証明する書類を添付して申請する。
   deadline_note: 入籍日から6か月以内
@@ -31,6 +34,7 @@
   name_kana: しゅっさんいわいきん
   summary: 社員または配偶者が出産したときに支給されるお祝い金。
   eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  conditions: { TENURE_6M: ["YES"] }
   benefit: 子1人につき20,000円
   how_to_apply: 社内ポータルの「慶弔申請」から、出生を証明する書類を添付して申請する。
   deadline_note: 出生日から6か月以内
@@ -67,6 +71,7 @@
   name_kana: しょうびょうみまいきん
   summary: 業務外の病気・けがで連続14日以上欠勤したときに支給される見舞金。
   eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  conditions: { TENURE_6M: ["YES"] }
   benefit: 10,000円
   how_to_apply: 社内ポータルの「慶弔申請」から申請する。
   deadline_note: 事由の発生日から6か月以内
@@ -84,6 +89,7 @@
   name_kana: さいがいみまいきん
   summary: 住居が火災・自然災害で被害を受けたときに支給される見舞金。
   eligibility: 勤続6か月以上の正社員・契約社員（パートタイム社員は半額）
+  conditions: { TENURE_6M: ["YES"] }
   benefit: 全壊・全焼100,000円、半壊・半焼50,000円、一部損壊20,000円
   how_to_apply: 社内ポータルの「慶弔申請」から、被害を証明する書類（罹災証明書など）を添付して申請する。
   deadline_note: 事由の発生日から6か月以内
@@ -174,6 +180,7 @@
   name_kana: ねんじゆうきゅうきゅうか
   summary: 入社6か月後から付与される有給休暇。勤続年数に応じて日数が増える。
   eligibility: 6か月以上継続勤務し、所定労働日の8割以上出勤した社員
+  conditions: { TENURE_6M: ["YES"] }
   benefit: 入社6か月で10日、以後1年ごとに増え、6年6か月以上で年20日。翌年度に繰り越し可
   how_to_apply: 原則として前日までに勤怠システムで申請する。
   category: hr-leave
@@ -524,6 +531,7 @@
   name_kana: じゅうたくてあて
   summary: 世帯主として賃貸住宅を契約している正社員に支給される手当。
   eligibility: 世帯主として賃貸住宅を契約している正社員
+  conditions: { EMPLOYMENT_TYPE: [REGULAR] }
   benefit: 月額20,000円
   how_to_apply: 人事システムの「住宅手当申請」に賃貸借契約書の写しを添付して申請する。結婚・転居などで変わったら14日以内に届け出る。
   deadline_note: 変更は14日以内に届出
@@ -558,6 +566,7 @@
   name_kana: にんげんどっくほじょ
   summary: 35歳以上の社員が人間ドックを受けたときの費用補助。定期健康診断の代わりになる。
   eligibility: 満35歳以上の正社員・契約社員
+  conditions: { EMPLOYMENT_TYPE: [REGULAR, CONTRACT] }
   benefit: 1年度に1回、30,000円まで
   how_to_apply: 社内ポータルの「健康補助申請」から領収書を添付して申請する。
   deadline_note: 受診後3か月以内
@@ -576,6 +585,7 @@
   name_kana: しかくしゅとくしょうれいきん
   summary: 会社が指定する資格を取ったときの奨励金と、通信教育・外部研修の受講料補助。
   eligibility: 正社員・契約社員
+  conditions: { EMPLOYMENT_TYPE: [REGULAR, CONTRACT] }
   benefit: 資格ごとの奨励金、通信教育・外部研修は受講料の2分の1（年50,000円まで）
   how_to_apply: 合格通知・修了証を添えて人事部 採用・研修グループに申請する。
   deadline_note: 合格通知を受けた日から3か月以内

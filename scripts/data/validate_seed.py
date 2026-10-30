@@ -22,6 +22,7 @@ DOCUMENT_FIELDS = (
 DISCLAIMER = "架空企業「架空商事株式会社」のサンプル"
 CONTACT_ROLES = {"APPLY", "INQUIRY", "PAYMENT"}
 LIFE_EVENT_RELATIONS = {"PRIMARY", "RELATED"}
+PROFILE_ATTRIBUTES = {"EMPLOYMENT_TYPE"}
 # 公開範囲の広さ（数字が小さいほど広い）。制度・FAQ は根拠文書より広くしてはいけない
 VISIBILITY_RANK = {"INTERNAL": 0, "MANAGERS": 1, "RESTRICTED": 2, "CONFIDENTIAL": 3}
 ARTICLE_HEADING = re.compile(r"^### 第(\d+)条（(.+)）\s*$", re.MULTILINE)
@@ -135,12 +136,62 @@ def check_visibility_not_wider(label: str, visibility: str, doc_meta: dict | Non
         )
 
 
+def validate_assistant_questions(seed_dir: Path, errors: list[str]) -> dict[str, set[str]]:
+    """確認質問（ADR-0014）。質問のコード → 選択肢の value を返す（制度の conditions の確認に使う）"""
+    questions = load(seed_dir, "assistant_questions.yaml")
+    check_unique(questions, "code", "assistant_questions", errors)
+    choices_by_code: dict[str, set[str]] = {}
+    for q in questions:
+        label = f"assistant_questions[{q.get('code')}]"
+        for field in ("code", "text"):
+            if not q.get(field):
+                errors.append(f"{label}: {field} がありません")
+        choices = q.get("choices") or []
+        if len(choices) < 2:
+            errors.append(f"{label}: 選択肢（choices）は2件以上必要です")
+        values = [str(c.get("value")) for c in choices if c.get("value") is not None]
+        if len(values) != len(choices) or any(not c.get("label") for c in choices):
+            errors.append(f"{label}: 選択肢には value と label が必要です")
+        if len(set(values)) != len(values):
+            errors.append(f"{label}: 選択肢の value が重複しています")
+        attribute = q.get("profile_attribute")
+        if attribute is not None:
+            if attribute not in PROFILE_ATTRIBUTES:
+                errors.append(f"{label}: profile_attribute が不正です: {attribute}")
+            elif attribute == "EMPLOYMENT_TYPE" and set(values) != EMPLOYMENT_TYPES:
+                errors.append(f"{label}: 雇用形態の選択肢は {sorted(EMPLOYMENT_TYPES)} と一致させてください")
+        if q.get("code"):
+            choices_by_code[q["code"]] = set(values)
+    return choices_by_code
+
+
+def check_conditions(label: str, conditions: object, questions: dict[str, set[str]], errors: list[str]) -> None:
+    if conditions is None:
+        return
+    if not isinstance(conditions, dict) or not conditions:
+        errors.append(f"{label}: conditions は「質問のコード: [選択肢の value]」の形で書いてください")
+        return
+    for code, values in conditions.items():
+        if code not in questions:
+            errors.append(f"{label}: 条件の質問 {code} が assistant_questions.yaml にありません")
+            continue
+        if not isinstance(values, list) or not values:
+            errors.append(f"{label}: 条件 {code} の選択肢が1件もありません")
+            continue
+        for value in values:
+            if str(value) not in questions[code]:
+                errors.append(f"{label}: 条件 {code} の選択肢 {value} が質問にありません")
+        if set(map(str, values)) == questions[code]:
+            errors.append(f"{label}: 条件 {code} がすべての選択肢を含んでいて、絞り込みになっていません")
+
+
 def validate_programs_and_faqs(
     seed_dir: Path,
     dept_codes: set[str],
     category_slugs: set[str],
     contact_codes: set[str],
     docs: dict[str, tuple[dict, str, set[int]]],
+    questions: dict[str, set[str]],
     errors: list[str],
 ) -> None:
     programs = load(seed_dir, "programs.yaml")
@@ -172,6 +223,7 @@ def validate_programs_and_faqs(
         for ref in p.get("basis") or []:
             meta = check_document_ref(label, ref, docs, errors)
             check_visibility_not_wider(label, p.get("visibility"), meta, errors)
+        check_conditions(label, p.get("conditions"), questions, errors)
 
     check_unique(life_events, "code", "life_events", errors)
     for e in life_events:
@@ -446,7 +498,8 @@ def validate(seed_dir: Path) -> list[str]:
 
     # ---------- programs / life_events / faqs ----------
     contact_codes = {c["code"] for c in contacts if c.get("code")}
-    validate_programs_and_faqs(seed_dir, dept_codes, category_slugs, contact_codes, docs, errors)
+    questions = validate_assistant_questions(seed_dir, errors)
+    validate_programs_and_faqs(seed_dir, dept_codes, category_slugs, contact_codes, docs, questions, errors)
 
     # ---------- eval ----------
     validate_eval(seed_dir, errors)

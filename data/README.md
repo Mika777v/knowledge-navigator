@@ -16,6 +16,7 @@ data/
 │   ├── documents/        # 架空の社内規程（10本、Markdown + front matter）
 │   ├── programs.yaml     # 制度（39件。根拠の条・窓口・キーワード）
 │   ├── life_events.yaml  # きっかけ（結婚・出産など8件）
+│   ├── assistant_questions.yaml  # AI アシスタントの確認質問（ADR-0014）
 │   ├── faqs.yaml         # よくある質問（50件。うち2件は管理職限定）
 │   └── synonyms.yaml     # 類義語辞書（16グループ。育休 = 育児休業 など）
 ├── pdf/                  # documents/ の規程を PDF にしたもの（10本。PDF 取り込みの確認・テスト用）
@@ -54,8 +55,9 @@ make seed   # data/seed を投入（何度実行してもよい）
 
 | ファイル | 主な項目 | ルール |
 |---|---|---|
-| `programs.yaml` | `basis`（文書と条）、`contacts`（窓口と役割 APPLY / INQUIRY / PAYMENT）、`keywords` | 窓口は1件以上必須。公開範囲は根拠文書より広くしない |
+| `programs.yaml` | `basis`（文書と条）、`contacts`（窓口と役割 APPLY / INQUIRY / PAYMENT）、`keywords`、`conditions`（対象者の条件。質問のコード → 当てはまる選択肢） | 窓口は1件以上必須。公開範囲は根拠文書より広くしない |
 | `life_events.yaml` | `programs`（PRIMARY = まず確認する制度 / RELATED = あわせて必要な手続き）、`keywords` | |
+| `assistant_questions.yaml` | `choices`（value と label）、`profile_attribute`（利用者の属性から初めに選ぶ値） | 制度の `conditions` はこの質問と選択肢だけを使う。すべての選択肢を並べた条件は書かない |
 | `faqs.yaml` | `links`（program か document + article）、`contact`、`visibility` | 窓口か関連制度のどちらかが必要 |
 | `documents/*.md` の `tags` | `tags.yaml` にある名前（対象者 TARGET・話題 TOPIC） | 10個まで。社員が規程の一覧で絞り込むときに使う |
 
