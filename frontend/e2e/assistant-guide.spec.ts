@@ -12,6 +12,11 @@ test("検索結果から結婚の案内へ移り、答えで制度を判定し�
   await expect(page).toHaveURL(/\/assistant\/guide\?event=MARRIAGE/);
   await expect(page.getByRole("heading", { level: 1, name: "結婚の手続き" })).toBeVisible();
 
+  // CI では AI をオフにしているので、状況を書いても読み取らず、その旨を出す（ADR-0014 の決定 2）
+  await page.getByLabel(/状況を書くと/).fill("パートで働いています");
+  await page.getByRole("button", { name: "AI に読み取ってもらう" }).click();
+  await expect(page.getByText(/AI による読み取りは、いまは使えない設定/)).toBeVisible();
+
   // 雇用形態はプロフィールから選ばれている。勤続は答えるまで要確認
   await expect(page.getByRole("radio", { name: "正社員", exact: true })).toBeChecked();
   const gift = page.getByRole("listitem", { name: "結婚祝金" });

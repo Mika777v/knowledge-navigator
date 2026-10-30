@@ -46,3 +46,4 @@ export type GuideChecklistItem = Schemas["GuideChecklistItem"];
 export type ConversationSummary = Schemas["ConversationSummary"];
 export type ConversationDetail = Schemas["ConversationDetail"];
 export type ConversationMessage = Schemas["ConversationMessage"];
+export type GuideExtraction = Schemas["GuideExtraction"];

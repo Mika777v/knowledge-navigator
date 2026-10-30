@@ -118,4 +118,42 @@ describe("GuideView", () => {
     const [, init] = fetchMock.mock.calls[1];
     expect(JSON.parse(String(init?.body))).toEqual({ lifeEvent: "MARRIAGE", answers: { EMPLOYMENT_TYPE: "PART_TIME" } });
   });
+
+  it("書いた状況から AI が選んだ答えを選んだ状態にし、その答えで判定し直す", async () => {
+    fetchMock.mockImplementation(async (input, init) => {
+      if (String(input).endsWith("/extract")) {
+        return Response.json({ answers: { EMPLOYMENT_TYPE: "PART_TIME" }, available: true });
+      }
+      const body = JSON.parse(String(init?.body)) as { answers: Record<string, string> };
+      return Response.json(
+        body.answers.EMPLOYMENT_TYPE === "PART_TIME" ? result("PART_TIME", "USER") : result("REGULAR", "PROFILE"),
+      );
+    });
+    renderWithQuery(<GuideView />);
+
+    fireEvent.change(await screen.findByLabelText(/状況を書くと/), { target: { value: "パートで働いています" } });
+    fireEvent.click(screen.getByRole("button", { name: "AI に読み取ってもらう" }));
+
+    expect(await screen.findByText(/書いた内容から 1 件の答えを選びました/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "パートタイム社員" })).toBeChecked();
+    expect(screen.getByText(/AI が書いた内容から選びました/)).toBeInTheDocument();
+    expect(await within(await screen.findByRole("listitem", { name: "住宅手当" })).findByText("対象外")).toBeInTheDocument();
+    const extractCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/extract"));
+    expect(JSON.parse(String(extractCall?.[1]?.body))).toEqual({ lifeEvent: "MARRIAGE", text: "パートで働いています" });
+  });
+
+  it("AI がオフのときは、その旨を出して答えを変えない", async () => {
+    fetchMock.mockImplementation(async (input) =>
+      String(input).endsWith("/extract")
+        ? Response.json({ answers: {}, available: false })
+        : Response.json(result("REGULAR", "PROFILE")),
+    );
+    renderWithQuery(<GuideView />);
+
+    fireEvent.change(await screen.findByLabelText(/状況を書くと/), { target: { value: "パートで働いています" } });
+    fireEvent.click(screen.getByRole("button", { name: "AI に読み取ってもらう" }));
+
+    expect(await screen.findByText(/AI による読み取りは、いまは使えない設定/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "正社員" })).toBeChecked();
+  });
 });
