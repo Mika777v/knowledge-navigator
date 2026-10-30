@@ -39,3 +39,7 @@ export type DirectoryDepartment = Schemas["DirectoryDepartment"];
 export type AssistantAnswer = Schemas["AssistantAnswer"];
 export type AssistantEvidence = Schemas["AssistantEvidence"];
 export type AssistantUnanswerable = Schemas["AssistantUnanswerable"];
+export type GuideResult = Schemas["GuideResult"];
+export type GuideQuestion = Schemas["GuideQuestion"];
+export type GuideProgram = Schemas["GuideProgram"];
+export type GuideChecklistItem = Schemas["GuideChecklistItem"];
