@@ -55,6 +55,15 @@
 - **保守が続いているか**も確かめる（例: MinIO はコミュニティ版のイメージ配布が止まったため SeaweedFS にした）
 - サードパーティの GitHub Actions はコミットのハッシュで固定する
 
+## 実装の解説（言語の学習を兼ねる。2026-11 にオーナーと決めたこと）
+
+- **実装の PR には、その PR で使った言語独特の動き・書き方の解説を `docs/learning/notes/` に md で1つ足す**（同じ PR に入れる。依存の更新・文書だけの PR は不要）
+  - ファイル名は `YYYY-MM-DD-内容.md`（例: `2026-11-02-csrf-openapi-hidden.md`）。一覧のファイルは作らず、フォルダの中を日付順に並べる（同時に開いている PR どうしがぶつからないように）
+  - 書くこと: 何をしたか（2〜3行）→ その PR の実際のコード → 言語・フレームワーク独特の動き（なぜそう書くのか、他の言語とのちがい、はまりやすい所）→ 手元で確かめる方法
+  - 対象の言語: Java・Spring（backend）、TypeScript・React・Next.js（frontend）、Python（ai-service）、SQL、シェル・Terraform など
+  - 教科書（`docs/learning/TYPESCRIPT.md` など）にある内容は、その章へのリンクで済ませてよい
+- 説明は「やりとり」と同じく、専門用語をかみくだいて書く
+
 ## PR を出す前の確認
 
 - backend: `cd backend && ./gradlew build`（テストとモジュール境界の検査を含む）
