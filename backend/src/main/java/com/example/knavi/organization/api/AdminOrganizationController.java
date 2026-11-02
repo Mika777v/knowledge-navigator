@@ -1,5 +1,6 @@
 package com.example.knavi.organization.api;
 
+import com.example.knavi.organization.application.DemoMode;
 import com.example.knavi.organization.application.OrganizationAdminService;
 import com.example.knavi.organization.application.OrganizationAdminService.ContactInput;
 import com.example.knavi.organization.application.OrganizationAdminService.DepartmentInput;
@@ -45,9 +46,11 @@ class AdminOrganizationController {
     private static final String CODE_MESSAGE = "英大文字・数字・ハイフン・下線で入力してください";
 
     private final OrganizationAdminService service;
+    private final DemoMode demoMode;
 
-    AdminOrganizationController(OrganizationAdminService service) {
+    AdminOrganizationController(OrganizationAdminService service, DemoMode demoMode) {
         this.service = service;
+        this.demoMode = demoMode;
     }
 
     // ------------------------------------------------------------------ 部署
@@ -203,6 +206,8 @@ class AdminOrganizationController {
             @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
             @Valid @RequestBody OrgUserRequest body,
             @AuthenticationPrincipal AuthenticatedUser user) {
+        // デモ環境では、ロールの変更・無効化で他の人を締め出せないようにする（ADR-0015）
+        demoMode.rejectIfEnabled("ユーザーを更新");
         OrgUserView updated = service.updateUser(id, ETags.parseIfMatch(ifMatch), body.toInput(), user);
         return ResponseEntity.ok().eTag(ETags.of(updated.rowVersion())).body(updated);
     }
