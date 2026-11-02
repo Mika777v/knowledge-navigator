@@ -2022,11 +2022,6 @@ export interface components {
             name: string;
             children: components["schemas"]["CategoryNode"][];
         };
-        CsrfToken: {
-            parameterName: string;
-            token: string;
-            headerName: string;
-        };
         ConversationSummary: {
             /** Format: uuid */
             id: string;
@@ -3877,9 +3872,7 @@ export interface operations {
     };
     csrf: {
         parameters: {
-            query: {
-                token: components["schemas"]["CsrfToken"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
