@@ -7,6 +7,7 @@ import com.example.knavi.organization.infrastructure.KnaviUserDetails;
 import com.example.knavi.organization.infrastructure.UserRepository;
 import com.example.knavi.shared.web.ApiErrors;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -63,7 +64,9 @@ class AuthController {
 
     @Operation(summary = "CSRF トークンを発行する（XSRF-TOKEN Cookie を設定する）。ログイン前に1回呼ぶ")
     @GetMapping("/auth/csrf")
-    Map<String, String> csrf(CsrfToken token) {
+    // CsrfToken は Spring Security が渡す引数で、API の入力ではない。説明に載せると、項目の並び順が
+    // ビルドのたびに変わって schema.d.ts の比較が落ちることがあったため、隠す
+    Map<String, String> csrf(@Parameter(hidden = true) CsrfToken token) {
         // トークンは遅延生成されるため、値を読んで生成させる（このとき XSRF-TOKEN Cookie が設定される）
         token.getToken();
         return Map.of("headerName", token.getHeaderName());
