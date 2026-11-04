@@ -51,6 +51,9 @@ springdoc:
   paths-to-match: /api/**
 
 knavi:
+  # デモ環境（ADR-0015）。true にすると、パスワードの変更・ユーザーの更新を断る（compose.demo.yaml で true）
+  demo:
+    enabled: ${KNAVI_DEMO_ENABLED:false}
   text:
     sudachi:
       # 形態素解析の辞書（ファイル、または .dic を1つ含むフォルダ。ADR-0011）。空なら表記ゆれの吸収なしで検索する

@@ -18,6 +18,11 @@ public final class ApiErrors {
         return of(HttpStatus.CONFLICT, detail);
     }
 
+    /** 権限はあるが、この環境では許していない操作（デモ環境でのパスワードの変更など） */
+    public static ErrorResponseException forbidden(String detail) {
+        return of(HttpStatus.FORBIDDEN, detail);
+    }
+
     public static ErrorResponseException badRequest(String detail) {
         return of(HttpStatus.BAD_REQUEST, detail);
     }

@@ -1,5 +1,6 @@
 package com.example.knavi.organization.api;
 
+import com.example.knavi.organization.application.DemoMode;
 import com.example.knavi.organization.application.LoginThrottle;
 import com.example.knavi.organization.application.PasswordChangeService;
 import com.example.knavi.organization.infrastructure.KnaviUserDetails;
@@ -43,18 +44,21 @@ class AuthController {
     private final UserRepository users;
     private final LoginThrottle loginThrottle;
     private final PasswordChangeService passwordChange;
+    private final DemoMode demoMode;
 
     AuthController(
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository,
             UserRepository users,
             LoginThrottle loginThrottle,
-            PasswordChangeService passwordChange) {
+            PasswordChangeService passwordChange,
+            DemoMode demoMode) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
         this.users = users;
         this.loginThrottle = loginThrottle;
         this.passwordChange = passwordChange;
+        this.demoMode = demoMode;
     }
 
     @Operation(summary = "CSRF トークンを発行する（XSRF-TOKEN Cookie を設定する）。ログイン前に1回呼ぶ")
@@ -114,6 +118,8 @@ class AuthController {
             @AuthenticationPrincipal KnaviUserDetails principal,
             @Valid @RequestBody PasswordChangeRequest body,
             HttpServletRequest request) {
+        // デモ環境は全員共通のパスワードで使うため、変えられると他の人が入れなくなる（ADR-0015）
+        demoMode.rejectIfEnabled("パスワードを変更");
         // 今のパスワードの総当たりを防ぐため、ログインと同じ回数制限をかける
         loginThrottle.lockedFor(principal.email()).ifPresent(remaining -> {
             throw new LoginLockedException(remaining);

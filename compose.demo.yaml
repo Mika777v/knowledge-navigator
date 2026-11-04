@@ -56,6 +56,8 @@ services:
       KNAVI_STORAGE_PATH_STYLE: ${KNAVI_STORAGE_PATH_STYLE:-false}
       KNAVI_STORAGE_CREATE_BUCKET: ${KNAVI_STORAGE_CREATE_BUCKET:-false}
       AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+      # 他の見る人を締め出せる操作（パスワードの変更・ユーザーの更新）を断る（ADR-0015 決定 5）
+      KNAVI_DEMO_ENABLED: "true"
       # AI はオフ（ADR-0015 決定 3）
       KNAVI_SEARCH_VECTOR_ENABLED: "false"
       KNAVI_ASSISTANT_ENABLED: "false"
