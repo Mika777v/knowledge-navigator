@@ -3,7 +3,7 @@
 spring-boot = "4.1.1"
 spring-dependency-management = "1.1.7"
 spring-modulith = "2.1.1"
-springdoc = "3.1.1"
+springdoc = "3.2.0"
 # 原本ファイルの保存（S3 互換ストレージ。ADR-0010）
 aws-sdk = "2.56.0"
 # PDF からの文字の抽出（ADR-0010）
