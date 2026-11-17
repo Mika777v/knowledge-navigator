@@ -10,7 +10,7 @@ aws-sdk = "2.56.0"
 pdfbox = "3.0.8"
 # 形態素解析・表記ゆれの正規化（ADR-0011）。辞書（SudachiDict）は build.gradle.kts の sudachiDictionary で取り寄せる
 sudachi = "0.8.2"
-spotless = "8.10.4"
+spotless = "8.11.0"
 palantir-java-format = "2.102.0"
 # Spring Boot が管理するバージョンを、脆弱性の修正版に上げる（Trivy で検出。Spring Boot の次のパッチで追いついたら消す）
 tomcat = "11.0.26"
